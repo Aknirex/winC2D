@@ -113,7 +113,7 @@
     <value>Select target folder (using mklink symbolic link)</value>
   </data>
   <data name="Msg.MklinkNote" xml:space="preserve">
-    <value>Note: This operation uses mklink to create symbolic links.</value>
+    <value>ℹ Note: This operation uses mklink to create symbolic links.</value>
   </data>
   <data name="Button.RefreshAppData" xml:space="preserve">
     <value>Refresh List</value>

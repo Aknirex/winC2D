@@ -113,7 +113,7 @@
     <value>选择目标文件夹（使用 mklink 符号链接）</value>
   </data>
   <data name="Msg.MklinkNote" xml:space="preserve">
-    <value>注意：此操作使用 mklink 创建符号链接。</value>
+    <value>ℹ 注意：此操作使用 mklink 创建符号链接。</value>
   </data>
   <data name="Button.RefreshAppData" xml:space="preserve">
     <value>刷新列表</value>
