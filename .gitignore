@@ -1,0 +1,40 @@
+# Visual Studio
+.vs/
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+# OS
+[Dd]esktop.ini
+[Tt]humbs.db
+*.DS_Store
+# VS Code
+.vscode/
+# Rider/IDEA
+.idea/
+# Test results
+[Tt]est[Rr]esult*/
+# Others
+*.cache
+*.log
+*.vsidx
+*.opendb
+*.VC.db
+*.db
+# Packages
+*.nupkg
+packages/
+# Publish
+[Pp]ublish*/
+# Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+# Backup & misc
+*.bak
+*.swp
+*.tmp
