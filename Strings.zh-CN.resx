@@ -118,4 +118,46 @@
   <data name="Button.RefreshAppData" xml:space="preserve">
     <value>刷新列表</value>
   </data>
+  <data name="Settings.Title" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="Settings.ProgramFilesPath" xml:space="preserve">
+    <value>Program Files 默认位置（64位）：</value>
+  </data>
+  <data name="Settings.ProgramFilesPathX86" xml:space="preserve">
+    <value>Program Files 默认位置（32位）：</value>
+  </data>
+  <data name="Settings.CustomX86Path" xml:space="preserve">
+    <value>自定义 32位 程序路径</value>
+  </data>
+  <data name="Settings.Description" xml:space="preserve">
+    <value>此设置会修改 Windows 系统的 Program Files 默认路径，影响新安装软件的默认安装位置。</value>
+  </data>
+  <data name="Settings.Warning" xml:space="preserve">
+    <value>ℹ 注意：此更改仅影响新安装的软件，已安装的软件不受影响。某些安装程序可能需要重启系统才能识别此更改。</value>
+  </data>
+  <data name="Button.Browse" xml:space="preserve">
+    <value>浏览</value>
+  </data>
+  <data name="Button.Apply" xml:space="preserve">
+    <value>应用</value>
+  </data>
+  <data name="Button.Reset" xml:space="preserve">
+    <value>恢复默认</value>
+  </data>
+  <data name="Msg.InvalidPath" xml:space="preserve">
+    <value>请输入有效的文件夹路径。</value>
+  </data>
+  <data name="Msg.SettingsApplied" xml:space="preserve">
+    <value>设置已成功应用！</value>
+  </data>
+  <data name="Msg.SettingsFailed" xml:space="preserve">
+    <value>设置应用失败：{0}</value>
+  </data>
+  <data name="Msg.SelectFolder" xml:space="preserve">
+    <value>选择 Program Files 默认位置</value>
+  </data>
+  <data name="Msg.ResetConfirm" xml:space="preserve">
+    <value>确定要恢复到默认位置（C:\Program Files）吗？</value>
+  </data>
 </root>

@@ -118,4 +118,46 @@
   <data name="Button.RefreshAppData" xml:space="preserve">
     <value>Refresh List</value>
   </data>
+  <data name="Settings.Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Settings.ProgramFilesPath" xml:space="preserve">
+    <value>Default Program Files Location (64-bit):</value>
+  </data>
+  <data name="Settings.ProgramFilesPathX86" xml:space="preserve">
+    <value>Default Program Files Location (32-bit):</value>
+  </data>
+  <data name="Settings.CustomX86Path" xml:space="preserve">
+    <value>Customize 32-bit program path</value>
+  </data>
+  <data name="Settings.Description" xml:space="preserve">
+    <value>This setting modifies the Windows system default Program Files path, affecting the default installation location for newly installed software.</value>
+  </data>
+  <data name="Settings.Warning" xml:space="preserve">
+    <value>ℹ Note: This change only affects newly installed software. Existing software is not affected. Some installers may require a system restart to recognize the change.</value>
+  </data>
+  <data name="Button.Browse" xml:space="preserve">
+    <value>Browse</value>
+  </data>
+  <data name="Button.Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="Button.Reset" xml:space="preserve">
+    <value>Reset to Default</value>
+  </data>
+  <data name="Msg.InvalidPath" xml:space="preserve">
+    <value>Please enter a valid folder path.</value>
+  </data>
+  <data name="Msg.SettingsApplied" xml:space="preserve">
+    <value>Settings applied successfully!</value>
+  </data>
+  <data name="Msg.SettingsFailed" xml:space="preserve">
+    <value>Failed to apply settings: {0}</value>
+  </data>
+  <data name="Msg.SelectFolder" xml:space="preserve">
+    <value>Select the default Program Files location</value>
+  </data>
+  <data name="Msg.ResetConfirm" xml:space="preserve">
+    <value>Are you sure you want to reset to the default location (C:\Program Files)?</value>
+  </data>
 </root>
