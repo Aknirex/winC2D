@@ -24,6 +24,18 @@ namespace winC2D
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPageSoftware;
         private System.Windows.Forms.TabPage tabPageFolders;
+        private System.Windows.Forms.TabPage tabPageAppData;
+        private System.Windows.Forms.ListView listViewAppData;
+        private System.Windows.Forms.ColumnHeader columnHeaderAppName;
+        private System.Windows.Forms.ColumnHeader columnHeaderAppPath;
+        private System.Windows.Forms.ColumnHeader columnHeaderAppSize;
+        private System.Windows.Forms.ColumnHeader columnHeaderAppType;
+        private System.Windows.Forms.Button buttonMigrateAppData;
+        private System.Windows.Forms.Button buttonRefreshAppData;
+        private System.Windows.Forms.Label labelMklinkNote;
+        private System.Windows.Forms.ToolStripMenuItem menuLanguage;
+        private System.Windows.Forms.ToolStripMenuItem menuLanguageEnglish;
+        private System.Windows.Forms.ToolStripMenuItem menuLanguageChinese;
 
         /// <summary>
         ///  Clean up any resources being used.
@@ -45,6 +57,9 @@ namespace winC2D
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.menuSettings = new System.Windows.Forms.ToolStripMenuItem();
             this.menuLog = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguage = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguageEnglish = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguageChinese = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPageSoftware = new System.Windows.Forms.TabPage();
             this.listViewSoftware = new System.Windows.Forms.ListView();
@@ -57,17 +72,27 @@ namespace winC2D
             this.columnHeaderFolderName = new System.Windows.Forms.ColumnHeader();
             this.columnHeaderFolderPath = new System.Windows.Forms.ColumnHeader();
             this.buttonMigrateFolders = new System.Windows.Forms.Button();
+            this.tabPageAppData = new System.Windows.Forms.TabPage();
+            this.listViewAppData = new System.Windows.Forms.ListView();
+            this.columnHeaderAppName = new System.Windows.Forms.ColumnHeader();
+            this.columnHeaderAppPath = new System.Windows.Forms.ColumnHeader();
+            this.columnHeaderAppSize = new System.Windows.Forms.ColumnHeader();
+            this.columnHeaderAppType = new System.Windows.Forms.ColumnHeader();
+            this.buttonMigrateAppData = new System.Windows.Forms.Button();
+            this.buttonRefreshAppData = new System.Windows.Forms.Button();
+            this.labelMklinkNote = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPageSoftware.SuspendLayout();
             this.tabPageFolders.SuspendLayout();
+            this.tabPageAppData.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
             // 
             this.menuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.menuSettings, this.menuLog});
+            this.menuSettings, this.menuLog, this.menuLanguage});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(800, 28);
@@ -88,10 +113,34 @@ namespace winC2D
             this.menuLog.Text = "迁移日志";
             this.menuLog.Click += new System.EventHandler(this.menuLog_Click);
             // 
+            // menuLanguage
+            // 
+            this.menuLanguage.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuLanguageEnglish,
+            this.menuLanguageChinese});
+            this.menuLanguage.Name = "menuLanguage";
+            this.menuLanguage.Size = new System.Drawing.Size(83, 24);
+            this.menuLanguage.Text = "语言";
+            // 
+            // menuLanguageEnglish
+            // 
+            this.menuLanguageEnglish.Name = "menuLanguageEnglish";
+            this.menuLanguageEnglish.Size = new System.Drawing.Size(128, 26);
+            this.menuLanguageEnglish.Text = "English";
+            this.menuLanguageEnglish.Click += new System.EventHandler(this.menuLanguageEnglish_Click);
+            // 
+            // menuLanguageChinese
+            // 
+            this.menuLanguageChinese.Name = "menuLanguageChinese";
+            this.menuLanguageChinese.Size = new System.Drawing.Size(128, 26);
+            this.menuLanguageChinese.Text = "中文";
+            this.menuLanguageChinese.Click += new System.EventHandler(this.menuLanguageChinese_Click);
+            // 
             // tabControl1
             // 
             this.tabControl1.Controls.Add(this.tabPageSoftware);
             this.tabControl1.Controls.Add(this.tabPageFolders);
+            this.tabControl1.Controls.Add(this.tabPageAppData);
             this.tabControl1.Location = new System.Drawing.Point(12, 40);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
@@ -196,6 +245,86 @@ namespace winC2D
             this.buttonMigrateFolders.UseVisualStyleBackColor = true;
             this.buttonMigrateFolders.Click += new System.EventHandler(this.buttonMigrateFolders_Click);
             // 
+            // tabPageAppData
+            // 
+            this.tabPageAppData.Controls.Add(this.labelMklinkNote);
+            this.tabPageAppData.Controls.Add(this.listViewAppData);
+            this.tabPageAppData.Controls.Add(this.buttonMigrateAppData);
+            this.tabPageAppData.Controls.Add(this.buttonRefreshAppData);
+            this.tabPageAppData.Location = new System.Drawing.Point(4, 29);
+            this.tabPageAppData.Name = "tabPageAppData";
+            this.tabPageAppData.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageAppData.Size = new System.Drawing.Size(768, 365);
+            this.tabPageAppData.TabIndex = 2;
+            this.tabPageAppData.Text = "AppData (mklink)";
+            this.tabPageAppData.UseVisualStyleBackColor = true;
+            // 
+            // listViewAppData
+            // 
+            this.listViewAppData.CheckBoxes = true;
+            this.listViewAppData.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderAppName,
+            this.columnHeaderAppPath,
+            this.columnHeaderAppSize,
+            this.columnHeaderAppType});
+            this.listViewAppData.FullRowSelect = true;
+            this.listViewAppData.Location = new System.Drawing.Point(6, 35);
+            this.listViewAppData.Name = "listViewAppData";
+            this.listViewAppData.Size = new System.Drawing.Size(756, 270);
+            this.listViewAppData.TabIndex = 0;
+            this.listViewAppData.UseCompatibleStateImageBehavior = false;
+            this.listViewAppData.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeaderAppName
+            // 
+            this.columnHeaderAppName.Text = "应用名称";
+            this.columnHeaderAppName.Width = 200;
+            // 
+            // columnHeaderAppPath
+            // 
+            this.columnHeaderAppPath.Text = "路径";
+            this.columnHeaderAppPath.Width = 350;
+            // 
+            // columnHeaderAppSize
+            // 
+            this.columnHeaderAppSize.Text = "大小";
+            this.columnHeaderAppSize.Width = 100;
+            // 
+            // columnHeaderAppType
+            // 
+            this.columnHeaderAppType.Text = "类型";
+            this.columnHeaderAppType.Width = 80;
+            // 
+            // buttonMigrateAppData
+            // 
+            this.buttonMigrateAppData.Location = new System.Drawing.Point(650, 320);
+            this.buttonMigrateAppData.Name = "buttonMigrateAppData";
+            this.buttonMigrateAppData.Size = new System.Drawing.Size(112, 32);
+            this.buttonMigrateAppData.TabIndex = 1;
+            this.buttonMigrateAppData.Text = "迁移所选";
+            this.buttonMigrateAppData.UseVisualStyleBackColor = true;
+            this.buttonMigrateAppData.Click += new System.EventHandler(this.buttonMigrateAppData_Click);
+            // 
+            // buttonRefreshAppData
+            // 
+            this.buttonRefreshAppData.Location = new System.Drawing.Point(532, 320);
+            this.buttonRefreshAppData.Name = "buttonRefreshAppData";
+            this.buttonRefreshAppData.Size = new System.Drawing.Size(112, 32);
+            this.buttonRefreshAppData.TabIndex = 2;
+            this.buttonRefreshAppData.Text = "刷新列表";
+            this.buttonRefreshAppData.UseVisualStyleBackColor = true;
+            this.buttonRefreshAppData.Click += new System.EventHandler(this.buttonRefreshAppData_Click);
+            // 
+            // labelMklinkNote
+            // 
+            this.labelMklinkNote.AutoSize = true;
+            this.labelMklinkNote.ForeColor = System.Drawing.Color.DarkBlue;
+            this.labelMklinkNote.Location = new System.Drawing.Point(6, 10);
+            this.labelMklinkNote.Name = "labelMklinkNote";
+            this.labelMklinkNote.Size = new System.Drawing.Size(500, 20);
+            this.labelMklinkNote.TabIndex = 3;
+            this.labelMklinkNote.Text = "注意：此操作使用 mklink 创建符号链接，需要管理员权限。";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
@@ -211,6 +340,8 @@ namespace winC2D
             this.tabControl1.ResumeLayout(false);
             this.tabPageSoftware.ResumeLayout(false);
             this.tabPageFolders.ResumeLayout(false);
+            this.tabPageAppData.ResumeLayout(false);
+            this.tabPageAppData.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
         }

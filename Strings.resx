@@ -55,4 +55,67 @@
   <data name="Desc.TargetFolderForSoftware" xml:space="preserve">
     <value>Select target folder (e.g., D:\Program Files)</value>
   </data>
+  <data name="Title.MainWindow" xml:space="preserve">
+    <value>winC2D</value>
+  </data>
+  <data name="Menu.Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Menu.Log" xml:space="preserve">
+    <value>Migration Log</value>
+  </data>
+  <data name="Menu.Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Tab.SoftwareMigration" xml:space="preserve">
+    <value>Software Migration</value>
+  </data>
+  <data name="Tab.UserFolders" xml:space="preserve">
+    <value>User Folders</value>
+  </data>
+  <data name="Column.SoftwareName" xml:space="preserve">
+    <value>Software Name</value>
+  </data>
+  <data name="Column.InstallPath" xml:space="preserve">
+    <value>Install Path</value>
+  </data>
+  <data name="Column.Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Column.FolderName" xml:space="preserve">
+    <value>Folder Name</value>
+  </data>
+  <data name="Column.CurrentPath" xml:space="preserve">
+    <value>Current Path</value>
+  </data>
+  <data name="Button.MigrateSelected" xml:space="preserve">
+    <value>Migrate Selected</value>
+  </data>
+  <data name="Tab.AppData" xml:space="preserve">
+    <value>AppData (mklink)</value>
+  </data>
+  <data name="Column.AppName" xml:space="preserve">
+    <value>Application Name</value>
+  </data>
+  <data name="Column.AppPath" xml:space="preserve">
+    <value>Path</value>
+  </data>
+  <data name="Column.AppSize" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Column.AppType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Msg.SelectAppData" xml:space="preserve">
+    <value>Please select AppData folders to migrate.</value>
+  </data>
+  <data name="Desc.TargetFolderForAppData" xml:space="preserve">
+    <value>Select target folder (using mklink symbolic link)</value>
+  </data>
+  <data name="Msg.MklinkNote" xml:space="preserve">
+    <value>Note: This operation uses mklink to create symbolic links.</value>
+  </data>
+  <data name="Button.RefreshAppData" xml:space="preserve">
+    <value>Refresh List</value>
+  </data>
 </root>

@@ -13,109 +13,109 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Folder.Documents" xml:space="preserve">
-    <value>Documents</value>
+    <value>文档</value>
   </data>
   <data name="Folder.Pictures" xml:space="preserve">
-    <value>Pictures</value>
+    <value>图片</value>
   </data>
   <data name="Folder.Downloads" xml:space="preserve">
-    <value>Downloads</value>
+    <value>下载</value>
   </data>
   <data name="Folder.Videos" xml:space="preserve">
-    <value>Videos</value>
+    <value>视频</value>
   </data>
   <data name="Folder.Desktop" xml:space="preserve">
-    <value>Desktop</value>
+    <value>桌面</value>
   </data>
   <data name="Msg.ScanSoftwareFailedFmt" xml:space="preserve">
-    <value>Failed to scan software: {0}</value>
+    <value>扫描软件失败：{0}</value>
   </data>
   <data name="Title.Tip" xml:space="preserve">
-    <value>Info</value>
+    <value>提示</value>
   </data>
   <data name="Title.Error" xml:space="preserve">
-    <value>Error</value>
+    <value>错误</value>
   </data>
   <data name="Msg.SelectFolders" xml:space="preserve">
-    <value>Please select folders to migrate.</value>
+    <value>请选择要迁移的文件夹。</value>
   </data>
   <data name="Desc.TargetFolderForUserFolders" xml:space="preserve">
-    <value>Select target folder (e.g., D:\)</value>
+    <value>选择目标文件夹（如：D:\）</value>
   </data>
   <data name="Msg.MigrateFailedFmt" xml:space="preserve">
-    <value>Migration failed: {0}
+    <value>迁移失败：{0}
 {1}</value>
   </data>
   <data name="Msg.MigrateCompleted" xml:space="preserve">
-    <value>Migration complete! Success: {0}, Fail: {1}</value>
+    <value>迁移完成！成功：{0}，失败：{1}</value>
   </data>
   <data name="Msg.SelectSoftware" xml:space="preserve">
-    <value>Please select software to migrate.</value>
+    <value>请选择要迁移的软件。</value>
   </data>
   <data name="Desc.TargetFolderForSoftware" xml:space="preserve">
-    <value>Select target folder (e.g., D:\Program Files)</value>
+    <value>选择目标文件夹（如：D:\Program Files）</value>
   </data>
   <data name="Title.MainWindow" xml:space="preserve">
     <value>winC2D</value>
   </data>
   <data name="Menu.Settings" xml:space="preserve">
-    <value>Settings</value>
+    <value>系统设置</value>
   </data>
   <data name="Menu.Log" xml:space="preserve">
-    <value>Migration Log</value>
+    <value>迁移日志</value>
   </data>
   <data name="Menu.Language" xml:space="preserve">
-    <value>Language</value>
+    <value>语言</value>
   </data>
   <data name="Tab.SoftwareMigration" xml:space="preserve">
-    <value>Software Migration</value>
+    <value>软件迁移</value>
   </data>
   <data name="Tab.UserFolders" xml:space="preserve">
-    <value>User Folders</value>
+    <value>用户文件夹</value>
   </data>
   <data name="Column.SoftwareName" xml:space="preserve">
-    <value>Software Name</value>
+    <value>软件名称</value>
   </data>
   <data name="Column.InstallPath" xml:space="preserve">
-    <value>Install Path</value>
+    <value>安装路径</value>
   </data>
   <data name="Column.Size" xml:space="preserve">
-    <value>Size</value>
+    <value>大小</value>
   </data>
   <data name="Column.FolderName" xml:space="preserve">
-    <value>Folder Name</value>
+    <value>文件夹名称</value>
   </data>
   <data name="Column.CurrentPath" xml:space="preserve">
-    <value>Current Path</value>
+    <value>当前路径</value>
   </data>
   <data name="Button.MigrateSelected" xml:space="preserve">
-    <value>Migrate Selected</value>
+    <value>迁移所选</value>
   </data>
   <data name="Tab.AppData" xml:space="preserve">
     <value>AppData (mklink)</value>
   </data>
   <data name="Column.AppName" xml:space="preserve">
-    <value>Application Name</value>
+    <value>应用名称</value>
   </data>
   <data name="Column.AppPath" xml:space="preserve">
-    <value>Path</value>
+    <value>路径</value>
   </data>
   <data name="Column.AppSize" xml:space="preserve">
-    <value>Size</value>
+    <value>大小</value>
   </data>
   <data name="Column.AppType" xml:space="preserve">
-    <value>Type</value>
+    <value>类型</value>
   </data>
   <data name="Msg.SelectAppData" xml:space="preserve">
-    <value>Please select AppData folders to migrate.</value>
+    <value>请选择要迁移的AppData文件夹。</value>
   </data>
   <data name="Desc.TargetFolderForAppData" xml:space="preserve">
-    <value>Select target folder (using mklink symbolic link)</value>
+    <value>选择目标文件夹（使用 mklink 符号链接）</value>
   </data>
   <data name="Msg.MklinkNote" xml:space="preserve">
-    <value>Note: This operation uses mklink to create symbolic links.</value>
+    <value>注意：此操作使用 mklink 创建符号链接。</value>
   </data>
   <data name="Button.RefreshAppData" xml:space="preserve">
-    <value>Refresh List</value>
+    <value>刷新列表</value>
   </data>
 </root>

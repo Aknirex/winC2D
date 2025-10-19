@@ -1,4 +1,7 @@
 using System;
+using System.Diagnostics;
+using System.Globalization;
+using System.Security.Principal;
 using System.Windows.Forms;
 
 namespace winC2D
@@ -8,20 +11,59 @@ namespace winC2D
         [STAThread]
         static void Main()
         {
-            // 可选：根据系统或外部参数设置界面语言
-            try
+            // Check if running as administrator
+            if (!IsRunningAsAdministrator())
             {
-                var lang = Environment.GetEnvironmentVariable("WINC2D_UI_LANG");
-                if (!string.IsNullOrWhiteSpace(lang))
-                {
-                    var culture = new System.Globalization.CultureInfo(lang);
-                    System.Globalization.CultureInfo.CurrentUICulture = culture;
-                }
+                // Restart as administrator
+                RestartAsAdministrator();
+                return;
             }
-            catch { }
+
+            // Load language preference, default to English
+            string lang = Localization.LoadLanguagePreference();
+            CultureInfo.CurrentUICulture = new CultureInfo(lang);
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm());
+        }
+
+        private static bool IsRunningAsAdministrator()
+        {
+            try
+            {
+                WindowsIdentity identity = WindowsIdentity.GetCurrent();
+                WindowsPrincipal principal = new WindowsPrincipal(identity);
+                return principal.IsInRole(WindowsBuiltInRole.Administrator);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static void RestartAsAdministrator()
+        {
+            try
+            {
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = Application.ExecutablePath,
+                    UseShellExecute = true,
+                    Verb = "runas" // Request administrator privileges
+                };
+
+                Process.Start(startInfo);
+            }
+            catch
+            {
+                // User cancelled UAC prompt or other error
+                MessageBox.Show(
+                    "This application requires administrator privileges to run.\nPlease restart the application as administrator.",
+                    "Administrator Privileges Required",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
         }
     }
 }

@@ -12,12 +12,83 @@ namespace winC2D
         {
             InitializeComponent();
             this.Load += MainForm_Load;
+            this.FormClosing += MainForm_FormClosing;
+            Localization.LanguageChanged += OnLanguageChanged;
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Localization.LanguageChanged -= OnLanguageChanged;
         }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            ApplyLocalization();
+            UpdateLanguageMenuItems();
             LoadInstalledSoftware();
             LoadUserFolders();
+            LoadAppDataFolders();
+        }
+
+        private void OnLanguageChanged(object sender, EventArgs e)
+        {
+            ApplyLocalization();
+            UpdateLanguageMenuItems();
+            LoadUserFolders(); // Refresh to update localized folder names
+            LoadAppDataFolders(); // Refresh AppData list
+        }
+
+        private void ApplyLocalization()
+        {
+            // Window title
+            this.Text = Localization.T("Title.MainWindow");
+
+            // Menu items
+            menuSettings.Text = Localization.T("Menu.Settings");
+            menuLog.Text = Localization.T("Menu.Log");
+            menuLanguage.Text = Localization.T("Menu.Language");
+
+            // Tab pages
+            tabPageSoftware.Text = Localization.T("Tab.SoftwareMigration");
+            tabPageFolders.Text = Localization.T("Tab.UserFolders");
+            tabPageAppData.Text = Localization.T("Tab.AppData");
+
+            // Column headers for software
+            columnHeaderName.Text = Localization.T("Column.SoftwareName");
+            columnHeaderPath.Text = Localization.T("Column.InstallPath");
+            columnHeaderSize.Text = Localization.T("Column.Size");
+
+            // Column headers for folders
+            columnHeaderFolderName.Text = Localization.T("Column.FolderName");
+            columnHeaderFolderPath.Text = Localization.T("Column.CurrentPath");
+
+            // Column headers for AppData
+            columnHeaderAppName.Text = Localization.T("Column.AppName");
+            columnHeaderAppPath.Text = Localization.T("Column.AppPath");
+            columnHeaderAppSize.Text = Localization.T("Column.AppSize");
+            columnHeaderAppType.Text = Localization.T("Column.AppType");
+
+            // Buttons
+            buttonMigrateSoftware.Text = Localization.T("Button.MigrateSelected");
+            buttonMigrateFolders.Text = Localization.T("Button.MigrateSelected");
+            buttonMigrateAppData.Text = Localization.T("Button.MigrateSelected");
+            buttonRefreshAppData.Text = Localization.T("Button.RefreshAppData");
+
+            // Labels
+            labelMklinkNote.Text = Localization.T("Msg.MklinkNote");
+        }
+
+        private void UpdateLanguageMenuItems()
+        {
+            string currentLang = Localization.CurrentLanguage;
+
+            // Update English menu item
+            menuLanguageEnglish.Enabled = (currentLang != "en");
+            menuLanguageEnglish.Checked = (currentLang == "en");
+
+            // Update Chinese menu item
+            menuLanguageChinese.Enabled = (currentLang != "zh-CN");
+            menuLanguageChinese.Checked = (currentLang == "zh-CN");
         }
 
         private class UserFolderInfo
@@ -226,6 +297,154 @@ namespace winC2D
                     }
                     MessageBox.Show(string.Format(Localization.T("Msg.MigrateCompleted"), success, fail), Localization.T("Title.Tip"));
                     LoadInstalledSoftware(); // 刷新列表
+                }
+            }
+        }
+
+        private void menuLanguageEnglish_Click(object sender, EventArgs e)
+        {
+            if (Localization.CurrentLanguage != "en")
+            {
+                Localization.SetLanguage("en");
+            }
+        }
+
+        private void menuLanguageChinese_Click(object sender, EventArgs e)
+        {
+            if (Localization.CurrentLanguage != "zh-CN")
+            {
+                Localization.SetLanguage("zh-CN");
+            }
+        }
+
+        private void LoadAppDataFolders()
+        {
+            listViewAppData.Items.Clear();
+
+            // 获取 AppData 各个路径
+            string roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string localLow = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData\\LocalLow");
+
+            // 扫描 Roaming
+            ScanAppDataFolder(roaming, "Roaming");
+
+            // 扫描 Local
+            ScanAppDataFolder(local, "Local");
+
+            // 扫描 LocalLow
+            if (Directory.Exists(localLow))
+            {
+                ScanAppDataFolder(localLow, "LocalLow");
+            }
+        }
+
+        private void ScanAppDataFolder(string basePath, string type)
+        {
+            try
+            {
+                foreach (string dir in Directory.GetDirectories(basePath))
+                {
+                    try
+                    {
+                        DirectoryInfo di = new DirectoryInfo(dir);
+                        long size = AppDataMigrator.GetDirectorySize(dir);
+
+                        // 只显示大于 1MB 的文件夹
+                        if (size > 1024 * 1024)
+                        {
+                            var appData = new AppDataInfo
+                            {
+                                Name = di.Name,
+                                Path = dir,
+                                Size = size,
+                                Type = type
+                            };
+
+                            var item = new ListViewItem(new string[]
+                            {
+                                appData.Name,
+                                appData.Path,
+                                appData.SizeText,
+                                appData.Type
+                            });
+                            item.Tag = appData;
+                            listViewAppData.Items.Add(item);
+                        }
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+        }
+
+        private void buttonRefreshAppData_Click(object sender, EventArgs e)
+        {
+            LoadAppDataFolders();
+            MessageBox.Show(Localization.T("Msg.MigrateCompleted").Replace("{0}", listViewAppData.Items.Count.ToString()).Replace("{1}", "0"), 
+                Localization.T("Title.Tip"));
+        }
+
+        private void buttonMigrateAppData_Click(object sender, EventArgs e)
+        {
+            var selected = listViewAppData.CheckedItems.Cast<ListViewItem>().Select(i => i.Tag as AppDataInfo).ToList();
+            if (selected.Count == 0)
+            {
+                MessageBox.Show(Localization.T("Msg.SelectAppData"), Localization.T("Title.Tip"));
+                return;
+            }
+
+            // 显示 mklink 提示
+            var result = MessageBox.Show(
+                Localization.T("Msg.MklinkNote"),
+                Localization.T("Title.Tip"),
+                MessageBoxButtons.OKCancel,
+                MessageBoxIcon.Information);
+
+            if (result != DialogResult.OK)
+                return;
+
+            using (var fbd = new FolderBrowserDialog())
+            {
+                fbd.Description = Localization.T("Desc.TargetFolderForAppData");
+                fbd.ShowNewFolderButton = true;
+                if (fbd.ShowDialog() == DialogResult.OK)
+                {
+                    string targetRoot = fbd.SelectedPath;
+                    int success = 0, fail = 0;
+                    foreach (var app in selected)
+                    {
+                        try
+                        {
+                            AppDataMigrator.MigrateWithMklink(app.Name, app.Path, targetRoot);
+                            success++;
+                            MigrationLogger.Log(new MigrationLogEntry
+                            {
+                                Time = DateTime.Now,
+                                SoftwareName = $"{app.Name} (AppData-{app.Type})",
+                                OldPath = app.Path,
+                                NewPath = Path.Combine(targetRoot, "AppData", app.Name),
+                                Status = "Success",
+                                Message = "Migrated using mklink"
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            fail++;
+                            MigrationLogger.Log(new MigrationLogEntry
+                            {
+                                Time = DateTime.Now,
+                                SoftwareName = $"{app.Name} (AppData-{app.Type})",
+                                OldPath = app.Path,
+                                NewPath = Path.Combine(targetRoot, "AppData", app.Name),
+                                Status = "Fail",
+                                Message = ex.Message
+                            });
+                            MessageBox.Show(string.Format(Localization.T("Msg.MigrateFailedFmt"), app.Name, ex.Message), Localization.T("Title.Error"));
+                        }
+                    }
+                    MessageBox.Show(string.Format(Localization.T("Msg.MigrateCompleted"), success, fail), Localization.T("Title.Tip"));
+                    LoadAppDataFolders(); // 刷新列表
                 }
             }
         }
