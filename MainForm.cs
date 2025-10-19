@@ -8,6 +8,10 @@ namespace winC2D
 {
     public partial class MainForm : Form
     {
+        private const string DEFAULT_PROGRAM_FILES = @"C:\Program Files";
+        private const string DEFAULT_PROGRAM_FILES_X86 = @"C:\Program Files (x86)";
+        private const string REG_PATH = @"SOFTWARE\Microsoft\Windows\CurrentVersion";
+
         public MainForm()
         {
             InitializeComponent();
@@ -25,6 +29,7 @@ namespace winC2D
         {
             ApplyLocalization();
             UpdateLanguageMenuItems();
+            LoadSystemSettings();
             LoadInstalledSoftware();
             LoadUserFolders();
             LoadAppDataFolders();
@@ -44,14 +49,27 @@ namespace winC2D
             this.Text = Localization.T("Title.MainWindow");
 
             // Menu items
-            menuSettings.Text = Localization.T("Menu.Settings");
             menuLog.Text = Localization.T("Menu.Log");
             menuLanguage.Text = Localization.T("Menu.Language");
 
             // Tab pages
+            tabPageSettings.Text = Localization.T("GroupBox.SystemSettings");
             tabPageSoftware.Text = Localization.T("Tab.SoftwareMigration");
             tabPageFolders.Text = Localization.T("Tab.UserFolders");
             tabPageAppData.Text = Localization.T("Tab.AppData");
+
+            // Settings tab
+            groupBoxProgramFiles.Text = Localization.T("Settings.ProgramFilesSection");
+            labelProgramFiles.Text = Localization.T("Settings.ProgramFilesPath");
+            labelProgramFilesX86.Text = Localization.T("Settings.ProgramFilesPathX86");
+            checkBoxCustomX86.Text = Localization.T("Settings.CustomX86Path");
+            labelProgramFilesNote.Text = Localization.T("Settings.ProgramFilesNote");
+            groupBoxStoragePolicy.Text = Localization.T("Settings.StoragePolicySection");
+            labelStoragePolicyNote.Text = Localization.T("Settings.StoragePolicyNote");
+            buttonBrowseProgramFiles.Text = Localization.T("Button.Browse");
+            buttonBrowseProgramFilesX86.Text = Localization.T("Button.Browse");
+            buttonApplyProgramFiles.Text = Localization.T("Button.Apply");
+            buttonResetProgramFiles.Text = Localization.T("Button.Reset");
 
             // Column headers for software
             columnHeaderName.Text = Localization.T("Column.SoftwareName");
@@ -197,14 +215,6 @@ namespace winC2D
             }
         }
 
-        private void menuSettings_Click(object sender, EventArgs e)
-        {
-            using (var settingsForm = new SettingsForm())
-            {
-                settingsForm.ShowDialog();
-            }
-        }
-
         private void menuLog_Click(object sender, EventArgs e)
         {
             using (var logForm = new LogForm())
@@ -314,6 +324,208 @@ namespace winC2D
             if (Localization.CurrentLanguage != "zh-CN")
             {
                 Localization.SetLanguage("zh-CN");
+            }
+        }
+
+        private void LoadSystemSettings()
+        {
+            try
+            {
+                using (var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(REG_PATH, false))
+                {
+                    if (key != null)
+                    {
+                        // 读取 64 位路径
+                        string path64 = key.GetValue("ProgramFilesDir") as string;
+                        if (!string.IsNullOrEmpty(path64))
+                            textBoxProgramFiles.Text = path64;
+                        else
+                            textBoxProgramFiles.Text = DEFAULT_PROGRAM_FILES;
+
+                        // 读取 32 位路径
+                        if (Environment.Is64BitOperatingSystem)
+                        {
+                            string path32 = key.GetValue("ProgramFilesDir (x86)") as string;
+                            if (!string.IsNullOrEmpty(path32))
+                                textBoxProgramFilesX86.Text = path32;
+                            else
+                                textBoxProgramFilesX86.Text = DEFAULT_PROGRAM_FILES_X86;
+                        }
+                        else
+                        {
+                            // 32位系统隐藏32位选项
+                            checkBoxCustomX86.Visible = false;
+                            labelProgramFilesX86.Visible = false;
+                            textBoxProgramFilesX86.Visible = false;
+                            buttonBrowseProgramFilesX86.Visible = false;
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private void textBoxProgramFiles_TextChanged(object sender, EventArgs e)
+        {
+            // 如果未勾选自定义32位路径，自动设置
+            if (!checkBoxCustomX86.Checked && Environment.Is64BitOperatingSystem)
+            {
+                string path64 = textBoxProgramFiles.Text;
+                if (!string.IsNullOrEmpty(path64))
+                {
+                    string pathX86 = path64.Replace("Program Files", "Program Files (x86)");
+                    textBoxProgramFilesX86.Text = pathX86;
+                }
+            }
+        }
+
+        private void checkBoxCustomX86_CheckedChanged(object sender, EventArgs e)
+        {
+            bool customEnabled = checkBoxCustomX86.Checked;
+            labelProgramFilesX86.Enabled = customEnabled;
+            textBoxProgramFilesX86.Enabled = customEnabled;
+            buttonBrowseProgramFilesX86.Enabled = customEnabled;
+
+            if (!customEnabled)
+            {
+                textBoxProgramFiles_TextChanged(null, null);
+            }
+        }
+
+        private void buttonBrowseProgramFiles_Click(object sender, EventArgs e)
+        {
+            using (var fbd = new FolderBrowserDialog())
+            {
+                fbd.Description = Localization.T("Msg.SelectFolder");
+                fbd.ShowNewFolderButton = true;
+                fbd.SelectedPath = textBoxProgramFiles.Text;
+
+                if (fbd.ShowDialog() == DialogResult.OK)
+                {
+                    textBoxProgramFiles.Text = fbd.SelectedPath;
+                }
+            }
+        }
+
+        private void buttonBrowseProgramFilesX86_Click(object sender, EventArgs e)
+        {
+            using (var fbd = new FolderBrowserDialog())
+            {
+                fbd.Description = Localization.T("Msg.SelectFolder");
+                fbd.ShowNewFolderButton = true;
+                fbd.SelectedPath = textBoxProgramFilesX86.Text;
+
+                if (fbd.ShowDialog() == DialogResult.OK)
+                {
+                    textBoxProgramFilesX86.Text = fbd.SelectedPath;
+                }
+            }
+        }
+
+        private void buttonApplyProgramFiles_Click(object sender, EventArgs e)
+        {
+            string path64 = textBoxProgramFiles.Text.Trim();
+            string pathX86 = textBoxProgramFilesX86.Text.Trim();
+
+            if (string.IsNullOrEmpty(path64) || !Directory.Exists(path64))
+            {
+                MessageBox.Show(
+                    Localization.T("Msg.InvalidPath"),
+                    Localization.T("Title.Error"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (Environment.Is64BitOperatingSystem)
+            {
+                if (string.IsNullOrEmpty(pathX86) || !Directory.Exists(pathX86))
+                {
+                    MessageBox.Show(
+                        Localization.T("Msg.InvalidPath"),
+                        Localization.T("Title.Error"),
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
+            }
+
+            try
+            {
+                SetProgramFilesPaths(path64, pathX86);
+                MessageBox.Show(
+                    Localization.T("Msg.SettingsApplied"),
+                    Localization.T("Title.Tip"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    string.Format(Localization.T("Msg.SettingsFailed"), ex.Message),
+                    Localization.T("Title.Error"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private void buttonResetProgramFiles_Click(object sender, EventArgs e)
+        {
+            var result = MessageBox.Show(
+                Localization.T("Msg.ResetConfirm"),
+                Localization.T("Title.Tip"),
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes)
+            {
+                try
+                {
+                    SetProgramFilesPaths(DEFAULT_PROGRAM_FILES, DEFAULT_PROGRAM_FILES_X86);
+                    textBoxProgramFiles.Text = DEFAULT_PROGRAM_FILES;
+                    textBoxProgramFilesX86.Text = DEFAULT_PROGRAM_FILES_X86;
+                    checkBoxCustomX86.Checked = false;
+                    MessageBox.Show(
+                        Localization.T("Msg.SettingsApplied"),
+                        Localization.T("Title.Tip"),
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        string.Format(Localization.T("Msg.SettingsFailed"), ex.Message),
+                        Localization.T("Title.Error"),
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void SetProgramFilesPaths(string path64, string pathX86)
+        {
+            using (var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(REG_PATH, true))
+            {
+                if (key == null)
+                    throw new Exception("Unable to open registry key");
+
+                key.SetValue("ProgramFilesDir", path64);
+
+                if (Environment.Is64BitOperatingSystem)
+                {
+                    key.SetValue("ProgramW6432Dir", path64);
+                    key.SetValue("ProgramFilesDir (x86)", pathX86);
+                }
+            }
+        }
+
+        private void buttonEditSettings_Click(object sender, EventArgs e)
+        {
+            using (var settingsForm = new SettingsForm())
+            {
+                settingsForm.ShowDialog();
+                // 刷新显示的设置值
+                LoadSystemSettings();
             }
         }
 

@@ -160,4 +160,37 @@
   <data name="Msg.ResetConfirm" xml:space="preserve">
     <value>确定要恢复到默认位置（C:\Program Files）吗？</value>
   </data>
+  <data name="Settings.ProgramFilesSection" xml:space="preserve">
+    <value>Program Files 位置（传统桌面程序）</value>
+  </data>
+  <data name="Settings.ProgramFilesNote" xml:space="preserve">
+    <value>ℹ 此设置影响通过安装程序（.exe、.msi）安装的传统桌面程序。大多数第三方软件使用此位置。</value>
+  </data>
+  <data name="Settings.StoragePolicySection" xml:space="preserve">
+    <value>新内容保存位置（Microsoft Store 应用和用户内容）</value>
+  </data>
+  <data name="Settings.StoragePolicyNote" xml:space="preserve">
+    <value>ℹ 此设置影响 Microsoft Store 应用和新用户内容（文档、照片等）。需要 Windows 10 或更高版本。</value>
+  </data>
+  <data name="Settings.NewApps" xml:space="preserve">
+    <value>新应用：</value>
+  </data>
+  <data name="Settings.NewDocuments" xml:space="preserve">
+    <value>新文档：</value>
+  </data>
+  <data name="Settings.NewMusic" xml:space="preserve">
+    <value>新音乐：</value>
+  </data>
+  <data name="Settings.NewPhotos" xml:space="preserve">
+    <value>新照片和视频：</value>
+  </data>
+  <data name="Settings.NewMaps" xml:space="preserve">
+    <value>新离线地图：</value>
+  </data>
+  <data name="GroupBox.SystemSettings" xml:space="preserve">
+    <value>系统设置</value>
+  </data>
+  <data name="Button.OpenSettings" xml:space="preserve">
+    <value>打开设置</value>
+  </data>
 </root>

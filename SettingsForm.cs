@@ -20,11 +20,19 @@ namespace winC2D
         private void ApplyLocalization()
         {
             this.Text = Localization.T("Settings.Title");
+            
+            // Program Files 组
+            groupBoxProgramFiles.Text = Localization.T("Settings.ProgramFilesSection");
+            labelProgramFilesNote.Text = Localization.T("Settings.ProgramFilesNote");
             labelAppInstall.Text = Localization.T("Settings.ProgramFilesPath");
             labelAppInstallX86.Text = Localization.T("Settings.ProgramFilesPathX86");
             checkBoxCustomX86.Text = Localization.T("Settings.CustomX86Path");
-            labelDescription.Text = Localization.T("Settings.Description");
-            labelWarning.Text = Localization.T("Settings.Warning");
+            
+            // Storage Policy 组
+            groupBoxStoragePolicy.Text = Localization.T("Settings.StoragePolicySection");
+            labelStoragePolicyNote.Text = Localization.T("Settings.StoragePolicyNote");
+            
+            // 按钮
             buttonBrowseAppInstall.Text = Localization.T("Button.Browse");
             buttonBrowseAppInstallX86.Text = Localization.T("Button.Browse");
             buttonSetAppInstall.Text = Localization.T("Button.Apply");

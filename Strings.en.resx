@@ -160,4 +160,37 @@
   <data name="Msg.ResetConfirm" xml:space="preserve">
     <value>Are you sure you want to reset to the default location (C:\Program Files)?</value>
   </data>
+  <data name="Settings.ProgramFilesSection" xml:space="preserve">
+    <value>Program Files Location (Traditional Desktop Programs)</value>
+  </data>
+  <data name="Settings.ProgramFilesNote" xml:space="preserve">
+    <value>ℹ This setting affects traditional desktop programs installed via installers (.exe, .msi). Most third-party software uses this location.</value>
+  </data>
+  <data name="Settings.StoragePolicySection" xml:space="preserve">
+    <value>New Content Save Location (Microsoft Store Apps and User Content)</value>
+  </data>
+  <data name="Settings.StoragePolicyNote" xml:space="preserve">
+    <value>ℹ This setting affects Microsoft Store apps and new user content (documents, photos, etc.). Requires Windows 10 or later.</value>
+  </data>
+  <data name="Settings.NewApps" xml:space="preserve">
+    <value>New apps:</value>
+  </data>
+  <data name="Settings.NewDocuments" xml:space="preserve">
+    <value>New documents:</value>
+  </data>
+  <data name="Settings.NewMusic" xml:space="preserve">
+    <value>New music:</value>
+  </data>
+  <data name="Settings.NewPhotos" xml:space="preserve">
+    <value>New photos and videos:</value>
+  </data>
+  <data name="Settings.NewMaps" xml:space="preserve">
+    <value>New offline maps:</value>
+  </data>
+  <data name="GroupBox.SystemSettings" xml:space="preserve">
+    <value>System Settings</value>
+  </data>
+  <data name="Button.OpenSettings" xml:space="preserve">
+    <value>Open Settings</value>
+  </data>
 </root>
