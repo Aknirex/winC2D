@@ -53,6 +53,12 @@ namespace winC2D
         private System.Windows.Forms.ToolStripMenuItem menuLanguage;
         private System.Windows.Forms.ToolStripMenuItem menuLanguageEnglish;
         private System.Windows.Forms.ToolStripMenuItem menuLanguageChinese;
+        private System.Windows.Forms.ToolStripMenuItem menuLanguageJapanese;
+        private System.Windows.Forms.ToolStripMenuItem menuLanguageKorean;
+        private System.Windows.Forms.ToolStripMenuItem menuLanguageFrench;
+        private System.Windows.Forms.ToolStripMenuItem menuLanguageGerman;
+        private System.Windows.Forms.ToolStripMenuItem menuLanguageSpanish;
+        private System.Windows.Forms.ToolStripMenuItem menuLanguageRussian;
 
         /// <summary>
         ///  Clean up any resources being used.
@@ -76,6 +82,12 @@ namespace winC2D
             this.menuLanguage = new System.Windows.Forms.ToolStripMenuItem();
             this.menuLanguageEnglish = new System.Windows.Forms.ToolStripMenuItem();
             this.menuLanguageChinese = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguageJapanese = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguageKorean = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguageFrench = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguageGerman = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguageSpanish = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguageRussian = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPageSettings = new System.Windows.Forms.TabPage();
             this.groupBoxProgramFiles = new System.Windows.Forms.GroupBox();
@@ -144,7 +156,13 @@ namespace winC2D
             // 
             this.menuLanguage.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuLanguageEnglish,
-            this.menuLanguageChinese});
+            this.menuLanguageChinese,
+            this.menuLanguageJapanese,
+            this.menuLanguageKorean,
+            this.menuLanguageFrench,
+            this.menuLanguageGerman,
+            this.menuLanguageSpanish,
+            this.menuLanguageRussian});
             this.menuLanguage.Name = "menuLanguage";
             this.menuLanguage.Size = new System.Drawing.Size(83, 24);
             this.menuLanguage.Text = "语言";
@@ -152,16 +170,58 @@ namespace winC2D
             // menuLanguageEnglish
             // 
             this.menuLanguageEnglish.Name = "menuLanguageEnglish";
-            this.menuLanguageEnglish.Size = new System.Drawing.Size(128, 26);
+            this.menuLanguageEnglish.Size = new System.Drawing.Size(180, 26);
             this.menuLanguageEnglish.Text = "English";
             this.menuLanguageEnglish.Click += new System.EventHandler(this.menuLanguageEnglish_Click);
             // 
             // menuLanguageChinese
             // 
             this.menuLanguageChinese.Name = "menuLanguageChinese";
-            this.menuLanguageChinese.Size = new System.Drawing.Size(128, 26);
+            this.menuLanguageChinese.Size = new System.Drawing.Size(180, 26);
             this.menuLanguageChinese.Text = "中文";
             this.menuLanguageChinese.Click += new System.EventHandler(this.menuLanguageChinese_Click);
+            // 
+            // menuLanguageJapanese
+            // 
+            this.menuLanguageJapanese.Name = "menuLanguageJapanese";
+            this.menuLanguageJapanese.Size = new System.Drawing.Size(180, 26);
+            this.menuLanguageJapanese.Text = "日本語";
+            this.menuLanguageJapanese.Click += new System.EventHandler(this.menuLanguageJapanese_Click);
+            // 
+            // menuLanguageKorean
+            // 
+            this.menuLanguageKorean.Name = "menuLanguageKorean";
+            this.menuLanguageKorean.Size = new System.Drawing.Size(180, 26);
+            this.menuLanguageKorean.Text = "한국어";
+            this.menuLanguageKorean.Click += new System.EventHandler(this.menuLanguageKorean_Click);
+            // 
+            // menuLanguageFrench
+            // 
+            this.menuLanguageFrench.Name = "menuLanguageFrench";
+            this.menuLanguageFrench.Size = new System.Drawing.Size(180, 26);
+            this.menuLanguageFrench.Text = "Français";
+            this.menuLanguageFrench.Click += new System.EventHandler(this.menuLanguageFrench_Click);
+            // 
+            // menuLanguageGerman
+            // 
+            this.menuLanguageGerman.Name = "menuLanguageGerman";
+            this.menuLanguageGerman.Size = new System.Drawing.Size(180, 26);
+            this.menuLanguageGerman.Text = "Deutsch";
+            this.menuLanguageGerman.Click += new System.EventHandler(this.menuLanguageGerman_Click);
+            // 
+            // menuLanguageSpanish
+            // 
+            this.menuLanguageSpanish.Name = "menuLanguageSpanish";
+            this.menuLanguageSpanish.Size = new System.Drawing.Size(180, 26);
+            this.menuLanguageSpanish.Text = "Español";
+            this.menuLanguageSpanish.Click += new System.EventHandler(this.menuLanguageSpanish_Click);
+            // 
+            // menuLanguageRussian
+            // 
+            this.menuLanguageRussian.Name = "menuLanguageRussian";
+            this.menuLanguageRussian.Size = new System.Drawing.Size(180, 26);
+            this.menuLanguageRussian.Text = "Русский";
+            this.menuLanguageRussian.Click += new System.EventHandler(this.menuLanguageRussian_Click);
             // 
             // tabControl1
             // 

@@ -196,4 +196,43 @@
   <data name="Button.OpenSettings" xml:space="preserve">
     <value>Open Settings</value>
   </data>
+  <data name="Log.Title" xml:space="preserve">
+    <value>Migration Log</value>
+  </data>
+  <data name="Log.Time" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="Log.SoftwareName" xml:space="preserve">
+    <value>Software Name</value>
+  </data>
+  <data name="Log.OldPath" xml:space="preserve">
+    <value>Old Path</value>
+  </data>
+  <data name="Log.NewPath" xml:space="preserve">
+    <value>New Path</value>
+  </data>
+  <data name="Log.Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Log.Message" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Button.Rollback" xml:space="preserve">
+    <value>Rollback Selected</value>
+  </data>
+  <data name="Msg.SelectLogEntry" xml:space="preserve">
+    <value>Please select a migration log entry to rollback.</value>
+  </data>
+  <data name="Msg.NewPathNotExist" xml:space="preserve">
+    <value>The new path does not exist, cannot rollback.</value>
+  </data>
+  <data name="Msg.OldPathExists" xml:space="preserve">
+    <value>The old path already exists, cannot rollback.</value>
+  </data>
+  <data name="Msg.RollbackSuccess" xml:space="preserve">
+    <value>Rollback successful!</value>
+  </data>
+  <data name="Msg.RollbackFailedFmt" xml:space="preserve">
+    <value>Rollback failed: {0}</value>
+  </data>
 </root>

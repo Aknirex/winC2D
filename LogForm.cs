@@ -10,6 +10,24 @@ namespace winC2D
         {
             InitializeComponent();
             this.Load += LogForm_Load;
+            ApplyLocalization();
+        }
+
+        private void ApplyLocalization()
+        {
+            // 窗口标题
+            this.Text = Localization.T("Log.Title");
+
+            // 列标题
+            columnTime.Text = Localization.T("Log.Time");
+            columnName.Text = Localization.T("Log.SoftwareName");
+            columnOldPath.Text = Localization.T("Log.OldPath");
+            columnNewPath.Text = Localization.T("Log.NewPath");
+            columnStatus.Text = Localization.T("Log.Status");
+            columnMsg.Text = Localization.T("Log.Message");
+
+            // 按钮
+            buttonRollback.Text = Localization.T("Button.Rollback");
         }
 
         private void LogForm_Load(object sender, EventArgs e)
@@ -35,7 +53,9 @@ namespace winC2D
         {
             if (listViewLog.SelectedItems.Count == 0)
             {
-                MessageBox.Show("请先选择要回滚的迁移记录。", "提示");
+                MessageBox.Show(
+                    Localization.T("Msg.SelectLogEntry"), 
+                    Localization.T("Title.Tip"));
                 return;
             }
             var item = listViewLog.SelectedItems[0];
@@ -44,12 +64,16 @@ namespace winC2D
             string name = item.SubItems[1].Text;
             if (!Directory.Exists(newPath))
             {
-                MessageBox.Show("新路径目录不存在，无法回滚。", "错误");
+                MessageBox.Show(
+                    Localization.T("Msg.NewPathNotExist"), 
+                    Localization.T("Title.Error"));
                 return;
             }
             if (Directory.Exists(oldPath))
             {
-                MessageBox.Show("原路径已存在，无法回滚。", "错误");
+                MessageBox.Show(
+                    Localization.T("Msg.OldPathExists"), 
+                    Localization.T("Title.Error"));
                 return;
             }
             try
@@ -64,9 +88,9 @@ namespace winC2D
                     OldPath = newPath,
                     NewPath = oldPath,
                     Status = "Rollback",
-                    Message = "回滚成功"
+                    Message = Localization.T("Msg.RollbackSuccess")
                 });
-                MessageBox.Show("回滚成功！");
+                MessageBox.Show(Localization.T("Msg.RollbackSuccess"));
             }
             catch (Exception ex)
             {
@@ -79,7 +103,7 @@ namespace winC2D
                     Status = "RollbackFail",
                     Message = ex.Message
                 });
-                MessageBox.Show("回滚失败：" + ex.Message);
+                MessageBox.Show(string.Format(Localization.T("Msg.RollbackFailedFmt"), ex.Message));
             }
             LogForm_Load(null, null); // 刷新日志
         }

@@ -13,226 +13,187 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Folder.Documents" xml:space="preserve">
-    <value>文档</value>
+    <value>ドキュメント</value>
   </data>
   <data name="Folder.Pictures" xml:space="preserve">
-    <value>图片</value>
+    <value>ピクチャ</value>
   </data>
   <data name="Folder.Downloads" xml:space="preserve">
-    <value>下载</value>
+    <value>ダウンロード</value>
   </data>
   <data name="Folder.Videos" xml:space="preserve">
-    <value>视频</value>
+    <value>ビデオ</value>
   </data>
   <data name="Folder.Desktop" xml:space="preserve">
-    <value>桌面</value>
+    <value>デスクトップ</value>
   </data>
   <data name="Msg.ScanSoftwareFailedFmt" xml:space="preserve">
-    <value>扫描软件失败：{0}</value>
+    <value>ソフトウェアのスキャンに失敗しました：{0}</value>
   </data>
   <data name="Title.Tip" xml:space="preserve">
-    <value>提示</value>
+    <value>情報</value>
   </data>
   <data name="Title.Error" xml:space="preserve">
-    <value>错误</value>
+    <value>エラー</value>
   </data>
   <data name="Msg.SelectFolders" xml:space="preserve">
-    <value>请选择要迁移的文件夹。</value>
+    <value>移行するフォルダーを選択してください。</value>
   </data>
   <data name="Desc.TargetFolderForUserFolders" xml:space="preserve">
-    <value>选择目标文件夹（如：D:\）</value>
+    <value>Select target folder (e.g., D:\)</value>
   </data>
   <data name="Msg.MigrateFailedFmt" xml:space="preserve">
-    <value>迁移失败：{0}
+    <value>Migration failed: {0}
 {1}</value>
   </data>
   <data name="Msg.MigrateCompleted" xml:space="preserve">
-    <value>迁移完成！成功：{0}，失败：{1}</value>
+    <value>Migration complete! Success: {0}, Fail: {1}</value>
   </data>
   <data name="Msg.SelectSoftware" xml:space="preserve">
-    <value>请选择要迁移的软件。</value>
+    <value>Please select software to migrate.</value>
   </data>
   <data name="Desc.TargetFolderForSoftware" xml:space="preserve">
-    <value>选择目标文件夹（如：D:\Program Files）</value>
+    <value>Select target folder (e.g., D:\Program Files)</value>
   </data>
   <data name="Title.MainWindow" xml:space="preserve">
     <value>winC2D</value>
   </data>
   <data name="Menu.Settings" xml:space="preserve">
-    <value>系统设置</value>
+    <value>設定</value>
   </data>
   <data name="Menu.Log" xml:space="preserve">
-    <value>迁移日志</value>
+    <value>移行ログ</value>
   </data>
   <data name="Menu.Language" xml:space="preserve">
-    <value>语言</value>
+    <value>言語</value>
   </data>
   <data name="Tab.SoftwareMigration" xml:space="preserve">
-    <value>软件迁移</value>
+    <value>ソフトウェア移行</value>
   </data>
   <data name="Tab.UserFolders" xml:space="preserve">
-    <value>用户文件夹</value>
+    <value>ユーザーフォルダー</value>
   </data>
   <data name="Column.SoftwareName" xml:space="preserve">
-    <value>软件名称</value>
+    <value>ソフトウェア名</value>
   </data>
   <data name="Column.InstallPath" xml:space="preserve">
-    <value>安装路径</value>
+    <value>インストールパス</value>
   </data>
   <data name="Column.Size" xml:space="preserve">
-    <value>大小</value>
+    <value>サイズ</value>
   </data>
   <data name="Column.FolderName" xml:space="preserve">
-    <value>文件夹名称</value>
+    <value>フォルダー名</value>
   </data>
   <data name="Column.CurrentPath" xml:space="preserve">
-    <value>当前路径</value>
+    <value>現在のパス</value>
   </data>
   <data name="Button.MigrateSelected" xml:space="preserve">
-    <value>迁移所选</value>
+    <value>選択を移行</value>
   </data>
   <data name="Tab.AppData" xml:space="preserve">
     <value>AppData (mklink)</value>
   </data>
   <data name="Column.AppName" xml:space="preserve">
-    <value>应用名称</value>
+    <value>Application Name</value>
   </data>
   <data name="Column.AppPath" xml:space="preserve">
-    <value>路径</value>
+    <value>Path</value>
   </data>
   <data name="Column.AppSize" xml:space="preserve">
-    <value>大小</value>
+    <value>Size</value>
   </data>
   <data name="Column.AppType" xml:space="preserve">
-    <value>类型</value>
+    <value>Type</value>
   </data>
   <data name="Msg.SelectAppData" xml:space="preserve">
-    <value>请选择要迁移的AppData文件夹。</value>
+    <value>Please select AppData folders to migrate.</value>
   </data>
   <data name="Desc.TargetFolderForAppData" xml:space="preserve">
-    <value>选择目标文件夹（使用 mklink 符号链接）</value>
+    <value>Select target folder (using mklink symbolic link)</value>
   </data>
   <data name="Msg.MklinkNote" xml:space="preserve">
-    <value>ℹ 注意：此操作使用 mklink 创建符号链接。</value>
+    <value>ℹ Note: This operation uses mklink to create symbolic links.</value>
   </data>
   <data name="Button.RefreshAppData" xml:space="preserve">
-    <value>刷新列表</value>
+    <value>Refresh List</value>
   </data>
   <data name="Settings.Title" xml:space="preserve">
-    <value>设置</value>
+    <value>Settings</value>
   </data>
   <data name="Settings.ProgramFilesPath" xml:space="preserve">
-    <value>Program Files 默认位置（64位）：</value>
+    <value>Default Program Files Location (64-bit):</value>
   </data>
   <data name="Settings.ProgramFilesPathX86" xml:space="preserve">
-    <value>Program Files 默认位置（32位）：</value>
+    <value>Default Program Files Location (32-bit):</value>
   </data>
   <data name="Settings.CustomX86Path" xml:space="preserve">
-    <value>自定义 32位 程序路径</value>
+    <value>Customize 32-bit program path</value>
   </data>
   <data name="Settings.Description" xml:space="preserve">
-    <value>此设置会修改 Windows 系统的 Program Files 默认路径，影响新安装软件的默认安装位置。</value>
+    <value>This setting modifies the Windows system default Program Files path, affecting the default installation location for newly installed software.</value>
   </data>
   <data name="Settings.Warning" xml:space="preserve">
-    <value>ℹ 注意：此更改仅影响新安装的软件，已安装的软件不受影响。某些安装程序可能需要重启系统才能识别此更改。</value>
+    <value>ℹ Note: This change only affects newly installed software. Existing software is not affected. Some installers may require a system restart to recognize the change.</value>
   </data>
   <data name="Button.Browse" xml:space="preserve">
-    <value>浏览</value>
+    <value>参照</value>
   </data>
   <data name="Button.Apply" xml:space="preserve">
-    <value>应用</value>
+    <value>適用</value>
   </data>
   <data name="Button.Reset" xml:space="preserve">
-    <value>恢复默认</value>
+    <value>デフォルトに戻す</value>
   </data>
   <data name="Msg.InvalidPath" xml:space="preserve">
-    <value>请输入有效的文件夹路径。</value>
+    <value>Please enter a valid folder path.</value>
   </data>
   <data name="Msg.SettingsApplied" xml:space="preserve">
-    <value>设置已成功应用！</value>
+    <value>Settings applied successfully!</value>
   </data>
   <data name="Msg.SettingsFailed" xml:space="preserve">
-    <value>设置应用失败：{0}</value>
+    <value>Failed to apply settings: {0}</value>
   </data>
   <data name="Msg.SelectFolder" xml:space="preserve">
-    <value>选择 Program Files 默认位置</value>
+    <value>Select the default Program Files location</value>
   </data>
   <data name="Msg.ResetConfirm" xml:space="preserve">
-    <value>确定要恢复到默认位置（C:\Program Files）吗？</value>
+    <value>Are you sure you want to reset to the default location (C:\Program Files)?</value>
   </data>
   <data name="Settings.ProgramFilesSection" xml:space="preserve">
-    <value>Program Files 位置（传统桌面程序）</value>
+    <value>Program Files Location (Traditional Desktop Programs)</value>
   </data>
   <data name="Settings.ProgramFilesNote" xml:space="preserve">
-    <value>ℹ 此设置影响通过安装程序（.exe、.msi）安装的传统桌面程序。大多数第三方软件使用此位置。</value>
+    <value>ℹ This setting affects traditional desktop programs installed via installers (.exe, .msi). Most third-party software uses this location.</value>
   </data>
   <data name="Settings.StoragePolicySection" xml:space="preserve">
-    <value>新内容保存位置（Microsoft Store 应用和用户内容）</value>
+    <value>New Content Save Location (Microsoft Store Apps and User Content)</value>
   </data>
   <data name="Settings.StoragePolicyNote" xml:space="preserve">
-    <value>ℹ 此设置影响 Microsoft Store 应用和新用户内容（文档、照片等）。需要 Windows 10 或更高版本。</value>
+    <value>ℹ This setting affects Microsoft Store apps and new user content (documents, photos, etc.). Requires Windows 10 or later.</value>
   </data>
   <data name="Button.OpenWindowsStorage" xml:space="preserve">
-    <value>打开 Windows 设置</value>
-  </data>
-  <data name="Log.Title" xml:space="preserve">
-    <value>迁移日志</value>
-  </data>
-  <data name="Log.Time" xml:space="preserve">
-    <value>时间</value>
-  </data>
-  <data name="Log.SoftwareName" xml:space="preserve">
-    <value>软件名称</value>
-  </data>
-  <data name="Log.OldPath" xml:space="preserve">
-    <value>原路径</value>
-  </data>
-  <data name="Log.NewPath" xml:space="preserve">
-    <value>新路径</value>
-  </data>
-  <data name="Log.Status" xml:space="preserve">
-    <value>状态</value>
-  </data>
-  <data name="Log.Message" xml:space="preserve">
-    <value>信息</value>
-  </data>
-  <data name="Button.Rollback" xml:space="preserve">
-    <value>回滚所选</value>
-  </data>
-  <data name="Msg.SelectLogEntry" xml:space="preserve">
-    <value>请先选择要回滚的迁移记录。</value>
-  </data>
-  <data name="Msg.NewPathNotExist" xml:space="preserve">
-    <value>新路径目录不存在，无法回滚。</value>
-  </data>
-  <data name="Msg.OldPathExists" xml:space="preserve">
-    <value>原路径已存在，无法回滚。</value>
-  </data>
-  <data name="Msg.RollbackSuccess" xml:space="preserve">
-    <value>回滚成功！</value>
-  </data>
-  <data name="Msg.RollbackFailedFmt" xml:space="preserve">
-    <value>回滚失败：{0}</value>
+    <value>Open Windows Settings</value>
   </data>
   <data name="Settings.NewApps" xml:space="preserve">
-    <value>新应用：</value>
+    <value>New apps:</value>
   </data>
   <data name="Settings.NewDocuments" xml:space="preserve">
-    <value>新文档：</value>
+    <value>New documents:</value>
   </data>
   <data name="Settings.NewMusic" xml:space="preserve">
-    <value>新音乐：</value>
+    <value>New music:</value>
   </data>
   <data name="Settings.NewPhotos" xml:space="preserve">
-    <value>新照片和视频：</value>
+    <value>New photos and videos:</value>
   </data>
   <data name="Settings.NewMaps" xml:space="preserve">
-    <value>新离线地图：</value>
+    <value>New offline maps:</value>
   </data>
   <data name="GroupBox.SystemSettings" xml:space="preserve">
-    <value>系统设置</value>
+    <value>System Settings</value>
   </data>
   <data name="Button.OpenSettings" xml:space="preserve">
-    <value>打开设置</value>
+    <value>Open Settings</value>
   </data>
 </root>

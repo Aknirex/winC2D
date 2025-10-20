@@ -101,13 +101,30 @@ namespace winC2D
         {
             string currentLang = Localization.CurrentLanguage;
 
-            // Update English menu item
+            // Update all language menu items
             menuLanguageEnglish.Enabled = (currentLang != "en");
             menuLanguageEnglish.Checked = (currentLang == "en");
 
-            // Update Chinese menu item
             menuLanguageChinese.Enabled = (currentLang != "zh-CN");
             menuLanguageChinese.Checked = (currentLang == "zh-CN");
+
+            menuLanguageJapanese.Enabled = (currentLang != "ja");
+            menuLanguageJapanese.Checked = (currentLang == "ja");
+
+            menuLanguageKorean.Enabled = (currentLang != "ko");
+            menuLanguageKorean.Checked = (currentLang == "ko");
+
+            menuLanguageFrench.Enabled = (currentLang != "fr");
+            menuLanguageFrench.Checked = (currentLang == "fr");
+
+            menuLanguageGerman.Enabled = (currentLang != "de");
+            menuLanguageGerman.Checked = (currentLang == "de");
+
+            menuLanguageSpanish.Enabled = (currentLang != "es");
+            menuLanguageSpanish.Checked = (currentLang == "es");
+
+            menuLanguageRussian.Enabled = (currentLang != "ru");
+            menuLanguageRussian.Checked = (currentLang == "ru");
         }
 
         private class UserFolderInfo
@@ -325,6 +342,54 @@ namespace winC2D
             if (Localization.CurrentLanguage != "zh-CN")
             {
                 Localization.SetLanguage("zh-CN");
+            }
+        }
+
+        private void menuLanguageJapanese_Click(object sender, EventArgs e)
+        {
+            if (Localization.CurrentLanguage != "ja")
+            {
+                Localization.SetLanguage("ja");
+            }
+        }
+
+        private void menuLanguageKorean_Click(object sender, EventArgs e)
+        {
+            if (Localization.CurrentLanguage != "ko")
+            {
+                Localization.SetLanguage("ko");
+            }
+        }
+
+        private void menuLanguageFrench_Click(object sender, EventArgs e)
+        {
+            if (Localization.CurrentLanguage != "fr")
+            {
+                Localization.SetLanguage("fr");
+            }
+        }
+
+        private void menuLanguageGerman_Click(object sender, EventArgs e)
+        {
+            if (Localization.CurrentLanguage != "de")
+            {
+                Localization.SetLanguage("de");
+            }
+        }
+
+        private void menuLanguageSpanish_Click(object sender, EventArgs e)
+        {
+            if (Localization.CurrentLanguage != "es")
+            {
+                Localization.SetLanguage("es");
+            }
+        }
+
+        private void menuLanguageRussian_Click(object sender, EventArgs e)
+        {
+            if (Localization.CurrentLanguage != "ru")
+            {
+                Localization.SetLanguage("ru");
             }
         }
 
