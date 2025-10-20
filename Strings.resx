@@ -172,6 +172,9 @@
   <data name="Settings.StoragePolicyNote" xml:space="preserve">
     <value>ℹ This setting affects Microsoft Store apps and new user content (documents, photos, etc.). Requires Windows 10 or later.</value>
   </data>
+  <data name="Button.OpenWindowsStorage" xml:space="preserve">
+    <value>Open Windows Settings</value>
+  </data>
   <data name="Settings.NewApps" xml:space="preserve">
     <value>New apps:</value>
   </data>

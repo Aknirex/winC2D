@@ -40,6 +40,7 @@ namespace winC2D
         private System.Windows.Forms.Label labelProgramFiles;
         private System.Windows.Forms.GroupBox groupBoxStoragePolicy;
         private System.Windows.Forms.Label labelStoragePolicyNote;
+        private System.Windows.Forms.Button buttonOpenWindowsStorage;
         
         private System.Windows.Forms.ListView listViewAppData;
         private System.Windows.Forms.ColumnHeader columnHeaderAppName;
@@ -90,6 +91,7 @@ namespace winC2D
             this.labelProgramFiles = new System.Windows.Forms.Label();
             this.groupBoxStoragePolicy = new System.Windows.Forms.GroupBox();
             this.labelStoragePolicyNote = new System.Windows.Forms.Label();
+            this.buttonOpenWindowsStorage = new System.Windows.Forms.Button();
             this.tabPageSoftware = new System.Windows.Forms.TabPage();
             this.listViewSoftware = new System.Windows.Forms.ListView();
             this.columnHeaderName = new System.Windows.Forms.ColumnHeader();
@@ -320,6 +322,7 @@ namespace winC2D
             // 
             this.groupBoxStoragePolicy.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBoxStoragePolicy.Controls.Add(this.buttonOpenWindowsStorage);
             this.groupBoxStoragePolicy.Controls.Add(this.labelStoragePolicyNote);
             this.groupBoxStoragePolicy.Location = new System.Drawing.Point(15, 280);
             this.groupBoxStoragePolicy.Name = "groupBoxStoragePolicy";
@@ -336,9 +339,20 @@ namespace winC2D
             this.labelStoragePolicyNote.ForeColor = System.Drawing.Color.DarkBlue;
             this.labelStoragePolicyNote.Location = new System.Drawing.Point(15, 30);
             this.labelStoragePolicyNote.Name = "labelStoragePolicyNote";
-            this.labelStoragePolicyNote.Size = new System.Drawing.Size(705, 60);
+            this.labelStoragePolicyNote.Size = new System.Drawing.Size(515, 60);
             this.labelStoragePolicyNote.TabIndex = 0;
-            this.labelStoragePolicyNote.Text = "ℹ 此设置影响 Microsoft Store 应用和新用户内容（文档、照片等）。需要 Windows 10 或更高版本。\r\n该功能即将推出...";
+            this.labelStoragePolicyNote.Text = "ℹ 此设置影响 Microsoft Store 应用和新用户内容（文档、照片等）。需要 Windows 10 或更高版本。";
+            // 
+            // buttonOpenWindowsStorage
+            // 
+            this.buttonOpenWindowsStorage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonOpenWindowsStorage.Location = new System.Drawing.Point(550, 35);
+            this.buttonOpenWindowsStorage.Name = "buttonOpenWindowsStorage";
+            this.buttonOpenWindowsStorage.Size = new System.Drawing.Size(170, 50);
+            this.buttonOpenWindowsStorage.TabIndex = 1;
+            this.buttonOpenWindowsStorage.Text = "打开 Windows 设置";
+            this.buttonOpenWindowsStorage.UseVisualStyleBackColor = true;
+            this.buttonOpenWindowsStorage.Click += new System.EventHandler(this.buttonOpenWindowsStorage_Click);
             // 
             // tabPageSoftware
             // 

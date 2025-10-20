@@ -172,6 +172,9 @@
   <data name="Settings.StoragePolicyNote" xml:space="preserve">
     <value>ℹ 此设置影响 Microsoft Store 应用和新用户内容（文档、照片等）。需要 Windows 10 或更高版本。</value>
   </data>
+  <data name="Button.OpenWindowsStorage" xml:space="preserve">
+    <value>打开 Windows 设置</value>
+  </data>
   <data name="Settings.NewApps" xml:space="preserve">
     <value>新应用：</value>
   </data>

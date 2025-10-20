@@ -66,6 +66,7 @@ namespace winC2D
             labelProgramFilesNote.Text = Localization.T("Settings.ProgramFilesNote");
             groupBoxStoragePolicy.Text = Localization.T("Settings.StoragePolicySection");
             labelStoragePolicyNote.Text = Localization.T("Settings.StoragePolicyNote");
+            buttonOpenWindowsStorage.Text = Localization.T("Button.OpenWindowsStorage");
             buttonBrowseProgramFiles.Text = Localization.T("Button.Browse");
             buttonBrowseProgramFilesX86.Text = Localization.T("Button.Browse");
             buttonApplyProgramFiles.Text = Localization.T("Button.Apply");
@@ -526,6 +527,28 @@ namespace winC2D
                 settingsForm.ShowDialog();
                 // 刷新显示的设置值
                 LoadSystemSettings();
+            }
+        }
+
+        private void buttonOpenWindowsStorage_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 打开 Windows 设置 -> 系统 -> 存储 -> 高级存储设置 -> 新内容的保存位置
+                // Windows 10/11 使用 ms-settings URI scheme
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "ms-settings:savelocations",
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"无法打开 Windows 设置：{ex.Message}\n\n您可以手动打开：\n设置 → 系统 → 存储 → 高级存储设置 → 新内容的保存位置",
+                    Localization.T("Title.Error"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
             }
         }
 
