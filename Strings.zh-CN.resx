@@ -235,4 +235,19 @@
   <data name="Button.OpenSettings" xml:space="preserve">
     <value>打开设置</value>
   </data>
+  <data name="Msg.Loading" xml:space="preserve">
+    <value>正在加载...</value>
+  </data>
+  <data name="Msg.MergePrompt" xml:space="preserve">
+    <value>目标目录已存在：{0}
+是否将原内容合并到该目录？
+
+选择“是”将融合，选择“否”跳过该文件夹。</value>
+  </data>
+  <data name="Msg.UserFolderManualMigrateTip" xml:space="preserve">
+    <value>请在资源管理器中右键选中的用户文件夹，选择“属性”，然后在“位置”选项卡中迁移文件夹。这是迁移用户文件夹最推荐、最安全的方式。</value>
+  </data>
+  <data name="Button.Properties" xml:space="preserve">
+    <value>属性...</value>
+  </data>
 </root>

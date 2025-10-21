@@ -235,4 +235,22 @@
   <data name="Button.OpenSettings" xml:space="preserve">
     <value>Open Settings</value>
   </data>
+  <data name="Msg.Loading" xml:space="preserve">
+    <value>Loading...</value>
+  </data>
+  <data name="Msg.MergePrompt" xml:space="preserve">
+    <value>The target directory already exists: {0}
+Do you want to merge the original contents into this directory?
+
+Choose Yes to merge, No to skip this folder.</value>
+  </data>
+  <data name="Msg.FallbackShellWarning" xml:space="preserve">
+    <value>Shell migration failed, fallback to manual mode. If you encounter access denied or merge failure, please set Windows 'Save new content to...' back to C: and try again.</value>
+  </data>
+  <data name="Msg.UserFolderManualMigrateTip" xml:space="preserve">
+    <value>Please right-click the selected user folder in Explorer, choose 'Properties', then use the 'Location' tab to move the folder. This is the recommended and safest way to migrate user folders.</value>
+  </data>
+  <data name="Button.Properties" xml:space="preserve">
+    <value>Properties...</value>
+  </data>
 </root>

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace winC2D
@@ -30,16 +32,120 @@ namespace winC2D
             ApplyLocalization();
             UpdateLanguageMenuItems();
             LoadSystemSettings();
-            LoadInstalledSoftware();
-            LoadUserFolders();
-            LoadAppDataFolders();
+            // 异步加载数据
+            LoadAllDataAsync();
+        }
+
+        private async void LoadAllDataAsync()
+        {
+            // 软件列表
+            listViewSoftware.Items.Clear();
+            listViewSoftware.Items.Add(new ListViewItem(Localization.T("Msg.Loading")));
+            // AppData
+            listViewAppData.Items.Clear();
+            listViewAppData.Items.Add(new ListViewItem(Localization.T("Msg.Loading")));
+
+            await Task.WhenAll(
+                Task.Run(() => LoadInstalledSoftwareSafe()),
+                Task.Run(() => LoadAppDataFoldersSafe())
+            );
+        }
+
+        private void LoadInstalledSoftwareSafe()
+        {
+            try
+            {
+                var list = SoftwareScanner.GetInstalledSoftwareOnC();
+                this.Invoke(new Action(() => {
+                    listViewSoftware.Items.Clear();
+                    foreach (var sw in list)
+                    {
+                        var item = new ListViewItem(new string[] { sw.Name, sw.InstallLocation, sw.SizeText });
+                        item.Tag = sw;
+                        listViewSoftware.Items.Add(item);
+                    }
+                }));
+            }
+            catch (Exception ex)
+            {
+                this.Invoke(new Action(() => {
+                    listViewSoftware.Items.Clear();
+                    MessageBox.Show(string.Format(Localization.T("Msg.ScanSoftwareFailedFmt"), ex.Message), Localization.T("Title.Tip"));
+                }));
+            }
+        }
+
+        private void LoadAppDataFoldersSafe()
+        {
+            try
+            {
+                var items = new List<ListViewItem>();
+                string roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                string localLow = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData\\LocalLow");
+                void Scan(string basePath, string type)
+                {
+                    try
+                    {
+                        foreach (string dir in Directory.GetDirectories(basePath))
+                        {
+                            DirectoryInfo di = new DirectoryInfo(dir);
+                            long size = AppDataMigrator.GetDirectorySize(dir);
+                            if (size > 1024 * 1024)
+                            {
+                                var appData = new AppDataInfo
+                                {
+                                    Name = di.Name,
+                                    Path = dir,
+                                    Size = size,
+                                    Type = type
+                                };
+                                var item = new ListViewItem(new string[]
+                                {
+                                    appData.Name,
+                                    appData.Path,
+                                    appData.SizeText,
+                                    appData.Type
+                                });
+                                item.Tag = appData;
+                                items.Add(item);
+                            }
+                        }
+                    }
+                    catch { }
+                }
+                Scan(roaming, "Roaming");
+                Scan(local, "Local");
+                if (Directory.Exists(localLow))
+                    Scan(localLow, "LocalLow");
+                this.Invoke(new Action(() => {
+                    listViewAppData.Items.Clear();
+                    foreach (var item in items)
+                        listViewAppData.Items.Add(item);
+                }));
+            }
+            catch
+            {
+                this.Invoke(new Action(() => {
+                    listViewAppData.Items.Clear();
+                }));
+            }
+        }
+
+        // 刷新按钮也异步
+        private async void buttonRefreshAppData_Click(object sender, EventArgs e)
+        {
+            listViewAppData.Items.Clear();
+            listViewAppData.Items.Add(new ListViewItem(Localization.T("Msg.Loading")));
+            await Task.Run(() => LoadAppDataFoldersSafe());
+            MessageBox.Show(Localization.T("Msg.MigrateCompleted").Replace("{0}", listViewAppData.Items.Count.ToString()).Replace("{1}", "0"),
+                Localization.T("Title.Tip"));
         }
 
         private void OnLanguageChanged(object sender, EventArgs e)
         {
             ApplyLocalization();
             UpdateLanguageMenuItems();
-            LoadUserFolders(); // Refresh to update localized folder names
             LoadAppDataFolders(); // Refresh AppData list
         }
 
@@ -55,7 +161,6 @@ namespace winC2D
             // Tab pages
             tabPageSettings.Text = Localization.T("GroupBox.SystemSettings");
             tabPageSoftware.Text = Localization.T("Tab.SoftwareMigration");
-            tabPageFolders.Text = Localization.T("Tab.UserFolders");
             tabPageAppData.Text = Localization.T("Tab.AppData");
 
             // Settings tab
@@ -77,19 +182,8 @@ namespace winC2D
             columnHeaderPath.Text = Localization.T("Column.InstallPath");
             columnHeaderSize.Text = Localization.T("Column.Size");
 
-            // Column headers for folders
-            columnHeaderFolderName.Text = Localization.T("Column.FolderName");
-            columnHeaderFolderPath.Text = Localization.T("Column.CurrentPath");
-
-            // Column headers for AppData
-            columnHeaderAppName.Text = Localization.T("Column.AppName");
-            columnHeaderAppPath.Text = Localization.T("Column.AppPath");
-            columnHeaderAppSize.Text = Localization.T("Column.AppSize");
-            columnHeaderAppType.Text = Localization.T("Column.AppType");
-
             // Buttons
             buttonMigrateSoftware.Text = Localization.T("Button.MigrateSelected");
-            buttonMigrateFolders.Text = Localization.T("Button.MigrateSelected");
             buttonMigrateAppData.Text = Localization.T("Button.MigrateSelected");
             buttonRefreshAppData.Text = Localization.T("Button.RefreshAppData");
 
@@ -127,92 +221,6 @@ namespace winC2D
             menuLanguageRussian.Checked = (currentLang == "ru");
         }
 
-        private class UserFolderInfo
-        {
-            public string Name { get; set; }
-            public string Path { get; set; }
-        }
-
-        private void LoadUserFolders()
-        {
-            var folders = new List<UserFolderInfo>
-            {
-                new UserFolderInfo { Name = "文档", Path = GetUserShellFolderPath("Personal") },
-                new UserFolderInfo { Name = "图片", Path = GetUserShellFolderPath("My Pictures") },
-                new UserFolderInfo { Name = "下载", Path = GetUserShellFolderPath("{374DE290-123F-4565-9164-39C4925E467B}") },
-                new UserFolderInfo { Name = "视频", Path = GetUserShellFolderPath("My Video") },
-                new UserFolderInfo { Name = "桌面", Path = GetUserShellFolderPath("Desktop") }
-            };
-            listViewFolders.Items.Clear();
-            foreach (var f in folders)
-            {
-                if (!string.IsNullOrEmpty(f.Path))
-                {
-                    // 显示本地化名称，但内部Name保持为键值以便迁移逻辑使用
-                    var displayName = GetDisplayNameForFolderKey(f.Name);
-                    var item = new ListViewItem(new string[] { displayName, f.Path });
-                    item.Tag = f;
-                    listViewFolders.Items.Add(item);
-                }
-            }
-        } // end of LoadUserFolders
-
-        private static string GetDisplayNameForFolderKey(string key)
-        {
-            return key switch
-            {
-                "文档" => Localization.T("Folder.Documents"),
-                "图片" => Localization.T("Folder.Pictures"),
-                "下载" => Localization.T("Folder.Downloads"),
-                "视频" => Localization.T("Folder.Videos"),
-                "桌面" => Localization.T("Folder.Desktop"),
-                _ => key
-            };
-        }
-
-        // 读取注册表User Shell Folders，获取实际路径
-        private static string GetUserShellFolderPath(string regName)
-        {
-            try
-            {
-                var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
-                    "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders", false);
-                if (key != null)
-                {
-                    var val = key.GetValue(regName) as string;
-                    if (!string.IsNullOrEmpty(val))
-                    {
-                        // 展开环境变量
-                        return Environment.ExpandEnvironmentVariables(val);
-                    }
-                }
-            }
-            catch { }
-            return string.Empty;
-        }
-
-        // 获取KnownFolder路径（如下载）
-        private static string GetKnownFolder(string knownFolderId)
-        {
-            try
-            {
-                var type = Type.GetTypeFromCLSID(new Guid("{4DF0C730-DF9D-4AE3-9153-AA6B82E9795A}"));
-                dynamic shell = Activator.CreateInstance(type);
-                var folder = shell.GetKnownFolderPath(knownFolderId);
-                return folder;
-            }
-            catch
-            {
-                // 兼容性处理
-                string user = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                if (!string.IsNullOrEmpty(user))
-                {
-                    return Path.Combine(user, "Downloads");
-                }
-                return string.Empty;
-            }
-        }
-
         private void LoadInstalledSoftware()
         {
             // 读取注册表，获取C盘已安装软件列表
@@ -238,41 +246,6 @@ namespace winC2D
             using (var logForm = new LogForm())
             {
                 logForm.ShowDialog();
-            }
-        }
-
-        private void buttonMigrateFolders_Click(object sender, EventArgs e)
-        {
-            var selected = listViewFolders.CheckedItems.Cast<ListViewItem>().Select(i => i.Tag as UserFolderInfo).ToList();
-            if (selected.Count == 0)
-            {
-                MessageBox.Show(Localization.T("Msg.SelectFolders"), Localization.T("Title.Tip"));
-                return;
-            }
-            using (var fbd = new FolderBrowserDialog())
-            {
-                fbd.Description = Localization.T("Desc.TargetFolderForUserFolders");
-                fbd.ShowNewFolderButton = true;
-                if (fbd.ShowDialog() == DialogResult.OK)
-                {
-                    string targetRoot = fbd.SelectedPath;
-                    int success = 0, fail = 0;
-                    foreach (var folder in selected)
-                    {
-                        try
-                        {
-                            UserFolderMigrator.MigrateAndRedirect(folder.Name, folder.Path, targetRoot);
-                            success++;
-                        }
-                        catch (Exception ex)
-                        {
-                            fail++;
-                            MessageBox.Show(string.Format(Localization.T("Msg.MigrateFailedFmt"), folder.Name, ex.Message), Localization.T("Title.Error"));
-                        }
-                    }
-                    MessageBox.Show(string.Format(Localization.T("Msg.MigrateCompleted"), success, fail), Localization.T("Title.Tip"));
-                    LoadUserFolders();
-                }
             }
         }
 
@@ -676,13 +649,6 @@ namespace winC2D
                 }
             }
             catch { }
-        }
-
-        private void buttonRefreshAppData_Click(object sender, EventArgs e)
-        {
-            LoadAppDataFolders();
-            MessageBox.Show(Localization.T("Msg.MigrateCompleted").Replace("{0}", listViewAppData.Items.Count.ToString()).Replace("{1}", "0"), 
-                Localization.T("Title.Tip"));
         }
 
         private void buttonMigrateAppData_Click(object sender, EventArgs e)

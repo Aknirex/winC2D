@@ -9,10 +9,6 @@ namespace winC2D
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        private System.Windows.Forms.ListView listViewFolders;
-        private System.Windows.Forms.ColumnHeader columnHeaderFolderName;
-        private System.Windows.Forms.ColumnHeader columnHeaderFolderPath;
-        private System.Windows.Forms.Button buttonMigrateFolders;
         private System.Windows.Forms.ListView listViewSoftware;
         private System.Windows.Forms.ColumnHeader columnHeaderName;
         private System.Windows.Forms.ColumnHeader columnHeaderPath;
@@ -23,7 +19,6 @@ namespace winC2D
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPageSettings;
         private System.Windows.Forms.TabPage tabPageSoftware;
-        private System.Windows.Forms.TabPage tabPageFolders;
         private System.Windows.Forms.TabPage tabPageAppData;
         
         // Settings tab controls
@@ -110,11 +105,6 @@ namespace winC2D
             this.columnHeaderPath = new System.Windows.Forms.ColumnHeader();
             this.columnHeaderSize = new System.Windows.Forms.ColumnHeader();
             this.buttonMigrateSoftware = new System.Windows.Forms.Button();
-            this.tabPageFolders = new System.Windows.Forms.TabPage();
-            this.listViewFolders = new System.Windows.Forms.ListView();
-            this.columnHeaderFolderName = new System.Windows.Forms.ColumnHeader();
-            this.columnHeaderFolderPath = new System.Windows.Forms.ColumnHeader();
-            this.buttonMigrateFolders = new System.Windows.Forms.Button();
             this.tabPageAppData = new System.Windows.Forms.TabPage();
             this.listViewAppData = new System.Windows.Forms.ListView();
             this.columnHeaderAppName = new System.Windows.Forms.ColumnHeader();
@@ -130,7 +120,6 @@ namespace winC2D
             this.groupBoxProgramFiles.SuspendLayout();
             this.groupBoxStoragePolicy.SuspendLayout();
             this.tabPageSoftware.SuspendLayout();
-            this.tabPageFolders.SuspendLayout();
             this.tabPageAppData.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -230,7 +219,6 @@ namespace winC2D
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabControl1.Controls.Add(this.tabPageSettings);
             this.tabControl1.Controls.Add(this.tabPageSoftware);
-            this.tabControl1.Controls.Add(this.tabPageFolders);
             this.tabControl1.Controls.Add(this.tabPageAppData);
             this.tabControl1.Location = new System.Drawing.Point(12, 35);
             this.tabControl1.Name = "tabControl1";
@@ -470,56 +458,6 @@ namespace winC2D
             this.buttonMigrateSoftware.UseVisualStyleBackColor = true;
             this.buttonMigrateSoftware.Click += new System.EventHandler(this.buttonMigrateSoftware_Click);
             // 
-            // tabPageFolders
-            // 
-            this.tabPageFolders.Controls.Add(this.listViewFolders);
-            this.tabPageFolders.Controls.Add(this.buttonMigrateFolders);
-            this.tabPageFolders.Location = new System.Drawing.Point(4, 29);
-            this.tabPageFolders.Name = "tabPageFolders";
-            this.tabPageFolders.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageFolders.Size = new System.Drawing.Size(768, 461);
-            this.tabPageFolders.TabIndex = 2;
-            this.tabPageFolders.Text = "用户文件夹";
-            this.tabPageFolders.UseVisualStyleBackColor = true;
-            // 
-            // listViewFolders
-            // 
-            this.listViewFolders.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.listViewFolders.CheckBoxes = true;
-            this.listViewFolders.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeaderFolderName,
-            this.columnHeaderFolderPath});
-            this.listViewFolders.FullRowSelect = true;
-            this.listViewFolders.Location = new System.Drawing.Point(6, 6);
-            this.listViewFolders.Name = "listViewFolders";
-            this.listViewFolders.Size = new System.Drawing.Size(756, 300);
-            this.listViewFolders.TabIndex = 0;
-            this.listViewFolders.UseCompatibleStateImageBehavior = false;
-            this.listViewFolders.View = System.Windows.Forms.View.Details;
-            // 
-            // columnHeaderFolderName
-            // 
-            this.columnHeaderFolderName.Text = "文件夹名称";
-            this.columnHeaderFolderName.Width = 180;
-            // 
-            // columnHeaderFolderPath
-            // 
-            this.columnHeaderFolderPath.Text = "当前路径";
-            this.columnHeaderFolderPath.Width = 520;
-            // 
-            // buttonMigrateFolders
-            // 
-            this.buttonMigrateFolders.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonMigrateFolders.Location = new System.Drawing.Point(650, 320);
-            this.buttonMigrateFolders.Name = "buttonMigrateFolders";
-            this.buttonMigrateFolders.Size = new System.Drawing.Size(112, 32);
-            this.buttonMigrateFolders.TabIndex = 1;
-            this.buttonMigrateFolders.Text = "迁移所选";
-            this.buttonMigrateFolders.UseVisualStyleBackColor = true;
-            this.buttonMigrateFolders.Click += new System.EventHandler(this.buttonMigrateFolders_Click);
-            // 
             // tabPageAppData
             // 
             this.tabPageAppData.Controls.Add(this.labelMklinkNote);
@@ -624,7 +562,6 @@ namespace winC2D
             this.groupBoxProgramFiles.PerformLayout();
             this.groupBoxStoragePolicy.ResumeLayout(false);
             this.tabPageSoftware.ResumeLayout(false);
-            this.tabPageFolders.ResumeLayout(false);
             this.tabPageAppData.ResumeLayout(false);
             this.tabPageAppData.PerformLayout();
             this.ResumeLayout(false);

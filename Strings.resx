@@ -235,4 +235,7 @@
   <data name="Msg.RollbackFailedFmt" xml:space="preserve">
     <value>Rollback failed: {0}</value>
   </data>
+  <data name="Msg.Loading" xml:space="preserve">
+    <value>Loading...</value>
+  </data>
 </root>
