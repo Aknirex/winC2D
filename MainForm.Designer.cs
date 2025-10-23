@@ -72,471 +72,500 @@ namespace winC2D
 
         private void InitializeComponent()
         {
-            menuStrip1 = new MenuStrip();
-            menuLog = new ToolStripMenuItem();
-            menuLanguage = new ToolStripMenuItem();
-            menuLanguageEnglish = new ToolStripMenuItem();
-            menuLanguageChinese = new ToolStripMenuItem();
-            menuLanguageJapanese = new ToolStripMenuItem();
-            menuLanguageKorean = new ToolStripMenuItem();
-            menuLanguageFrench = new ToolStripMenuItem();
-            menuLanguageGerman = new ToolStripMenuItem();
-            menuLanguageSpanish = new ToolStripMenuItem();
-            menuLanguageRussian = new ToolStripMenuItem();
-            tabControl1 = new TabControl();
-            tabPageSettings = new TabPage();
-            groupBoxStoragePolicy = new GroupBox();
-            buttonOpenWindowsStorage = new Button();
-            labelStoragePolicyNote = new Label();
-            groupBoxProgramFiles = new GroupBox();
-            labelProgramFilesNote = new Label();
-            buttonResetProgramFiles = new Button();
-            buttonApplyProgramFiles = new Button();
-            buttonBrowseProgramFilesX86 = new Button();
-            textBoxProgramFilesX86 = new TextBox();
-            labelProgramFilesX86 = new Label();
-            checkBoxCustomX86 = new CheckBox();
-            buttonBrowseProgramFiles = new Button();
-            textBoxProgramFiles = new TextBox();
-            labelProgramFiles = new Label();
-            tabPageSoftware = new TabPage();
-            listViewSoftware = new ListView();
-            columnHeaderName = new ColumnHeader();
-            columnHeaderPath = new ColumnHeader();
-            columnHeaderSize = new ColumnHeader();
-            buttonMigrateSoftware = new Button();
-            tabPageAppData = new TabPage();
-            labelMklinkNote = new Label();
-            listViewAppData = new ListView();
-            columnHeaderAppName = new ColumnHeader();
-            columnHeaderAppPath = new ColumnHeader();
-            columnHeaderAppSize = new ColumnHeader();
-            columnHeaderAppType = new ColumnHeader();
-            buttonMigrateAppData = new Button();
-            buttonRefreshAppData = new Button();
-            menuStrip1.SuspendLayout();
-            tabControl1.SuspendLayout();
-            tabPageSettings.SuspendLayout();
-            groupBoxStoragePolicy.SuspendLayout();
-            groupBoxProgramFiles.SuspendLayout();
-            tabPageSoftware.SuspendLayout();
-            tabPageAppData.SuspendLayout();
-            SuspendLayout();
+            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.menuLog = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguage = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguageEnglish = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguageChinese = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguageJapanese = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguageKorean = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguageFrench = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguageGerman = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguageSpanish = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLanguageRussian = new System.Windows.Forms.ToolStripMenuItem();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabPageSettings = new System.Windows.Forms.TabPage();
+            this.groupBoxProgramFiles = new System.Windows.Forms.GroupBox();
+            this.labelProgramFilesNote = new System.Windows.Forms.Label();
+            this.buttonResetProgramFiles = new System.Windows.Forms.Button();
+            this.buttonApplyProgramFiles = new System.Windows.Forms.Button();
+            this.buttonBrowseProgramFilesX86 = new System.Windows.Forms.Button();
+            this.textBoxProgramFilesX86 = new System.Windows.Forms.TextBox();
+            this.labelProgramFilesX86 = new System.Windows.Forms.Label();
+            this.checkBoxCustomX86 = new System.Windows.Forms.CheckBox();
+            this.buttonBrowseProgramFiles = new System.Windows.Forms.Button();
+            this.textBoxProgramFiles = new System.Windows.Forms.TextBox();
+            this.labelProgramFiles = new System.Windows.Forms.Label();
+            this.groupBoxStoragePolicy = new System.Windows.Forms.GroupBox();
+            this.labelStoragePolicyNote = new System.Windows.Forms.Label();
+            this.buttonOpenWindowsStorage = new System.Windows.Forms.Button();
+            this.tabPageSoftware = new System.Windows.Forms.TabPage();
+            this.listViewSoftware = new System.Windows.Forms.ListView();
+            this.columnHeaderName = new System.Windows.Forms.ColumnHeader();
+            this.columnHeaderPath = new System.Windows.Forms.ColumnHeader();
+            this.columnHeaderSize = new System.Windows.Forms.ColumnHeader();
+            this.buttonMigrateSoftware = new System.Windows.Forms.Button();
+            this.tabPageAppData = new System.Windows.Forms.TabPage();
+            this.listViewAppData = new System.Windows.Forms.ListView();
+            this.columnHeaderAppName = new System.Windows.Forms.ColumnHeader();
+            this.columnHeaderAppPath = new System.Windows.Forms.ColumnHeader();
+            this.columnHeaderAppSize = new System.Windows.Forms.ColumnHeader();
+            this.columnHeaderAppType = new System.Windows.Forms.ColumnHeader();
+            this.buttonMigrateAppData = new System.Windows.Forms.Button();
+            this.buttonRefreshAppData = new System.Windows.Forms.Button();
+            this.labelMklinkNote = new System.Windows.Forms.Label();
+            this.menuStrip1.SuspendLayout();
+            this.tabControl1.SuspendLayout();
+            this.tabPageSettings.SuspendLayout();
+            this.groupBoxProgramFiles.SuspendLayout();
+            this.groupBoxStoragePolicy.SuspendLayout();
+            this.tabPageSoftware.SuspendLayout();
+            this.tabPageAppData.SuspendLayout();
+            this.SuspendLayout();
             // 
             // menuStrip1
             // 
-            menuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
-            menuStrip1.Items.AddRange(new ToolStripItem[] { menuLog, menuLanguage });
-            menuStrip1.Location = new System.Drawing.Point(0, 0);
-            menuStrip1.Name = "menuStrip1";
-            menuStrip1.Padding = new Padding(5, 2, 0, 2);
-            menuStrip1.Size = new System.Drawing.Size(700, 25);
-            menuStrip1.TabIndex = 0;
-            menuStrip1.Text = "menuStrip1";
+            this.menuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuLog, this.menuLanguage});
+            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip1.Name = "menuStrip1";
+            this.menuStrip1.Size = new System.Drawing.Size(800, 28);
+            this.menuStrip1.TabIndex = 0;
+            this.menuStrip1.Text = "menuStrip1";
             // 
             // menuLog
             // 
-            menuLog.Name = "menuLog";
-            menuLog.Size = new System.Drawing.Size(68, 21);
-            menuLog.Text = "迁移日志";
-            menuLog.Click += menuLog_Click;
+            this.menuLog.Name = "menuLog";
+            this.menuLog.Size = new System.Drawing.Size(83, 24);
+            this.menuLog.Text = "迁移日志";
+            this.menuLog.Click += new System.EventHandler(this.menuLog_Click);
             // 
             // menuLanguage
             // 
-            menuLanguage.DropDownItems.AddRange(new ToolStripItem[] { menuLanguageEnglish, menuLanguageChinese, menuLanguageJapanese, menuLanguageKorean, menuLanguageFrench, menuLanguageGerman, menuLanguageSpanish, menuLanguageRussian });
-            menuLanguage.Name = "menuLanguage";
-            menuLanguage.Size = new System.Drawing.Size(44, 21);
-            menuLanguage.Text = "语言";
+            this.menuLanguage.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuLanguageEnglish,
+            this.menuLanguageChinese,
+            this.menuLanguageJapanese,
+            this.menuLanguageKorean,
+            this.menuLanguageFrench,
+            this.menuLanguageGerman,
+            this.menuLanguageSpanish,
+            this.menuLanguageRussian});
+            this.menuLanguage.Name = "menuLanguage";
+            this.menuLanguage.Size = new System.Drawing.Size(83, 24);
+            this.menuLanguage.Text = "语言";
             // 
             // menuLanguageEnglish
             // 
-            menuLanguageEnglish.Name = "menuLanguageEnglish";
-            menuLanguageEnglish.Size = new System.Drawing.Size(124, 22);
-            menuLanguageEnglish.Text = "English";
-            menuLanguageEnglish.Click += menuLanguageEnglish_Click;
+            this.menuLanguageEnglish.Name = "menuLanguageEnglish";
+            this.menuLanguageEnglish.Size = new System.Drawing.Size(180, 26);
+            this.menuLanguageEnglish.Text = "English";
+            this.menuLanguageEnglish.Click += new System.EventHandler(this.menuLanguageEnglish_Click);
             // 
             // menuLanguageChinese
             // 
-            menuLanguageChinese.Name = "menuLanguageChinese";
-            menuLanguageChinese.Size = new System.Drawing.Size(124, 22);
-            menuLanguageChinese.Text = "中文";
-            menuLanguageChinese.Click += menuLanguageChinese_Click;
+            this.menuLanguageChinese.Name = "menuLanguageChinese";
+            this.menuLanguageChinese.Size = new System.Drawing.Size(180, 26);
+            this.menuLanguageChinese.Text = "中文";
+            this.menuLanguageChinese.Click += new System.EventHandler(this.menuLanguageChinese_Click);
             // 
             // menuLanguageJapanese
             // 
-            menuLanguageJapanese.Name = "menuLanguageJapanese";
-            menuLanguageJapanese.Size = new System.Drawing.Size(124, 22);
-            menuLanguageJapanese.Text = "日本語";
-            menuLanguageJapanese.Click += menuLanguageJapanese_Click;
+            this.menuLanguageJapanese.Name = "menuLanguageJapanese";
+            this.menuLanguageJapanese.Size = new System.Drawing.Size(180, 26);
+            this.menuLanguageJapanese.Text = "日本語";
+            this.menuLanguageJapanese.Click += new System.EventHandler(this.menuLanguageJapanese_Click);
             // 
             // menuLanguageKorean
             // 
-            menuLanguageKorean.Name = "menuLanguageKorean";
-            menuLanguageKorean.Size = new System.Drawing.Size(124, 22);
-            menuLanguageKorean.Text = "한국어";
-            menuLanguageKorean.Click += menuLanguageKorean_Click;
+            this.menuLanguageKorean.Name = "menuLanguageKorean";
+            this.menuLanguageKorean.Size = new System.Drawing.Size(180, 26);
+            this.menuLanguageKorean.Text = "한국어";
+            this.menuLanguageKorean.Click += new System.EventHandler(this.menuLanguageKorean_Click);
             // 
             // menuLanguageFrench
             // 
-            menuLanguageFrench.Name = "menuLanguageFrench";
-            menuLanguageFrench.Size = new System.Drawing.Size(124, 22);
-            menuLanguageFrench.Text = "Français";
-            menuLanguageFrench.Click += menuLanguageFrench_Click;
+            this.menuLanguageFrench.Name = "menuLanguageFrench";
+            this.menuLanguageFrench.Size = new System.Drawing.Size(180, 26);
+            this.menuLanguageFrench.Text = "Français";
+            this.menuLanguageFrench.Click += new System.EventHandler(this.menuLanguageFrench_Click);
             // 
             // menuLanguageGerman
             // 
-            menuLanguageGerman.Name = "menuLanguageGerman";
-            menuLanguageGerman.Size = new System.Drawing.Size(124, 22);
-            menuLanguageGerman.Text = "Deutsch";
-            menuLanguageGerman.Click += menuLanguageGerman_Click;
+            this.menuLanguageGerman.Name = "menuLanguageGerman";
+            this.menuLanguageGerman.Size = new System.Drawing.Size(180, 26);
+            this.menuLanguageGerman.Text = "Deutsch";
+            this.menuLanguageGerman.Click += new System.EventHandler(this.menuLanguageGerman_Click);
             // 
             // menuLanguageSpanish
             // 
-            menuLanguageSpanish.Name = "menuLanguageSpanish";
-            menuLanguageSpanish.Size = new System.Drawing.Size(124, 22);
-            menuLanguageSpanish.Text = "Español";
-            menuLanguageSpanish.Click += menuLanguageSpanish_Click;
+            this.menuLanguageSpanish.Name = "menuLanguageSpanish";
+            this.menuLanguageSpanish.Size = new System.Drawing.Size(180, 26);
+            this.menuLanguageSpanish.Text = "Español";
+            this.menuLanguageSpanish.Click += new System.EventHandler(this.menuLanguageSpanish_Click);
             // 
             // menuLanguageRussian
             // 
-            menuLanguageRussian.Name = "menuLanguageRussian";
-            menuLanguageRussian.Size = new System.Drawing.Size(124, 22);
-            menuLanguageRussian.Text = "Русский";
-            menuLanguageRussian.Click += menuLanguageRussian_Click;
+            this.menuLanguageRussian.Name = "menuLanguageRussian";
+            this.menuLanguageRussian.Size = new System.Drawing.Size(180, 26);
+            this.menuLanguageRussian.Text = "Русский";
+            this.menuLanguageRussian.Click += new System.EventHandler(this.menuLanguageRussian_Click);
             // 
             // tabControl1
             // 
-            tabControl1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            tabControl1.Controls.Add(tabPageSettings);
-            tabControl1.Controls.Add(tabPageSoftware);
-            tabControl1.Controls.Add(tabPageAppData);
-            tabControl1.Location = new System.Drawing.Point(10, 30);
-            tabControl1.Name = "tabControl1";
-            tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new System.Drawing.Size(679, 420);
-            tabControl1.TabIndex = 1;
+            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabControl1.Controls.Add(this.tabPageSettings);
+            this.tabControl1.Controls.Add(this.tabPageSoftware);
+            this.tabControl1.Controls.Add(this.tabPageAppData);
+            this.tabControl1.Location = new System.Drawing.Point(12, 35);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.Size = new System.Drawing.Size(776, 494);
+            this.tabControl1.TabIndex = 1;
             // 
             // tabPageSettings
             // 
-            tabPageSettings.Controls.Add(groupBoxStoragePolicy);
-            tabPageSettings.Controls.Add(groupBoxProgramFiles);
-            tabPageSettings.Location = new System.Drawing.Point(4, 26);
-            tabPageSettings.Name = "tabPageSettings";
-            tabPageSettings.Padding = new Padding(3);
-            tabPageSettings.Size = new System.Drawing.Size(671, 390);
-            tabPageSettings.TabIndex = 0;
-            tabPageSettings.Text = "系统设置";
-            tabPageSettings.UseVisualStyleBackColor = true;
-            // 
-            // groupBoxStoragePolicy
-            // 
-            groupBoxStoragePolicy.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            groupBoxStoragePolicy.Controls.Add(buttonOpenWindowsStorage);
-            groupBoxStoragePolicy.Controls.Add(labelStoragePolicyNote);
-            groupBoxStoragePolicy.Location = new System.Drawing.Point(13, 238);
-            groupBoxStoragePolicy.Name = "groupBoxStoragePolicy";
-            groupBoxStoragePolicy.Size = new System.Drawing.Size(643, 85);
-            groupBoxStoragePolicy.TabIndex = 1;
-            groupBoxStoragePolicy.TabStop = false;
-            groupBoxStoragePolicy.Text = "新内容保存位置（Microsoft Store 应用和用户内容）";
-            // 
-            // buttonOpenWindowsStorage
-            // 
-            buttonOpenWindowsStorage.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            buttonOpenWindowsStorage.Location = new System.Drawing.Point(481, 30);
-            buttonOpenWindowsStorage.Name = "buttonOpenWindowsStorage";
-            buttonOpenWindowsStorage.Size = new System.Drawing.Size(149, 42);
-            buttonOpenWindowsStorage.TabIndex = 1;
-            buttonOpenWindowsStorage.Text = "打开 Windows 设置";
-            buttonOpenWindowsStorage.UseVisualStyleBackColor = true;
-            buttonOpenWindowsStorage.Click += buttonOpenWindowsStorage_Click;
-            // 
-            // labelStoragePolicyNote
-            // 
-            labelStoragePolicyNote.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            labelStoragePolicyNote.ForeColor = System.Drawing.Color.DarkBlue;
-            labelStoragePolicyNote.Location = new System.Drawing.Point(13, 26);
-            labelStoragePolicyNote.Name = "labelStoragePolicyNote";
-            labelStoragePolicyNote.Size = new System.Drawing.Size(451, 51);
-            labelStoragePolicyNote.TabIndex = 0;
-            labelStoragePolicyNote.Text = "ℹ 此设置影响 Microsoft Store 应用和新用户内容（文档、照片等）。需要 Windows 10 或更高版本。";
+            this.tabPageSettings.Controls.Add(this.groupBoxStoragePolicy);
+            this.tabPageSettings.Controls.Add(this.groupBoxProgramFiles);
+            this.tabPageSettings.Location = new System.Drawing.Point(4, 29);
+            this.tabPageSettings.Name = "tabPageSettings";
+            this.tabPageSettings.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageSettings.Size = new System.Drawing.Size(768, 461);
+            this.tabPageSettings.TabIndex = 0;
+            this.tabPageSettings.Text = "系统设置";
+            this.tabPageSettings.UseVisualStyleBackColor = true;
             // 
             // groupBoxProgramFiles
             // 
-            groupBoxProgramFiles.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            groupBoxProgramFiles.Controls.Add(labelProgramFilesNote);
-            groupBoxProgramFiles.Controls.Add(buttonResetProgramFiles);
-            groupBoxProgramFiles.Controls.Add(buttonApplyProgramFiles);
-            groupBoxProgramFiles.Controls.Add(buttonBrowseProgramFilesX86);
-            groupBoxProgramFiles.Controls.Add(textBoxProgramFilesX86);
-            groupBoxProgramFiles.Controls.Add(labelProgramFilesX86);
-            groupBoxProgramFiles.Controls.Add(checkBoxCustomX86);
-            groupBoxProgramFiles.Controls.Add(buttonBrowseProgramFiles);
-            groupBoxProgramFiles.Controls.Add(textBoxProgramFiles);
-            groupBoxProgramFiles.Controls.Add(labelProgramFiles);
-            groupBoxProgramFiles.Location = new System.Drawing.Point(13, 13);
-            groupBoxProgramFiles.Name = "groupBoxProgramFiles";
-            groupBoxProgramFiles.Size = new System.Drawing.Size(643, 212);
-            groupBoxProgramFiles.TabIndex = 0;
-            groupBoxProgramFiles.TabStop = false;
-            groupBoxProgramFiles.Text = "Program Files 位置（传统桌面程序）";
-            // 
-            // labelProgramFilesNote
-            // 
-            labelProgramFilesNote.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            labelProgramFilesNote.ForeColor = System.Drawing.Color.DarkBlue;
-            labelProgramFilesNote.Location = new System.Drawing.Point(13, 157);
-            labelProgramFilesNote.Name = "labelProgramFilesNote";
-            labelProgramFilesNote.Size = new System.Drawing.Size(617, 42);
-            labelProgramFilesNote.TabIndex = 9;
-            labelProgramFilesNote.Text = "ℹ 此设置影响通过安装程序（.exe、.msi）安装的传统桌面程序。大多数第三方软件使用此位置。";
-            // 
-            // buttonResetProgramFiles
-            // 
-            buttonResetProgramFiles.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            buttonResetProgramFiles.Location = new System.Drawing.Point(560, 46);
-            buttonResetProgramFiles.Name = "buttonResetProgramFiles";
-            buttonResetProgramFiles.Size = new System.Drawing.Size(70, 25);
-            buttonResetProgramFiles.TabIndex = 8;
-            buttonResetProgramFiles.Text = "恢复默认";
-            buttonResetProgramFiles.UseVisualStyleBackColor = true;
-            buttonResetProgramFiles.Click += buttonResetProgramFiles_Click;
-            // 
-            // buttonApplyProgramFiles
-            // 
-            buttonApplyProgramFiles.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            buttonApplyProgramFiles.Location = new System.Drawing.Point(481, 46);
-            buttonApplyProgramFiles.Name = "buttonApplyProgramFiles";
-            buttonApplyProgramFiles.Size = new System.Drawing.Size(70, 25);
-            buttonApplyProgramFiles.TabIndex = 7;
-            buttonApplyProgramFiles.Text = "应用";
-            buttonApplyProgramFiles.UseVisualStyleBackColor = true;
-            buttonApplyProgramFiles.Click += buttonApplyProgramFiles_Click;
-            // 
-            // buttonBrowseProgramFilesX86
-            // 
-            buttonBrowseProgramFilesX86.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            buttonBrowseProgramFilesX86.Enabled = false;
-            buttonBrowseProgramFilesX86.Location = new System.Drawing.Point(402, 127);
-            buttonBrowseProgramFilesX86.Name = "buttonBrowseProgramFilesX86";
-            buttonBrowseProgramFilesX86.Size = new System.Drawing.Size(70, 25);
-            buttonBrowseProgramFilesX86.TabIndex = 6;
-            buttonBrowseProgramFilesX86.Text = "浏览";
-            buttonBrowseProgramFilesX86.UseVisualStyleBackColor = true;
-            buttonBrowseProgramFilesX86.Click += buttonBrowseProgramFilesX86_Click;
-            // 
-            // textBoxProgramFilesX86
-            // 
-            textBoxProgramFilesX86.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            textBoxProgramFilesX86.Enabled = false;
-            textBoxProgramFilesX86.Location = new System.Drawing.Point(13, 128);
-            textBoxProgramFilesX86.Name = "textBoxProgramFilesX86";
-            textBoxProgramFilesX86.Size = new System.Drawing.Size(381, 23);
-            textBoxProgramFilesX86.TabIndex = 5;
-            // 
-            // labelProgramFilesX86
-            // 
-            labelProgramFilesX86.AutoSize = true;
-            labelProgramFilesX86.Enabled = false;
-            labelProgramFilesX86.Location = new System.Drawing.Point(13, 106);
-            labelProgramFilesX86.Name = "labelProgramFilesX86";
-            labelProgramFilesX86.Size = new System.Drawing.Size(202, 17);
-            labelProgramFilesX86.TabIndex = 4;
-            labelProgramFilesX86.Text = "Program Files 默认位置（32位）：";
-            // 
-            // checkBoxCustomX86
-            // 
-            checkBoxCustomX86.AutoSize = true;
-            checkBoxCustomX86.Location = new System.Drawing.Point(13, 81);
-            checkBoxCustomX86.Name = "checkBoxCustomX86";
-            checkBoxCustomX86.Size = new System.Drawing.Size(145, 21);
-            checkBoxCustomX86.TabIndex = 3;
-            checkBoxCustomX86.Text = "自定义 32位 程序路径";
-            checkBoxCustomX86.UseVisualStyleBackColor = true;
-            checkBoxCustomX86.CheckedChanged += checkBoxCustomX86_CheckedChanged;
-            // 
-            // buttonBrowseProgramFiles
-            // 
-            buttonBrowseProgramFiles.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            buttonBrowseProgramFiles.Location = new System.Drawing.Point(402, 46);
-            buttonBrowseProgramFiles.Name = "buttonBrowseProgramFiles";
-            buttonBrowseProgramFiles.Size = new System.Drawing.Size(70, 25);
-            buttonBrowseProgramFiles.TabIndex = 2;
-            buttonBrowseProgramFiles.Text = "浏览";
-            buttonBrowseProgramFiles.UseVisualStyleBackColor = true;
-            buttonBrowseProgramFiles.Click += buttonBrowseProgramFiles_Click;
-            // 
-            // textBoxProgramFiles
-            // 
-            textBoxProgramFiles.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            textBoxProgramFiles.Location = new System.Drawing.Point(13, 47);
-            textBoxProgramFiles.Name = "textBoxProgramFiles";
-            textBoxProgramFiles.Size = new System.Drawing.Size(381, 23);
-            textBoxProgramFiles.TabIndex = 1;
-            textBoxProgramFiles.TextChanged += textBoxProgramFiles_TextChanged;
+            this.groupBoxProgramFiles.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBoxProgramFiles.Controls.Add(this.labelProgramFilesNote);
+            this.groupBoxProgramFiles.Controls.Add(this.buttonResetProgramFiles);
+            this.groupBoxProgramFiles.Controls.Add(this.buttonApplyProgramFiles);
+            this.groupBoxProgramFiles.Controls.Add(this.buttonBrowseProgramFilesX86);
+            this.groupBoxProgramFiles.Controls.Add(this.textBoxProgramFilesX86);
+            this.groupBoxProgramFiles.Controls.Add(this.labelProgramFilesX86);
+            this.groupBoxProgramFiles.Controls.Add(this.checkBoxCustomX86);
+            this.groupBoxProgramFiles.Controls.Add(this.buttonBrowseProgramFiles);
+            this.groupBoxProgramFiles.Controls.Add(this.textBoxProgramFiles);
+            this.groupBoxProgramFiles.Controls.Add(this.labelProgramFiles);
+            this.groupBoxProgramFiles.Location = new System.Drawing.Point(15, 15);
+            this.groupBoxProgramFiles.Name = "groupBoxProgramFiles";
+            this.groupBoxProgramFiles.Size = new System.Drawing.Size(735, 250);
+            this.groupBoxProgramFiles.TabIndex = 0;
+            this.groupBoxProgramFiles.TabStop = false;
+            this.groupBoxProgramFiles.Text = "Program Files 位置（传统桌面程序）";
             // 
             // labelProgramFiles
             // 
-            labelProgramFiles.AutoSize = true;
-            labelProgramFiles.Location = new System.Drawing.Point(13, 26);
-            labelProgramFiles.Name = "labelProgramFiles";
-            labelProgramFiles.Size = new System.Drawing.Size(202, 17);
-            labelProgramFiles.TabIndex = 0;
-            labelProgramFiles.Text = "Program Files 默认位置（64位）：";
+            this.labelProgramFiles.AutoSize = true;
+            this.labelProgramFiles.Location = new System.Drawing.Point(15, 30);
+            this.labelProgramFiles.Name = "labelProgramFiles";
+            this.labelProgramFiles.Size = new System.Drawing.Size(250, 20);
+            this.labelProgramFiles.TabIndex = 0;
+            this.labelProgramFiles.Text = "Program Files 默认位置（64位）：";
+            // 
+            // textBoxProgramFiles
+            // 
+            this.textBoxProgramFiles.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxProgramFiles.Location = new System.Drawing.Point(15, 55);
+            this.textBoxProgramFiles.Name = "textBoxProgramFiles";
+            this.textBoxProgramFiles.Size = new System.Drawing.Size(435, 27);
+            this.textBoxProgramFiles.TabIndex = 1;
+            this.textBoxProgramFiles.TextChanged += new System.EventHandler(this.textBoxProgramFiles_TextChanged);
+            // 
+            // buttonBrowseProgramFiles
+            // 
+            this.buttonBrowseProgramFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonBrowseProgramFiles.Location = new System.Drawing.Point(460, 54);
+            this.buttonBrowseProgramFiles.Name = "buttonBrowseProgramFiles";
+            this.buttonBrowseProgramFiles.Size = new System.Drawing.Size(80, 29);
+            this.buttonBrowseProgramFiles.TabIndex = 2;
+            this.buttonBrowseProgramFiles.Text = "浏览";
+            this.buttonBrowseProgramFiles.UseVisualStyleBackColor = true;
+            this.buttonBrowseProgramFiles.Click += new System.EventHandler(this.buttonBrowseProgramFiles_Click);
+            // 
+            // checkBoxCustomX86
+            // 
+            this.checkBoxCustomX86.AutoSize = true;
+            this.checkBoxCustomX86.Location = new System.Drawing.Point(15, 95);
+            this.checkBoxCustomX86.Name = "checkBoxCustomX86";
+            this.checkBoxCustomX86.Size = new System.Drawing.Size(260, 24);
+            this.checkBoxCustomX86.TabIndex = 3;
+            this.checkBoxCustomX86.Text = "自定义 32位 程序路径";
+            this.checkBoxCustomX86.UseVisualStyleBackColor = true;
+            this.checkBoxCustomX86.CheckedChanged += new System.EventHandler(this.checkBoxCustomX86_CheckedChanged);
+            // 
+            // labelProgramFilesX86
+            // 
+            this.labelProgramFilesX86.AutoSize = true;
+            this.labelProgramFilesX86.Enabled = false;
+            this.labelProgramFilesX86.Location = new System.Drawing.Point(15, 125);
+            this.labelProgramFilesX86.Name = "labelProgramFilesX86";
+            this.labelProgramFilesX86.Size = new System.Drawing.Size(250, 20);
+            this.labelProgramFilesX86.TabIndex = 4;
+            this.labelProgramFilesX86.Text = "Program Files 默认位置（32位）：";
+            // 
+            // textBoxProgramFilesX86
+            // 
+            this.textBoxProgramFilesX86.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxProgramFilesX86.Enabled = false;
+            this.textBoxProgramFilesX86.Location = new System.Drawing.Point(15, 150);
+            this.textBoxProgramFilesX86.Name = "textBoxProgramFilesX86";
+            this.textBoxProgramFilesX86.Size = new System.Drawing.Size(435, 27);
+            this.textBoxProgramFilesX86.TabIndex = 5;
+            // 
+            // buttonBrowseProgramFilesX86
+            // 
+            this.buttonBrowseProgramFilesX86.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonBrowseProgramFilesX86.Enabled = false;
+            this.buttonBrowseProgramFilesX86.Location = new System.Drawing.Point(460, 149);
+            this.buttonBrowseProgramFilesX86.Name = "buttonBrowseProgramFilesX86";
+            this.buttonBrowseProgramFilesX86.Size = new System.Drawing.Size(80, 29);
+            this.buttonBrowseProgramFilesX86.TabIndex = 6;
+            this.buttonBrowseProgramFilesX86.Text = "浏览";
+            this.buttonBrowseProgramFilesX86.UseVisualStyleBackColor = true;
+            this.buttonBrowseProgramFilesX86.Click += new System.EventHandler(this.buttonBrowseProgramFilesX86_Click);
+            // 
+            // buttonApplyProgramFiles
+            // 
+            this.buttonApplyProgramFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonApplyProgramFiles.Location = new System.Drawing.Point(550, 54);
+            this.buttonApplyProgramFiles.Name = "buttonApplyProgramFiles";
+            this.buttonApplyProgramFiles.Size = new System.Drawing.Size(80, 29);
+            this.buttonApplyProgramFiles.TabIndex = 7;
+            this.buttonApplyProgramFiles.Text = "应用";
+            this.buttonApplyProgramFiles.UseVisualStyleBackColor = true;
+            this.buttonApplyProgramFiles.Click += new System.EventHandler(this.buttonApplyProgramFiles_Click);
+            // 
+            // buttonResetProgramFiles
+            // 
+            this.buttonResetProgramFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonResetProgramFiles.Location = new System.Drawing.Point(640, 54);
+            this.buttonResetProgramFiles.Name = "buttonResetProgramFiles";
+            this.buttonResetProgramFiles.Size = new System.Drawing.Size(80, 29);
+            this.buttonResetProgramFiles.TabIndex = 8;
+            this.buttonResetProgramFiles.Text = "恢复默认";
+            this.buttonResetProgramFiles.UseVisualStyleBackColor = true;
+            this.buttonResetProgramFiles.Click += new System.EventHandler(this.buttonResetProgramFiles_Click);
+            // 
+            // labelProgramFilesNote
+            // 
+            this.labelProgramFilesNote.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelProgramFilesNote.AutoSize = false;
+            this.labelProgramFilesNote.ForeColor = System.Drawing.Color.DarkBlue;
+            this.labelProgramFilesNote.Location = new System.Drawing.Point(15, 185);
+            this.labelProgramFilesNote.Name = "labelProgramFilesNote";
+            this.labelProgramFilesNote.Size = new System.Drawing.Size(705, 50);
+            this.labelProgramFilesNote.TabIndex = 9;
+            this.labelProgramFilesNote.Text = "ℹ 此设置影响通过安装程序（.exe、.msi）安装的传统桌面程序。大多数第三方软件使用此位置。";
+            // 
+            // groupBoxStoragePolicy
+            // 
+            this.groupBoxStoragePolicy.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBoxStoragePolicy.Controls.Add(this.buttonOpenWindowsStorage);
+            this.groupBoxStoragePolicy.Controls.Add(this.labelStoragePolicyNote);
+            this.groupBoxStoragePolicy.Location = new System.Drawing.Point(15, 280);
+            this.groupBoxStoragePolicy.Name = "groupBoxStoragePolicy";
+            this.groupBoxStoragePolicy.Size = new System.Drawing.Size(735, 100);
+            this.groupBoxStoragePolicy.TabIndex = 1;
+            this.groupBoxStoragePolicy.TabStop = false;
+            this.groupBoxStoragePolicy.Text = "新内容保存位置（Microsoft Store 应用和用户内容）";
+            // 
+            // labelStoragePolicyNote
+            // 
+            this.labelStoragePolicyNote.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelStoragePolicyNote.AutoSize = false;
+            this.labelStoragePolicyNote.ForeColor = System.Drawing.Color.DarkBlue;
+            this.labelStoragePolicyNote.Location = new System.Drawing.Point(15, 30);
+            this.labelStoragePolicyNote.Name = "labelStoragePolicyNote";
+            this.labelStoragePolicyNote.Size = new System.Drawing.Size(515, 60);
+            this.labelStoragePolicyNote.TabIndex = 0;
+            this.labelStoragePolicyNote.Text = "ℹ 此设置影响 Microsoft Store 应用和新用户内容（文档、照片等）。需要 Windows 10 或更高版本。";
+            // 
+            // buttonOpenWindowsStorage
+            // 
+            this.buttonOpenWindowsStorage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonOpenWindowsStorage.Location = new System.Drawing.Point(550, 35);
+            this.buttonOpenWindowsStorage.Name = "buttonOpenWindowsStorage";
+            this.buttonOpenWindowsStorage.Size = new System.Drawing.Size(170, 50);
+            this.buttonOpenWindowsStorage.TabIndex = 1;
+            this.buttonOpenWindowsStorage.Text = "打开 Windows 设置";
+            this.buttonOpenWindowsStorage.UseVisualStyleBackColor = true;
+            this.buttonOpenWindowsStorage.Click += new System.EventHandler(this.buttonOpenWindowsStorage_Click);
             // 
             // tabPageSoftware
             // 
-            tabPageSoftware.Controls.Add(listViewSoftware);
-            tabPageSoftware.Controls.Add(buttonMigrateSoftware);
-            tabPageSoftware.Location = new System.Drawing.Point(4, 26);
-            tabPageSoftware.Name = "tabPageSoftware";
-            tabPageSoftware.Padding = new Padding(3);
-            tabPageSoftware.Size = new System.Drawing.Size(671, 390);
-            tabPageSoftware.TabIndex = 1;
-            tabPageSoftware.Text = "软件迁移";
-            tabPageSoftware.UseVisualStyleBackColor = true;
+            this.tabPageSoftware.Controls.Add(this.listViewSoftware);
+            this.tabPageSoftware.Controls.Add(this.buttonMigrateSoftware);
+            this.tabPageSoftware.Location = new System.Drawing.Point(4, 29);
+            this.tabPageSoftware.Name = "tabPageSoftware";
+            this.tabPageSoftware.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageSoftware.Size = new System.Drawing.Size(768, 461);
+            this.tabPageSoftware.TabIndex = 1;
+            this.tabPageSoftware.Text = "软件迁移";
+            this.tabPageSoftware.UseVisualStyleBackColor = true;
             // 
             // listViewSoftware
             // 
-            listViewSoftware.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            listViewSoftware.CheckBoxes = true;
-            listViewSoftware.Columns.AddRange(new ColumnHeader[] { columnHeaderName, columnHeaderPath, columnHeaderSize });
-            listViewSoftware.FullRowSelect = true;
-            listViewSoftware.Location = new System.Drawing.Point(5, 5);
-            listViewSoftware.Name = "listViewSoftware";
-            listViewSoftware.Size = new System.Drawing.Size(662, 346);
-            listViewSoftware.TabIndex = 0;
-            listViewSoftware.UseCompatibleStateImageBehavior = false;
-            listViewSoftware.View = View.Details;
+            this.listViewSoftware.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.listViewSoftware.CheckBoxes = true;
+            this.listViewSoftware.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderName,
+            this.columnHeaderPath,
+            this.columnHeaderSize});
+            this.listViewSoftware.FullRowSelect = true;
+            this.listViewSoftware.Location = new System.Drawing.Point(6, 6);
+            this.listViewSoftware.Name = "listViewSoftware";
+            this.listViewSoftware.Size = new System.Drawing.Size(756, 300);
+            this.listViewSoftware.TabIndex = 0;
+            this.listViewSoftware.UseCompatibleStateImageBehavior = false;
+            this.listViewSoftware.View = System.Windows.Forms.View.Details;
             // 
             // columnHeaderName
             // 
-            columnHeaderName.Text = "软件名称";
-            columnHeaderName.Width = 180;
+            this.columnHeaderName.Text = "软件名称";
+            this.columnHeaderName.Width = 180;
             // 
             // columnHeaderPath
             // 
-            columnHeaderPath.Text = "安装路径";
-            columnHeaderPath.Width = 400;
+            this.columnHeaderPath.Text = "安装路径";
+            this.columnHeaderPath.Width = 400;
             // 
             // columnHeaderSize
             // 
-            columnHeaderSize.Text = "大小";
-            columnHeaderSize.Width = 120;
+            this.columnHeaderSize.Text = "大小";
+            this.columnHeaderSize.Width = 120;
             // 
             // buttonMigrateSoftware
             // 
-            buttonMigrateSoftware.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            buttonMigrateSoftware.Location = new System.Drawing.Point(567, 357);
-            buttonMigrateSoftware.Name = "buttonMigrateSoftware";
-            buttonMigrateSoftware.Size = new System.Drawing.Size(98, 27);
-            buttonMigrateSoftware.TabIndex = 1;
-            buttonMigrateSoftware.Text = "迁移所选";
-            buttonMigrateSoftware.UseVisualStyleBackColor = true;
-            buttonMigrateSoftware.Click += buttonMigrateSoftware_Click;
+            this.buttonMigrateSoftware.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonMigrateSoftware.Location = new System.Drawing.Point(650, 320);
+            this.buttonMigrateSoftware.Name = "buttonMigrateSoftware";
+            this.buttonMigrateSoftware.Size = new System.Drawing.Size(112, 32);
+            this.buttonMigrateSoftware.TabIndex = 1;
+            this.buttonMigrateSoftware.Text = "迁移所选";
+            this.buttonMigrateSoftware.UseVisualStyleBackColor = true;
+            this.buttonMigrateSoftware.Click += new System.EventHandler(this.buttonMigrateSoftware_Click);
             // 
             // tabPageAppData
             // 
-            tabPageAppData.Controls.Add(labelMklinkNote);
-            tabPageAppData.Controls.Add(listViewAppData);
-            tabPageAppData.Controls.Add(buttonMigrateAppData);
-            tabPageAppData.Controls.Add(buttonRefreshAppData);
-            tabPageAppData.Location = new System.Drawing.Point(4, 26);
-            tabPageAppData.Name = "tabPageAppData";
-            tabPageAppData.Padding = new Padding(3);
-            tabPageAppData.Size = new System.Drawing.Size(671, 390);
-            tabPageAppData.TabIndex = 3;
-            tabPageAppData.Text = "AppData (mklink)";
-            tabPageAppData.UseVisualStyleBackColor = true;
-            // 
-            // labelMklinkNote
-            // 
-            labelMklinkNote.AutoSize = true;
-            labelMklinkNote.ForeColor = System.Drawing.Color.DarkBlue;
-            labelMklinkNote.Location = new System.Drawing.Point(6, 3);
-            labelMklinkNote.Name = "labelMklinkNote";
-            labelMklinkNote.Size = new System.Drawing.Size(330, 17);
-            labelMklinkNote.TabIndex = 3;
-            labelMklinkNote.Text = "注意：此操作使用 mklink 创建符号链接，需要管理员权限。";
+            this.tabPageAppData.Controls.Add(this.labelMklinkNote);
+            this.tabPageAppData.Controls.Add(this.listViewAppData);
+            this.tabPageAppData.Controls.Add(this.buttonMigrateAppData);
+            this.tabPageAppData.Controls.Add(this.buttonRefreshAppData);
+            this.tabPageAppData.Location = new System.Drawing.Point(4, 29);
+            this.tabPageAppData.Name = "tabPageAppData";
+            this.tabPageAppData.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageAppData.Size = new System.Drawing.Size(768, 461);
+            this.tabPageAppData.TabIndex = 3;
+            this.tabPageAppData.Text = "AppData (mklink)";
+            this.tabPageAppData.UseVisualStyleBackColor = true;
             // 
             // listViewAppData
             // 
-            listViewAppData.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            listViewAppData.CheckBoxes = true;
-            listViewAppData.Columns.AddRange(new ColumnHeader[] { columnHeaderAppName, columnHeaderAppPath, columnHeaderAppSize, columnHeaderAppType });
-            listViewAppData.FullRowSelect = true;
-            listViewAppData.Location = new System.Drawing.Point(5, 23);
-            listViewAppData.Name = "listViewAppData";
-            listViewAppData.Size = new System.Drawing.Size(662, 328);
-            listViewAppData.TabIndex = 0;
-            listViewAppData.UseCompatibleStateImageBehavior = false;
-            listViewAppData.View = View.Details;
+            this.listViewAppData.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.listViewAppData.CheckBoxes = true;
+            this.listViewAppData.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderAppName,
+            this.columnHeaderAppPath,
+            this.columnHeaderAppSize,
+            this.columnHeaderAppType});
+            this.listViewAppData.FullRowSelect = true;
+            this.listViewAppData.Location = new System.Drawing.Point(6, 35);
+            this.listViewAppData.Name = "listViewAppData";
+            this.listViewAppData.Size = new System.Drawing.Size(756, 270);
+            this.listViewAppData.TabIndex = 0;
+            this.listViewAppData.UseCompatibleStateImageBehavior = false;
+            this.listViewAppData.View = System.Windows.Forms.View.Details;
             // 
             // columnHeaderAppName
             // 
-            columnHeaderAppName.Text = "应用名称";
-            columnHeaderAppName.Width = 200;
+            this.columnHeaderAppName.Text = "应用名称";
+            this.columnHeaderAppName.Width = 200;
             // 
             // columnHeaderAppPath
             // 
-            columnHeaderAppPath.Text = "路径";
-            columnHeaderAppPath.Width = 350;
+            this.columnHeaderAppPath.Text = "路径";
+            this.columnHeaderAppPath.Width = 350;
             // 
             // columnHeaderAppSize
             // 
-            columnHeaderAppSize.Text = "大小";
-            columnHeaderAppSize.Width = 100;
+            this.columnHeaderAppSize.Text = "大小";
+            this.columnHeaderAppSize.Width = 100;
             // 
             // columnHeaderAppType
             // 
-            columnHeaderAppType.Text = "类型";
-            columnHeaderAppType.Width = 80;
+            this.columnHeaderAppType.Text = "类型";
+            this.columnHeaderAppType.Width = 80;
             // 
             // buttonMigrateAppData
             // 
-            buttonMigrateAppData.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            buttonMigrateAppData.Location = new System.Drawing.Point(567, 357);
-            buttonMigrateAppData.Name = "buttonMigrateAppData";
-            buttonMigrateAppData.Size = new System.Drawing.Size(98, 27);
-            buttonMigrateAppData.TabIndex = 1;
-            buttonMigrateAppData.Text = "迁移所选";
-            buttonMigrateAppData.UseVisualStyleBackColor = true;
-            buttonMigrateAppData.Click += buttonMigrateAppData_Click;
+            this.buttonMigrateAppData.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonMigrateAppData.Location = new System.Drawing.Point(650, 320);
+            this.buttonMigrateAppData.Name = "buttonMigrateAppData";
+            this.buttonMigrateAppData.Size = new System.Drawing.Size(112, 32);
+            this.buttonMigrateAppData.TabIndex = 1;
+            this.buttonMigrateAppData.Text = "迁移所选";
+            this.buttonMigrateAppData.UseVisualStyleBackColor = true;
+            this.buttonMigrateAppData.Click += new System.EventHandler(this.buttonMigrateAppData_Click);
             // 
             // buttonRefreshAppData
             // 
-            buttonRefreshAppData.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            buttonRefreshAppData.Location = new System.Drawing.Point(463, 357);
-            buttonRefreshAppData.Name = "buttonRefreshAppData";
-            buttonRefreshAppData.Size = new System.Drawing.Size(98, 27);
-            buttonRefreshAppData.TabIndex = 2;
-            buttonRefreshAppData.Text = "刷新列表";
-            buttonRefreshAppData.UseVisualStyleBackColor = true;
-            buttonRefreshAppData.Click += buttonRefreshAppData_Click;
+            this.buttonRefreshAppData.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonRefreshAppData.Location = new System.Drawing.Point(532, 320);
+            this.buttonRefreshAppData.Name = "buttonRefreshAppData";
+            this.buttonRefreshAppData.Size = new System.Drawing.Size(112, 32);
+            this.buttonRefreshAppData.TabIndex = 2;
+            this.buttonRefreshAppData.Text = "刷新列表";
+            this.buttonRefreshAppData.UseVisualStyleBackColor = true;
+            this.buttonRefreshAppData.Click += new System.EventHandler(this.buttonRefreshAppData_Click);
+            // 
+            // labelMklinkNote
+            // 
+            this.labelMklinkNote.AutoSize = true;
+            this.labelMklinkNote.ForeColor = System.Drawing.Color.DarkBlue;
+            this.labelMklinkNote.Location = new System.Drawing.Point(6, 10);
+            this.labelMklinkNote.Name = "labelMklinkNote";
+            this.labelMklinkNote.Size = new System.Drawing.Size(500, 20);
+            this.labelMklinkNote.TabIndex = 3;
+            this.labelMklinkNote.Text = "注意：此操作使用 mklink 创建符号链接，需要管理员权限。";
             // 
             // MainForm
             // 
-            AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
-            AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(700, 460);
-            Controls.Add(tabControl1);
-            Controls.Add(menuStrip1);
-            MainMenuStrip = menuStrip1;
-            MinimumSize = new System.Drawing.Size(527, 388);
-            Name = "MainForm";
-            Text = "Windows存储迁移助手";
-            menuStrip1.ResumeLayout(false);
-            menuStrip1.PerformLayout();
-            tabControl1.ResumeLayout(false);
-            tabPageSettings.ResumeLayout(false);
-            groupBoxStoragePolicy.ResumeLayout(false);
-            groupBoxProgramFiles.ResumeLayout(false);
-            groupBoxProgramFiles.PerformLayout();
-            tabPageSoftware.ResumeLayout(false);
-            tabPageAppData.ResumeLayout(false);
-            tabPageAppData.PerformLayout();
-            ResumeLayout(false);
-            PerformLayout();
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(800, 541);
+            this.Controls.Add(this.tabControl1);
+            this.Controls.Add(this.menuStrip1);
+            this.MainMenuStrip = this.menuStrip1;
+            this.MinimumSize = new System.Drawing.Size(600, 450);
+            this.Name = "MainForm";
+            this.Text = "Windows存储迁移助手";
+            this.menuStrip1.ResumeLayout(false);
+            this.menuStrip1.PerformLayout();
+            this.tabControl1.ResumeLayout(false);
+            this.tabPageSettings.ResumeLayout(false);
+            this.groupBoxProgramFiles.ResumeLayout(false);
+            this.groupBoxProgramFiles.PerformLayout();
+            this.groupBoxStoragePolicy.ResumeLayout(false);
+            this.tabPageSoftware.ResumeLayout(false);
+            this.tabPageAppData.ResumeLayout(false);
+            this.tabPageAppData.PerformLayout();
+            this.ResumeLayout(false);
+            this.PerformLayout();
         }
 
         #endregion
