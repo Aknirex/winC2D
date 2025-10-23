@@ -11,6 +11,12 @@ namespace winC2D
             InitializeComponent();
             this.Load += LogForm_Load;
             ApplyLocalization();
+
+            // 设置 listViewLog 的 Anchor 属性，使其随窗口大小变化
+            listViewLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+
+            // 设置 buttonRollback 的 Anchor 属性，使其保持在窗口左下角
+            buttonRollback.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
         }
 
         private void ApplyLocalization()
@@ -109,3 +115,4 @@ namespace winC2D
         }
     }
 }
+
