@@ -43,6 +43,26 @@ namespace winC2D
             LoadSystemSettings();
             // 异步加载数据
             LoadAllDataAsync();
+
+            // 绑定窗口图标点击事件
+            this.MouseDown += MainForm_MouseDown;
+        }
+
+        private void MainForm_MouseDown(object sender, MouseEventArgs e)
+        {
+            // 检查是否点击了窗口左上角图标区域
+            if (e.Button == MouseButtons.Left && e.X <= SystemInformation.FrameBorderSize.Width + SystemInformation.SmallIconSize.Width && e.Y <= SystemInformation.CaptionHeight)
+            {
+                ShowAppDetailDialog();
+            }
+        }
+
+        private void ShowAppDetailDialog()
+        {
+            using (var dlg = new AppDetailForm(this.Icon))
+            {
+                dlg.ShowDialog();
+            }
         }
 
         private async void LoadAllDataAsync()
@@ -711,6 +731,25 @@ namespace winC2D
                     LoadAppDataFolders(); // 刷新列表
                 }
             }
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            const int WM_NCLBUTTONDOWN = 0x00A1;
+            const int WM_NCLBUTTONDBLCLK = 0x00A3;
+            const int HTSYSMENU = 3;
+
+            if (m.Msg == WM_NCLBUTTONDOWN && (m.WParam.ToInt32() == HTSYSMENU))
+            {
+                ShowAppDetailDialog();
+                return;
+            }
+            if (m.Msg == WM_NCLBUTTONDBLCLK && (m.WParam.ToInt32() == HTSYSMENU))
+            {
+                // 阻止双击左上角关闭窗口
+                return;
+            }
+            base.WndProc(ref m);
         }
     }
 }
