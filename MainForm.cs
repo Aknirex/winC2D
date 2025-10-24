@@ -20,6 +20,15 @@ namespace winC2D
             this.Load += MainForm_Load;
             this.FormClosing += MainForm_FormClosing;
             Localization.LanguageChanged += OnLanguageChanged;
+            // 通过嵌入资源方式设置窗口图标，确保任务栏和窗口左上角都显示
+            try
+            {
+                var asm = typeof(MainForm).Assembly;
+                using var stream = asm.GetManifestResourceStream("winC2D.winc2d.ico");
+                if (stream != null)
+                    this.Icon = new System.Drawing.Icon(stream);
+            }
+            catch { }
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
