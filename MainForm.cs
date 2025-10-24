@@ -211,23 +211,20 @@ namespace winC2D
             menuLanguageChinese.Enabled = (currentLang != "zh-CN");
             menuLanguageChinese.Checked = (currentLang == "zh-CN");
 
+            menuLanguageChineseTraditional.Enabled = (currentLang != "zh-Hant");
+            menuLanguageChineseTraditional.Checked = (currentLang == "zh-Hant");
+
             menuLanguageJapanese.Enabled = (currentLang != "ja");
             menuLanguageJapanese.Checked = (currentLang == "ja");
 
             menuLanguageKorean.Enabled = (currentLang != "ko");
             menuLanguageKorean.Checked = (currentLang == "ko");
 
-            menuLanguageFrench.Enabled = (currentLang != "fr");
-            menuLanguageFrench.Checked = (currentLang == "fr");
-
-            menuLanguageGerman.Enabled = (currentLang != "de");
-            menuLanguageGerman.Checked = (currentLang == "de");
-
-            menuLanguageSpanish.Enabled = (currentLang != "es");
-            menuLanguageSpanish.Checked = (currentLang == "es");
-
             menuLanguageRussian.Enabled = (currentLang != "ru");
             menuLanguageRussian.Checked = (currentLang == "ru");
+
+            menuLanguagePortuguese.Enabled = (currentLang != "pt-BR");
+            menuLanguagePortuguese.Checked = (currentLang == "pt-BR");
         }
 
         private void LoadInstalledSoftware()
@@ -327,6 +324,14 @@ namespace winC2D
             }
         }
 
+        private void menuLanguageChineseTraditional_Click(object sender, EventArgs e)
+        {
+            if (Localization.CurrentLanguage != "zh-Hant")
+            {
+                Localization.SetLanguage("zh-Hant");
+            }
+        }
+
         private void menuLanguageJapanese_Click(object sender, EventArgs e)
         {
             if (Localization.CurrentLanguage != "ja")
@@ -343,35 +348,19 @@ namespace winC2D
             }
         }
 
-        private void menuLanguageFrench_Click(object sender, EventArgs e)
-        {
-            if (Localization.CurrentLanguage != "fr")
-            {
-                Localization.SetLanguage("fr");
-            }
-        }
-
-        private void menuLanguageGerman_Click(object sender, EventArgs e)
-        {
-            if (Localization.CurrentLanguage != "de")
-            {
-                Localization.SetLanguage("de");
-            }
-        }
-
-        private void menuLanguageSpanish_Click(object sender, EventArgs e)
-        {
-            if (Localization.CurrentLanguage != "es")
-            {
-                Localization.SetLanguage("es");
-            }
-        }
-
         private void menuLanguageRussian_Click(object sender, EventArgs e)
         {
             if (Localization.CurrentLanguage != "ru")
             {
                 Localization.SetLanguage("ru");
+            }
+        }
+
+        private void menuLanguagePortuguese_Click(object sender, EventArgs e)
+        {
+            if (Localization.CurrentLanguage != "pt-BR")
+            {
+                Localization.SetLanguage("pt-BR");
             }
         }
 

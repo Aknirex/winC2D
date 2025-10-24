@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Msg.ScanSoftwareFailedFmt" xml:space="preserve">
+    <value>Не удалось просканировать программное обеспечение: {0}</value>
+  </data>
+  <data name="Title.Tip" xml:space="preserve">
+    <value>Информация</value>
+  </data>
+  <data name="Title.Error" xml:space="preserve">
+    <value>Ошибка</value>
+  </data>
+  <data name="Msg.MigrateFailedFmt" xml:space="preserve">
+    <value>Миграция не удалась: {0}
+{1}</value>
+  </data>
+  <data name="Msg.MigrateCompleted" xml:space="preserve">
+    <value>Миграция завершена! Успешно: {0}, Ошибок: {1}</value>
+  </data>
+  <data name="Msg.SelectSoftware" xml:space="preserve">
+    <value>Пожалуйста, выберите программное обеспечение для миграции.</value>
+  </data>
+  <data name="Desc.TargetFolderForSoftware" xml:space="preserve">
+    <value>Выберите целевую папку (например, D:\Program Files)</value>
+  </data>
+  <data name="Title.MainWindow" xml:space="preserve">
+    <value>winC2D</value>
+  </data>
+  <data name="Menu.Log" xml:space="preserve">
+    <value>Журнал миграции</value>
+  </data>
+  <data name="Menu.Language" xml:space="preserve">
+    <value>Язык</value>
+  </data>
+  <data name="Tab.SoftwareMigration" xml:space="preserve">
+    <value>Миграция ПО</value>
+  </data>
+  <data name="Tab.AppData" xml:space="preserve">
+    <value>Данные приложений</value>
+  </data>
+  <data name="Msg.SelectAppData" xml:space="preserve">
+    <value>Пожалуйста, выберите папки AppData для миграции.</value>
+  </data>
+  <data name="Desc.TargetFolderForAppData" xml:space="preserve">
+    <value>Выберите целевую папку (используя mklink символические ссылки)</value>
+  </data>
+  <data name="Msg.MklinkNote" xml:space="preserve">
+    <value>ℹ Примечание: Эта операция использует mklink для создания символических ссылок.</value>
+  </data>
+  <data name="Button.RefreshAppData" xml:space="preserve">
+    <value>Обновить список</value>
+  </data>
+  <data name="Settings.Title" xml:space="preserve">
+    <value>Настройки</value>
+  </data>
+  <data name="Settings.ProgramFilesPath" xml:space="preserve">
+    <value>Расположение Program Files по умолчанию (64-бит):</value>
+  </data>
+  <data name="Settings.ProgramFilesPathX86" xml:space="preserve">
+    <value>Расположение Program Files по умолчанию (32-бит):</value>
+  </data>
+  <data name="Settings.CustomX86Path" xml:space="preserve">
+    <value>Настроить путь для 32-битных программ</value>
+  </data>
+  <data name="Button.Browse" xml:space="preserve">
+    <value>Обзор</value>
+  </data>
+  <data name="Button.Apply" xml:space="preserve">
+    <value>Применить</value>
+  </data>
+  <data name="Button.Reset" xml:space="preserve">
+    <value>Сбросить настройки</value>
+  </data>
+  <data name="Msg.InvalidPath" xml:space="preserve">
+    <value>Пожалуйста, введите действительный путь к папке.</value>
+  </data>
+  <data name="Msg.SettingsApplied" xml:space="preserve">
+    <value>Настройки успешно применены!</value>
+  </data>
+  <data name="Msg.SettingsFailed" xml:space="preserve">
+    <value>Не удалось применить настройки: {0}</value>
+  </data>
+  <data name="Msg.SelectFolder" xml:space="preserve">
+    <value>Выберите расположение Program Files по умолчанию</value>
+  </data>
+  <data name="Msg.ResetConfirm" xml:space="preserve">
+    <value>Вы уверены, что хотите сбросить настройки расположения (C:\Program Files)?</value>
+  </data>
+  <data name="Settings.ProgramFilesSection" xml:space="preserve">
+    <value>Расположение Program Files (Классические приложения)</value>
+  </data>
+  <data name="Settings.ProgramFilesNote" xml:space="preserve">
+    <value>ℹ Эта настройка влияет на классические приложения, установленные через установщики (.exe, .msi). Большинство стороннего ПО использует это расположение.</value>
+  </data>
+  <data name="Settings.StoragePolicySection" xml:space="preserve">
+    <value>Расположение для нового контента (Приложения Microsoft Store и пользовательский контент)</value>
+  </data>
+  <data name="Settings.StoragePolicyNote" xml:space="preserve">
+    <value>ℹ Эта настройка влияет на приложения Microsoft Store и новый пользовательский контент (документы, фото и т.д.). Требуется Windows 10 или новее.</value>
+  </data>
+  <data name="Button.OpenWindowsStorage" xml:space="preserve">
+    <value>Открыть настройки Windows</value>
+  </data>
+  <data name="GroupBox.SystemSettings" xml:space="preserve">
+    <value>Системные настройки</value>
+  </data>
+  <data name="Log.Title" xml:space="preserve">
+    <value>Журнал миграции</value>
+  </data>
+  <data name="Log.Time" xml:space="preserve">
+    <value>Время</value>
+  </data>
+  <data name="Log.SoftwareName" xml:space="preserve">
+    <value>Название ПО</value>
+  </data>
+  <data name="Log.OldPath" xml:space="preserve">
+    <value>Старый путь</value>
+  </data>
+  <data name="Log.NewPath" xml:space="preserve">
+    <value>Новый путь</value>
+  </data>
+  <data name="Log.Status" xml:space="preserve">
+    <value>Статус</value>
+  </data>
+  <data name="Log.Message" xml:space="preserve">
+    <value>Сообщение</value>
+  </data>
+  <data name="Button.Rollback" xml:space="preserve">
+    <value>Откатить выбранное</value>
+  </data>
+  <data name="Msg.SelectLogEntry" xml:space="preserve">
+    <value>Пожалуйста, выберите запись в журнале миграции для отката.</value>
+  </data>
+  <data name="Msg.NewPathNotExist" xml:space="preserve">
+    <value>Новый путь не существует, откат невозможен.</value>
+  </data>
+  <data name="Msg.OldPathExists" xml:space="preserve">
+    <value>Старый путь уже существует, откат невозможен.</value>
+  </data>
+  <data name="Msg.RollbackSuccess" xml:space="preserve">
+    <value>Откат выполнен успешно!</value>
+  </data>
+  <data name="Msg.RollbackFailedFmt" xml:space="preserve">
+    <value>Откат не удался: {0}</value>
+  </data>
+  <data name="Msg.Loading" xml:space="preserve">
+    <value>Загрузка...</value>
+  </data>
+  <data name="Column.SoftwareName" xml:space="preserve">
+    <value>Название ПО</value>
+  </data>
+  <data name="Column.InstallPath" xml:space="preserve">
+    <value>Путь установки</value>
+  </data>
+  <data name="Column.Size" xml:space="preserve">
+    <value>Размер</value>
+  </data>
+  <data name="Button.MigrateSelected" xml:space="preserve">
+    <value>Мигрировать выбранное</value>
+  </data>
+</root>

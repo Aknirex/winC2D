@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Msg.ScanSoftwareFailedFmt" xml:space="preserve">
+    <value>Falha ao escanear software: {0}</value>
+  </data>
+  <data name="Title.Tip" xml:space="preserve">
+    <value>Informação</value>
+  </data>
+  <data name="Title.Error" xml:space="preserve">
+    <value>Erro</value>
+  </data>
+  <data name="Msg.MigrateFailedFmt" xml:space="preserve">
+    <value>Falha na migração: {0}
+{1}</value>
+  </data>
+  <data name="Msg.MigrateCompleted" xml:space="preserve">
+    <value>Migração concluída! Sucesso: {0}, Falha: {1}</value>
+  </data>
+  <data name="Msg.SelectSoftware" xml:space="preserve">
+    <value>Por favor, selecione o software para migrar.</value>
+  </data>
+  <data name="Desc.TargetFolderForSoftware" xml:space="preserve">
+    <value>Selecione a pasta de destino (ex: D:\Program Files)</value>
+  </data>
+  <data name="Title.MainWindow" xml:space="preserve">
+    <value>winC2D</value>
+  </data>
+  <data name="Menu.Log" xml:space="preserve">
+    <value>Log de Migração</value>
+  </data>
+  <data name="Menu.Language" xml:space="preserve">
+    <value>Idioma</value>
+  </data>
+  <data name="Tab.SoftwareMigration" xml:space="preserve">
+    <value>Migração de Software</value>
+  </data>
+  <data name="Tab.AppData" xml:space="preserve">
+    <value>Dados do Aplicativo</value>
+  </data>
+  <data name="Msg.SelectAppData" xml:space="preserve">
+    <value>Por favor, selecione as pastas AppData para migrar.</value>
+  </data>
+  <data name="Desc.TargetFolderForAppData" xml:space="preserve">
+    <value>Selecione a pasta de destino (usando link simbólico mklink)</value>
+  </data>
+  <data name="Msg.MklinkNote" xml:space="preserve">
+    <value>ℹ Observação: Esta operação usa mklink para criar links simbólicos.</value>
+  </data>
+  <data name="Button.RefreshAppData" xml:space="preserve">
+    <value>Atualizar Lista</value>
+  </data>
+  <data name="Settings.Title" xml:space="preserve">
+    <value>Configurações</value>
+  </data>
+  <data name="Settings.ProgramFilesPath" xml:space="preserve">
+    <value>Localização padrão do Program Files (64-bit):</value>
+  </data>
+  <data name="Settings.ProgramFilesPathX86" xml:space="preserve">
+    <value>Localização padrão do Program Files (32-bit):</value>
+  </data>
+  <data name="Settings.CustomX86Path" xml:space="preserve">
+    <value>Personalizar caminho do programa 32-bit</value>
+  </data>
+  <data name="Button.Browse" xml:space="preserve">
+    <value>Procurar</value>
+  </data>
+  <data name="Button.Apply" xml:space="preserve">
+    <value>Aplicar</value>
+  </data>
+  <data name="Button.Reset" xml:space="preserve">
+    <value>Restaurar Padrão</value>
+  </data>
+  <data name="Msg.InvalidPath" xml:space="preserve">
+    <value>Por favor, insira um caminho de pasta válido.</value>
+  </data>
+  <data name="Msg.SettingsApplied" xml:space="preserve">
+    <value>Configurações aplicadas com sucesso!</value>
+  </data>
+  <data name="Msg.SettingsFailed" xml:space="preserve">
+    <value>Falha ao aplicar configurações: {0}</value>
+  </data>
+  <data name="Msg.SelectFolder" xml:space="preserve">
+    <value>Selecione a localização padrão do Program Files</value>
+  </data>
+  <data name="Msg.ResetConfirm" xml:space="preserve">
+    <value>Tem certeza que deseja restaurar para a localização padrão (C:\Program Files)?</value>
+  </data>
+  <data name="Settings.ProgramFilesSection" xml:space="preserve">
+    <value>Localização do Program Files (Programas de Desktop Tradicionais)</value>
+  </data>
+  <data name="Settings.ProgramFilesNote" xml:space="preserve">
+    <value>ℹ Esta configuração afeta programas de desktop tradicionais instalados via instaladores (.exe, .msi). A maioria dos softwares de terceiros usa esta localização.</value>
+  </data>
+  <data name="Settings.StoragePolicySection" xml:space="preserve">
+    <value>Local de Salvamento de Novo Conteúdo (Aplicativos Microsoft Store e Conteúdo do Usuário)</value>
+  </data>
+  <data name="Settings.StoragePolicyNote" xml:space="preserve">
+    <value>ℹ Esta configuração afeta aplicativos Microsoft Store e novo conteúdo do usuário (documentos, fotos, etc.). Requer Windows 10 ou superior.</value>
+  </data>
+  <data name="Button.OpenWindowsStorage" xml:space="preserve">
+    <value>Abrir Configurações do Windows</value>
+  </data>
+  <data name="GroupBox.SystemSettings" xml:space="preserve">
+    <value>Configurações do Sistema</value>
+  </data>
+  <data name="Log.Title" xml:space="preserve">
+    <value>Log de Migração</value>
+  </data>
+  <data name="Log.Time" xml:space="preserve">
+    <value>Hora</value>
+  </data>
+  <data name="Log.SoftwareName" xml:space="preserve">
+    <value>Nome do Software</value>
+  </data>
+  <data name="Log.OldPath" xml:space="preserve">
+    <value>Caminho Antigo</value>
+  </data>
+  <data name="Log.NewPath" xml:space="preserve">
+    <value>Novo Caminho</value>
+  </data>
+  <data name="Log.Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Log.Message" xml:space="preserve">
+    <value>Mensagem</value>
+  </data>
+  <data name="Button.Rollback" xml:space="preserve">
+    <value>Reverter Selecionados</value>
+  </data>
+  <data name="Msg.SelectLogEntry" xml:space="preserve">
+    <value>Por favor, selecione uma entrada do log de migração para reverter.</value>
+  </data>
+  <data name="Msg.NewPathNotExist" xml:space="preserve">
+    <value>O novo caminho não existe, não é possível reverter.</value>
+  </data>
+  <data name="Msg.OldPathExists" xml:space="preserve">
+    <value>O caminho antigo já existe, não é possível reverter.</value>
+  </data>
+  <data name="Msg.RollbackSuccess" xml:space="preserve">
+    <value>Reversão bem-sucedida!</value>
+  </data>
+  <data name="Msg.RollbackFailedFmt" xml:space="preserve">
+    <value>Falha na reversão: {0}</value>
+  </data>
+  <data name="Msg.Loading" xml:space="preserve">
+    <value>Carregando...</value>
+  </data>
+  <data name="Column.SoftwareName" xml:space="preserve">
+    <value>Nome do Software</value>
+  </data>
+  <data name="Column.InstallPath" xml:space="preserve">
+    <value>Caminho de Instalação</value>
+  </data>
+  <data name="Column.Size" xml:space="preserve">
+    <value>Tamanho</value>
+  </data>
+  <data name="Button.MigrateSelected" xml:space="preserve">
+    <value>Migrar Selecionados</value>
+  </data>
+</root>

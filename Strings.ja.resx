@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Msg.ScanSoftwareFailedFmt" xml:space="preserve">
+    <value>ソフトウェアのスキャンに失敗しました: {0}</value>
+  </data>
+  <data name="Title.Tip" xml:space="preserve">
+    <value>情報</value>
+  </data>
+  <data name="Title.Error" xml:space="preserve">
+    <value>エラー</value>
+  </data>
+  <data name="Msg.MigrateFailedFmt" xml:space="preserve">
+    <value>移行に失敗しました: {0}
+{1}</value>
+  </data>
+  <data name="Msg.MigrateCompleted" xml:space="preserve">
+    <value>移行が完了しました！成功: {0}, 失敗: {1}</value>
+  </data>
+  <data name="Msg.SelectSoftware" xml:space="preserve">
+    <value>移行するソフトウェアを選択してください。</value>
+  </data>
+  <data name="Desc.TargetFolderForSoftware" xml:space="preserve">
+    <value>ターゲットフォルダを選択（例: D:\Program Files）</value>
+  </data>
+  <data name="Title.MainWindow" xml:space="preserve">
+    <value>winC2D</value>
+  </data>
+  <data name="Menu.Log" xml:space="preserve">
+    <value>移行ログ</value>
+  </data>
+  <data name="Menu.Language" xml:space="preserve">
+    <value>言語</value>
+  </data>
+  <data name="Tab.SoftwareMigration" xml:space="preserve">
+    <value>ソフトウェア移行</value>
+  </data>
+  <data name="Tab.AppData" xml:space="preserve">
+    <value>アプリケーションデータ</value>
+  </data>
+  <data name="Msg.SelectAppData" xml:space="preserve">
+    <value>移行するAppDataフォルダを選択してください。</value>
+  </data>
+  <data name="Desc.TargetFolderForAppData" xml:space="preserve">
+    <value>ターゲットフォルダを選択（mklinkシンボリックリンクを使用）</value>
+  </data>
+  <data name="Msg.MklinkNote" xml:space="preserve">
+    <value>ℹ 注意：この操作はmklinkを使用してシンボリックリンクを作成します。</value>
+  </data>
+  <data name="Button.RefreshAppData" xml:space="preserve">
+    <value>リストを更新</value>
+  </data>
+  <data name="Settings.Title" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="Settings.ProgramFilesPath" xml:space="preserve">
+    <value>デフォルトProgram Files場所（64ビット）:</value>
+  </data>
+  <data name="Settings.ProgramFilesPathX86" xml:space="preserve">
+    <value>デフォルトProgram Files場所（32ビット）:</value>
+  </data>
+  <data name="Settings.CustomX86Path" xml:space="preserve">
+    <value>32ビットプログラムのパスをカスタマイズ</value>
+  </data>
+  <data name="Button.Browse" xml:space="preserve">
+    <value>参照</value>
+  </data>
+  <data name="Button.Apply" xml:space="preserve">
+    <value>適用</value>
+  </data>
+  <data name="Button.Reset" xml:space="preserve">
+    <value>デフォルトにリセット</value>
+  </data>
+  <data name="Msg.InvalidPath" xml:space="preserve">
+    <value>有効なフォルダパスを入力してください。</value>
+  </data>
+  <data name="Msg.SettingsApplied" xml:space="preserve">
+    <value>設定が正常に適用されました！</value>
+  </data>
+  <data name="Msg.SettingsFailed" xml:space="preserve">
+    <value>設定の適用に失敗しました: {0}</value>
+  </data>
+  <data name="Msg.SelectFolder" xml:space="preserve">
+    <value>デフォルトのProgram Files場所を選択</value>
+  </data>
+  <data name="Msg.ResetConfirm" xml:space="preserve">
+    <value>デフォルトの場所（C:\Program Files）にリセットしますか？</value>
+  </data>
+  <data name="Settings.ProgramFilesSection" xml:space="preserve">
+    <value>Program Filesの場所（従来のデスクトッププログラム）</value>
+  </data>
+  <data name="Settings.ProgramFilesNote" xml:space="preserve">
+    <value>ℹ この設定は、インストーラー（.exe、.msi）経由でインストールされた従来のデスクトッププログラムに影響します。ほとんどのサードパーティソフトウェアはこの場所を使用します。</value>
+  </data>
+  <data name="Settings.StoragePolicySection" xml:space="preserve">
+    <value>新しいコンテンツの保存場所（Microsoft Storeアプリとユーザーコンテンツ）</value>
+  </data>
+  <data name="Settings.StoragePolicyNote" xml:space="preserve">
+    <value>ℹ この設定は、Microsoft Storeアプリと新しいユーザーコンテンツ（ドキュメント、写真など）に影響します。Windows 10以降が必要です。</value>
+  </data>
+  <data name="Button.OpenWindowsStorage" xml:space="preserve">
+    <value>Windows設定を開く</value>
+  </data>
+  <data name="GroupBox.SystemSettings" xml:space="preserve">
+    <value>システム設定</value>
+  </data>
+  <data name="Log.Title" xml:space="preserve">
+    <value>移行ログ</value>
+  </data>
+  <data name="Log.Time" xml:space="preserve">
+    <value>時間</value>
+  </data>
+  <data name="Log.SoftwareName" xml:space="preserve">
+    <value>ソフトウェア名</value>
+  </data>
+  <data name="Log.OldPath" xml:space="preserve">
+    <value>旧パス</value>
+  </data>
+  <data name="Log.NewPath" xml:space="preserve">
+    <value>新パス</value>
+  </data>
+  <data name="Log.Status" xml:space="preserve">
+    <value>ステータス</value>
+  </data>
+  <data name="Log.Message" xml:space="preserve">
+    <value>メッセージ</value>
+  </data>
+  <data name="Button.Rollback" xml:space="preserve">
+    <value>選択項目をロールバック</value>
+  </data>
+  <data name="Msg.SelectLogEntry" xml:space="preserve">
+    <value>ロールバックする移行ログエントリを選択してください。</value>
+  </data>
+  <data name="Msg.NewPathNotExist" xml:space="preserve">
+    <value>新しいパスが存在しないため、ロールバックできません。</value>
+  </data>
+  <data name="Msg.OldPathExists" xml:space="preserve">
+    <value>古いパスが既に存在するため、ロールバックできません。</value>
+  </data>
+  <data name="Msg.RollbackSuccess" xml:space="preserve">
+    <value>ロールバックが成功しました！</value>
+  </data>
+  <data name="Msg.RollbackFailedFmt" xml:space="preserve">
+    <value>ロールバックに失敗しました: {0}</value>
+  </data>
+  <data name="Msg.Loading" xml:space="preserve">
+    <value>読み込み中...</value>
+  </data>
+  <data name="Column.SoftwareName" xml:space="preserve">
+    <value>ソフトウェア名</value>
+  </data>
+  <data name="Column.InstallPath" xml:space="preserve">
+    <value>インストールパス</value>
+  </data>
+  <data name="Column.Size" xml:space="preserve">
+    <value>サイズ</value>
+  </data>
+  <data name="Button.MigrateSelected" xml:space="preserve">
+    <value>選択項目を移行</value>
+  </data>
+</root>

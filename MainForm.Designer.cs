@@ -50,10 +50,9 @@ namespace winC2D
         private System.Windows.Forms.ToolStripMenuItem menuLanguageChinese;
         private System.Windows.Forms.ToolStripMenuItem menuLanguageJapanese;
         private System.Windows.Forms.ToolStripMenuItem menuLanguageKorean;
-        private System.Windows.Forms.ToolStripMenuItem menuLanguageFrench;
-        private System.Windows.Forms.ToolStripMenuItem menuLanguageGerman;
-        private System.Windows.Forms.ToolStripMenuItem menuLanguageSpanish;
         private System.Windows.Forms.ToolStripMenuItem menuLanguageRussian;
+        private System.Windows.Forms.ToolStripMenuItem menuLanguageChineseTraditional;
+        private System.Windows.Forms.ToolStripMenuItem menuLanguagePortuguese;
 
         /// <summary>
         ///  Clean up any resources being used.
@@ -79,10 +78,9 @@ namespace winC2D
             menuLanguageChinese = new ToolStripMenuItem();
             menuLanguageJapanese = new ToolStripMenuItem();
             menuLanguageKorean = new ToolStripMenuItem();
-            menuLanguageFrench = new ToolStripMenuItem();
-            menuLanguageGerman = new ToolStripMenuItem();
-            menuLanguageSpanish = new ToolStripMenuItem();
             menuLanguageRussian = new ToolStripMenuItem();
+            menuLanguageChineseTraditional = new ToolStripMenuItem();
+            menuLanguagePortuguese = new ToolStripMenuItem();
             tabControl1 = new TabControl();
             tabPageSettings = new TabPage();
             groupBoxStoragePolicy = new GroupBox();
@@ -143,7 +141,7 @@ namespace winC2D
             // 
             // menuLanguage
             // 
-            menuLanguage.DropDownItems.AddRange(new ToolStripItem[] { menuLanguageEnglish, menuLanguageChinese, menuLanguageJapanese, menuLanguageKorean, menuLanguageFrench, menuLanguageGerman, menuLanguageSpanish, menuLanguageRussian });
+            menuLanguage.DropDownItems.AddRange(new ToolStripItem[] { menuLanguageEnglish, menuLanguageChinese, menuLanguageChineseTraditional, menuLanguageJapanese, menuLanguageKorean, menuLanguageRussian, menuLanguagePortuguese });
             menuLanguage.Name = "menuLanguage";
             menuLanguage.Size = new System.Drawing.Size(44, 21);
             menuLanguage.Text = "语言";
@@ -176,33 +174,26 @@ namespace winC2D
             menuLanguageKorean.Text = "한국어";
             menuLanguageKorean.Click += menuLanguageKorean_Click;
             // 
-            // menuLanguageFrench
-            // 
-            menuLanguageFrench.Name = "menuLanguageFrench";
-            menuLanguageFrench.Size = new System.Drawing.Size(124, 22);
-            menuLanguageFrench.Text = "Français";
-            menuLanguageFrench.Click += menuLanguageFrench_Click;
-            // 
-            // menuLanguageGerman
-            // 
-            menuLanguageGerman.Name = "menuLanguageGerman";
-            menuLanguageGerman.Size = new System.Drawing.Size(124, 22);
-            menuLanguageGerman.Text = "Deutsch";
-            menuLanguageGerman.Click += menuLanguageGerman_Click;
-            // 
-            // menuLanguageSpanish
-            // 
-            menuLanguageSpanish.Name = "menuLanguageSpanish";
-            menuLanguageSpanish.Size = new System.Drawing.Size(124, 22);
-            menuLanguageSpanish.Text = "Español";
-            menuLanguageSpanish.Click += menuLanguageSpanish_Click;
-            // 
             // menuLanguageRussian
             // 
             menuLanguageRussian.Name = "menuLanguageRussian";
             menuLanguageRussian.Size = new System.Drawing.Size(124, 22);
             menuLanguageRussian.Text = "Русский";
             menuLanguageRussian.Click += menuLanguageRussian_Click;
+            // 
+            // menuLanguageChineseTraditional
+            // 
+            menuLanguageChineseTraditional.Name = "menuLanguageChineseTraditional";
+            menuLanguageChineseTraditional.Size = new System.Drawing.Size(124, 22);
+            menuLanguageChineseTraditional.Text = "繁體中文";
+            menuLanguageChineseTraditional.Click += menuLanguageChineseTraditional_Click;
+            // 
+            // menuLanguagePortuguese
+            // 
+            menuLanguagePortuguese.Name = "menuLanguagePortuguese";
+            menuLanguagePortuguese.Size = new System.Drawing.Size(124, 22);
+            menuLanguagePortuguese.Text = "Português (Brasil)";
+            menuLanguagePortuguese.Click += menuLanguagePortuguese_Click;
             // 
             // tabControl1
             // 
