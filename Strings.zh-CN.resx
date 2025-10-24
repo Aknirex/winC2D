@@ -12,21 +12,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Folder.Documents" xml:space="preserve">
-    <value>文档</value>
-  </data>
-  <data name="Folder.Pictures" xml:space="preserve">
-    <value>图片</value>
-  </data>
-  <data name="Folder.Downloads" xml:space="preserve">
-    <value>下载</value>
-  </data>
-  <data name="Folder.Videos" xml:space="preserve">
-    <value>视频</value>
-  </data>
-  <data name="Folder.Desktop" xml:space="preserve">
-    <value>桌面</value>
-  </data>
+  <!-- 只保留 Strings.resx 中存在的 key -->
   <data name="Msg.ScanSoftwareFailedFmt" xml:space="preserve">
     <value>扫描软件失败：{0}</value>
   </data>
@@ -35,12 +21,6 @@
   </data>
   <data name="Title.Error" xml:space="preserve">
     <value>错误</value>
-  </data>
-  <data name="Msg.SelectFolders" xml:space="preserve">
-    <value>请选择要迁移的文件夹。</value>
-  </data>
-  <data name="Desc.TargetFolderForUserFolders" xml:space="preserve">
-    <value>选择目标文件夹（如：D:\）</value>
   </data>
   <data name="Msg.MigrateFailedFmt" xml:space="preserve">
     <value>迁移失败：{0}
@@ -58,9 +38,6 @@
   <data name="Title.MainWindow" xml:space="preserve">
     <value>winC2D</value>
   </data>
-  <data name="Menu.Settings" xml:space="preserve">
-    <value>系统设置</value>
-  </data>
   <data name="Menu.Log" xml:space="preserve">
     <value>迁移日志</value>
   </data>
@@ -69,9 +46,6 @@
   </data>
   <data name="Tab.SoftwareMigration" xml:space="preserve">
     <value>软件迁移</value>
-  </data>
-  <data name="Tab.UserFolders" xml:space="preserve">
-    <value>用户文件夹</value>
   </data>
   <data name="Column.SoftwareName" xml:space="preserve">
     <value>软件名称</value>
@@ -82,29 +56,11 @@
   <data name="Column.Size" xml:space="preserve">
     <value>大小</value>
   </data>
-  <data name="Column.FolderName" xml:space="preserve">
-    <value>文件夹名称</value>
-  </data>
-  <data name="Column.CurrentPath" xml:space="preserve">
-    <value>当前路径</value>
-  </data>
   <data name="Button.MigrateSelected" xml:space="preserve">
     <value>迁移所选</value>
   </data>
   <data name="Tab.AppData" xml:space="preserve">
-    <value>AppData (mklink)</value>
-  </data>
-  <data name="Column.AppName" xml:space="preserve">
-    <value>应用名称</value>
-  </data>
-  <data name="Column.AppPath" xml:space="preserve">
-    <value>路径</value>
-  </data>
-  <data name="Column.AppSize" xml:space="preserve">
-    <value>大小</value>
-  </data>
-  <data name="Column.AppType" xml:space="preserve">
-    <value>类型</value>
+    <value>AppData</value>
   </data>
   <data name="Msg.SelectAppData" xml:space="preserve">
     <value>请选择要迁移的AppData文件夹。</value>
@@ -129,12 +85,6 @@
   </data>
   <data name="Settings.CustomX86Path" xml:space="preserve">
     <value>自定义 32位 程序路径</value>
-  </data>
-  <data name="Settings.Description" xml:space="preserve">
-    <value>此设置会修改 Windows 系统的 Program Files 默认路径，影响新安装软件的默认安装位置。</value>
-  </data>
-  <data name="Settings.Warning" xml:space="preserve">
-    <value>ℹ 注意：此更改仅影响新安装的软件，已安装的软件不受影响。某些安装程序可能需要重启系统才能识别此更改。</value>
   </data>
   <data name="Button.Browse" xml:space="preserve">
     <value>浏览</value>
@@ -175,6 +125,9 @@
   <data name="Button.OpenWindowsStorage" xml:space="preserve">
     <value>打开 Windows 设置</value>
   </data>
+  <data name="GroupBox.SystemSettings" xml:space="preserve">
+    <value>系统设置</value>
+  </data>
   <data name="Log.Title" xml:space="preserve">
     <value>迁移日志</value>
   </data>
@@ -214,40 +167,7 @@
   <data name="Msg.RollbackFailedFmt" xml:space="preserve">
     <value>回滚失败：{0}</value>
   </data>
-  <data name="Settings.NewApps" xml:space="preserve">
-    <value>新应用：</value>
-  </data>
-  <data name="Settings.NewDocuments" xml:space="preserve">
-    <value>新文档：</value>
-  </data>
-  <data name="Settings.NewMusic" xml:space="preserve">
-    <value>新音乐：</value>
-  </data>
-  <data name="Settings.NewPhotos" xml:space="preserve">
-    <value>新照片和视频：</value>
-  </data>
-  <data name="Settings.NewMaps" xml:space="preserve">
-    <value>新离线地图：</value>
-  </data>
-  <data name="GroupBox.SystemSettings" xml:space="preserve">
-    <value>系统设置</value>
-  </data>
-  <data name="Button.OpenSettings" xml:space="preserve">
-    <value>打开设置</value>
-  </data>
   <data name="Msg.Loading" xml:space="preserve">
     <value>正在加载...</value>
-  </data>
-  <data name="Msg.MergePrompt" xml:space="preserve">
-    <value>目标目录已存在：{0}
-是否将原内容合并到该目录？
-
-选择“是”将融合，选择“否”跳过该文件夹。</value>
-  </data>
-  <data name="Msg.UserFolderManualMigrateTip" xml:space="preserve">
-    <value>请在资源管理器中右键选中的用户文件夹，选择“属性”，然后在“位置”选项卡中迁移文件夹。这是迁移用户文件夹最推荐、最安全的方式。</value>
-  </data>
-  <data name="Button.Properties" xml:space="preserve">
-    <value>属性...</value>
   </data>
 </root>
