@@ -84,7 +84,9 @@ namespace winC2D
             }
             try
             {
-                Directory.Move(newPath, oldPath);
+                // 跨卷回滚：复制+删除
+                CopyDirectory(newPath, oldPath);
+                Directory.Delete(newPath, true);
                 SoftwareMigrator.UpdateRegistryInstallLocation(oldPath, oldPath); // 恢复注册表
                 try { ShortcutHelper.FixShortcuts(newPath, oldPath); } catch { }
                 MigrationLogger.Log(new MigrationLogEntry
@@ -112,6 +114,21 @@ namespace winC2D
                 MessageBox.Show(string.Format(Localization.T("Msg.RollbackFailedFmt"), ex.Message));
             }
             LogForm_Load(null, null); // 刷新日志
+        }
+
+        private void CopyDirectory(string sourceDir, string targetDir)
+        {
+            Directory.CreateDirectory(targetDir);
+            foreach (var file in Directory.GetFiles(sourceDir))
+            {
+                string targetFile = Path.Combine(targetDir, Path.GetFileName(file));
+                File.Copy(file, targetFile);
+            }
+            foreach (var directory in Directory.GetDirectories(sourceDir))
+            {
+                string targetSubDir = Path.Combine(targetDir, Path.GetFileName(directory));
+                CopyDirectory(directory, targetSubDir);
+            }
         }
     }
 }
