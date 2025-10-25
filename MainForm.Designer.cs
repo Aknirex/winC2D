@@ -44,7 +44,6 @@ namespace winC2D
         private System.Windows.Forms.ColumnHeader columnHeaderAppType;
         private System.Windows.Forms.Button buttonMigrateAppData;
         private System.Windows.Forms.Button buttonRefreshAppData;
-        private System.Windows.Forms.Label labelMklinkNote;
         private System.Windows.Forms.ToolStripMenuItem menuLanguage;
         private System.Windows.Forms.ToolStripMenuItem menuLanguageEnglish;
         private System.Windows.Forms.ToolStripMenuItem menuLanguageChinese;
@@ -53,6 +52,7 @@ namespace winC2D
         private System.Windows.Forms.ToolStripMenuItem menuLanguageRussian;
         private System.Windows.Forms.ToolStripMenuItem menuLanguageChineseTraditional;
         private System.Windows.Forms.ToolStripMenuItem menuLanguagePortuguese;
+        private System.Windows.Forms.Button buttonRefreshSoftware;
 
         /// <summary>
         ///  Clean up any resources being used.
@@ -76,10 +76,10 @@ namespace winC2D
             menuLanguage = new ToolStripMenuItem();
             menuLanguageEnglish = new ToolStripMenuItem();
             menuLanguageChinese = new ToolStripMenuItem();
+            menuLanguageChineseTraditional = new ToolStripMenuItem();
             menuLanguageJapanese = new ToolStripMenuItem();
             menuLanguageKorean = new ToolStripMenuItem();
             menuLanguageRussian = new ToolStripMenuItem();
-            menuLanguageChineseTraditional = new ToolStripMenuItem();
             menuLanguagePortuguese = new ToolStripMenuItem();
             tabControl1 = new TabControl();
             tabPageSettings = new TabPage();
@@ -104,7 +104,6 @@ namespace winC2D
             columnHeaderSize = new ColumnHeader();
             buttonMigrateSoftware = new Button();
             tabPageAppData = new TabPage();
-            labelMklinkNote = new Label();
             listViewAppData = new ListView();
             columnHeaderAppName = new ColumnHeader();
             columnHeaderAppPath = new ColumnHeader();
@@ -112,6 +111,7 @@ namespace winC2D
             columnHeaderAppType = new ColumnHeader();
             buttonMigrateAppData = new Button();
             buttonRefreshAppData = new Button();
+            buttonRefreshSoftware = new Button();
             menuStrip1.SuspendLayout();
             tabControl1.SuspendLayout();
             tabPageSettings.SuspendLayout();
@@ -149,49 +149,49 @@ namespace winC2D
             // menuLanguageEnglish
             // 
             menuLanguageEnglish.Name = "menuLanguageEnglish";
-            menuLanguageEnglish.Size = new System.Drawing.Size(124, 22);
+            menuLanguageEnglish.Size = new System.Drawing.Size(179, 22);
             menuLanguageEnglish.Text = "English";
             menuLanguageEnglish.Click += menuLanguageEnglish_Click;
             // 
             // menuLanguageChinese
             // 
             menuLanguageChinese.Name = "menuLanguageChinese";
-            menuLanguageChinese.Size = new System.Drawing.Size(124, 22);
+            menuLanguageChinese.Size = new System.Drawing.Size(179, 22);
             menuLanguageChinese.Text = "中文";
             menuLanguageChinese.Click += menuLanguageChinese_Click;
+            // 
+            // menuLanguageChineseTraditional
+            // 
+            menuLanguageChineseTraditional.Name = "menuLanguageChineseTraditional";
+            menuLanguageChineseTraditional.Size = new System.Drawing.Size(179, 22);
+            menuLanguageChineseTraditional.Text = "繁體中文";
+            menuLanguageChineseTraditional.Click += menuLanguageChineseTraditional_Click;
             // 
             // menuLanguageJapanese
             // 
             menuLanguageJapanese.Name = "menuLanguageJapanese";
-            menuLanguageJapanese.Size = new System.Drawing.Size(124, 22);
+            menuLanguageJapanese.Size = new System.Drawing.Size(179, 22);
             menuLanguageJapanese.Text = "日本語";
             menuLanguageJapanese.Click += menuLanguageJapanese_Click;
             // 
             // menuLanguageKorean
             // 
             menuLanguageKorean.Name = "menuLanguageKorean";
-            menuLanguageKorean.Size = new System.Drawing.Size(124, 22);
+            menuLanguageKorean.Size = new System.Drawing.Size(179, 22);
             menuLanguageKorean.Text = "한국어";
             menuLanguageKorean.Click += menuLanguageKorean_Click;
             // 
             // menuLanguageRussian
             // 
             menuLanguageRussian.Name = "menuLanguageRussian";
-            menuLanguageRussian.Size = new System.Drawing.Size(124, 22);
+            menuLanguageRussian.Size = new System.Drawing.Size(179, 22);
             menuLanguageRussian.Text = "Русский";
             menuLanguageRussian.Click += menuLanguageRussian_Click;
-            // 
-            // menuLanguageChineseTraditional
-            // 
-            menuLanguageChineseTraditional.Name = "menuLanguageChineseTraditional";
-            menuLanguageChineseTraditional.Size = new System.Drawing.Size(124, 22);
-            menuLanguageChineseTraditional.Text = "繁體中文";
-            menuLanguageChineseTraditional.Click += menuLanguageChineseTraditional_Click;
             // 
             // menuLanguagePortuguese
             // 
             menuLanguagePortuguese.Name = "menuLanguagePortuguese";
-            menuLanguagePortuguese.Size = new System.Drawing.Size(124, 22);
+            menuLanguagePortuguese.Size = new System.Drawing.Size(179, 22);
             menuLanguagePortuguese.Text = "Português (Brasil)";
             menuLanguagePortuguese.Click += menuLanguagePortuguese_Click;
             // 
@@ -379,6 +379,7 @@ namespace winC2D
             // 
             tabPageSoftware.Controls.Add(listViewSoftware);
             tabPageSoftware.Controls.Add(buttonMigrateSoftware);
+            tabPageSoftware.Controls.Add(buttonRefreshSoftware);
             tabPageSoftware.Location = new System.Drawing.Point(4, 26);
             tabPageSoftware.Name = "tabPageSoftware";
             tabPageSoftware.Padding = new Padding(3);
@@ -393,9 +394,9 @@ namespace winC2D
             listViewSoftware.CheckBoxes = true;
             listViewSoftware.Columns.AddRange(new ColumnHeader[] { columnHeaderName, columnHeaderPath, columnHeaderSize });
             listViewSoftware.FullRowSelect = true;
-            listViewSoftware.Location = new System.Drawing.Point(5, 5);
+            listViewSoftware.Location = new System.Drawing.Point(5, 6);
             listViewSoftware.Name = "listViewSoftware";
-            listViewSoftware.Size = new System.Drawing.Size(662, 346);
+            listViewSoftware.Size = new System.Drawing.Size(662, 345);
             listViewSoftware.TabIndex = 0;
             listViewSoftware.UseCompatibleStateImageBehavior = false;
             listViewSoftware.View = View.Details;
@@ -426,9 +427,19 @@ namespace winC2D
             buttonMigrateSoftware.UseVisualStyleBackColor = true;
             buttonMigrateSoftware.Click += buttonMigrateSoftware_Click;
             // 
+            // buttonRefreshSoftware
+            // 
+            buttonRefreshSoftware.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonRefreshSoftware.Location = new System.Drawing.Point(463, 357);
+            buttonRefreshSoftware.Name = "buttonRefreshSoftware";
+            buttonRefreshSoftware.Size = new System.Drawing.Size(98, 27);
+            buttonRefreshSoftware.TabIndex = 2;
+            buttonRefreshSoftware.Text = "刷新列表";
+            buttonRefreshSoftware.UseVisualStyleBackColor = true;
+            buttonRefreshSoftware.Click += buttonRefreshSoftware_Click;
+            // 
             // tabPageAppData
             // 
-            tabPageAppData.Controls.Add(labelMklinkNote);
             tabPageAppData.Controls.Add(listViewAppData);
             tabPageAppData.Controls.Add(buttonMigrateAppData);
             tabPageAppData.Controls.Add(buttonRefreshAppData);
@@ -440,25 +451,15 @@ namespace winC2D
             tabPageAppData.Text = "AppData (mklink)";
             tabPageAppData.UseVisualStyleBackColor = true;
             // 
-            // labelMklinkNote
-            // 
-            labelMklinkNote.AutoSize = true;
-            labelMklinkNote.ForeColor = System.Drawing.Color.DarkBlue;
-            labelMklinkNote.Location = new System.Drawing.Point(6, 3);
-            labelMklinkNote.Name = "labelMklinkNote";
-            labelMklinkNote.Size = new System.Drawing.Size(330, 17);
-            labelMklinkNote.TabIndex = 3;
-            labelMklinkNote.Text = "注意：此操作使用 mklink 创建符号链接，需要管理员权限。";
-            // 
             // listViewAppData
             // 
             listViewAppData.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             listViewAppData.CheckBoxes = true;
             listViewAppData.Columns.AddRange(new ColumnHeader[] { columnHeaderAppName, columnHeaderAppPath, columnHeaderAppSize, columnHeaderAppType });
             listViewAppData.FullRowSelect = true;
-            listViewAppData.Location = new System.Drawing.Point(5, 23);
+            listViewAppData.Location = new System.Drawing.Point(5, 6);
             listViewAppData.Name = "listViewAppData";
-            listViewAppData.Size = new System.Drawing.Size(662, 328);
+            listViewAppData.Size = new System.Drawing.Size(662, 345);
             listViewAppData.TabIndex = 0;
             listViewAppData.UseCompatibleStateImageBehavior = false;
             listViewAppData.View = View.Details;
@@ -525,7 +526,6 @@ namespace winC2D
             groupBoxProgramFiles.PerformLayout();
             tabPageSoftware.ResumeLayout(false);
             tabPageAppData.ResumeLayout(false);
-            tabPageAppData.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }

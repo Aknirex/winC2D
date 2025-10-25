@@ -29,6 +29,10 @@ namespace winC2D
                     this.Icon = new System.Drawing.Icon(stream);
             }
             catch { }
+
+            // 在构造函数或MainForm_Load中添加列排序事件绑定
+            listViewAppData.ColumnClick += listViewAppData_ColumnClick;
+            listViewSoftware.ColumnClick += listViewSoftware_ColumnClick;
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -93,6 +97,10 @@ namespace winC2D
                         item.Tag = sw;
                         listViewSoftware.Items.Add(item);
                     }
+                    softwareSortColumn = 0;
+                    softwareSortAsc = true;
+                    listViewSoftware.ListViewItemSorter = new ListViewItemComparerSoftware(softwareSortColumn, softwareSortAsc);
+                    listViewSoftware.Sort();
                 }));
             }
             catch (Exception ex)
@@ -151,6 +159,11 @@ namespace winC2D
                     listViewAppData.Items.Clear();
                     foreach (var item in items)
                         listViewAppData.Items.Add(item);
+                    // 默认按名称升序
+                    appDataSortColumn = 0;
+                    appDataSortAsc = true;
+                    listViewAppData.ListViewItemSorter = new ListViewItemComparer(appDataSortColumn, appDataSortAsc);
+                    listViewAppData.Sort();
                 }));
             }
             catch
@@ -167,8 +180,14 @@ namespace winC2D
             listViewAppData.Items.Clear();
             listViewAppData.Items.Add(new ListViewItem(Localization.T("Msg.Loading")));
             await Task.Run(() => LoadAppDataFoldersSafe());
-            MessageBox.Show(Localization.T("Msg.MigrateCompleted").Replace("{0}", listViewAppData.Items.Count.ToString()).Replace("{1}", "0"),
-                Localization.T("Title.Tip"));
+            // 不再弹出迁移成功弹窗
+        }
+
+        private void buttonRefreshSoftware_Click(object sender, EventArgs e)
+        {
+            listViewSoftware.Items.Clear();
+            listViewSoftware.Items.Add(new ListViewItem(Localization.T("Msg.Loading")));
+            Task.Run(() => LoadInstalledSoftwareSafe());
         }
 
         private void OnLanguageChanged(object sender, EventArgs e)
@@ -211,13 +230,17 @@ namespace winC2D
             columnHeaderPath.Text = Localization.T("Column.InstallPath");
             columnHeaderSize.Text = Localization.T("Column.Size");
 
+            // AppData 列表列名（与软件迁移列名一致）
+            columnHeaderAppName.Text = Localization.T("Column.SoftwareName");
+            columnHeaderAppPath.Text = Localization.T("Column.InstallPath");
+            columnHeaderAppSize.Text = Localization.T("Column.Size");
+            columnHeaderAppType.Text = Localization.T("Column.Type");
+
             // Buttons
             buttonMigrateSoftware.Text = Localization.T("Button.MigrateSelected");
             buttonMigrateAppData.Text = Localization.T("Button.MigrateSelected");
             buttonRefreshAppData.Text = Localization.T("Button.RefreshAppData");
-
-            // Labels
-            labelMklinkNote.Text = Localization.T("Msg.MklinkNote");
+            buttonRefreshSoftware.Text = Localization.T("Button.RefreshAppData");
         }
 
         private void UpdateLanguageMenuItems()
@@ -576,16 +599,6 @@ namespace winC2D
             }
         }
 
-        private void buttonEditSettings_Click(object sender, EventArgs e)
-        {
-            using (var settingsForm = new SettingsForm())
-            {
-                settingsForm.ShowDialog();
-                // 刷新显示的设置值
-                LoadSystemSettings();
-            }
-        }
-
         private void buttonOpenWindowsStorage_Click(object sender, EventArgs e)
         {
             try
@@ -678,16 +691,6 @@ namespace winC2D
                 return;
             }
 
-            // 显示 mklink 提示
-            var result = MessageBox.Show(
-                Localization.T("Msg.MklinkNote"),
-                Localization.T("Title.Tip"),
-                MessageBoxButtons.OKCancel,
-                MessageBoxIcon.Information);
-
-            if (result != DialogResult.OK)
-                return;
-
             using (var fbd = new FolderBrowserDialog())
             {
                 fbd.Description = Localization.T("Desc.TargetFolderForAppData");
@@ -731,6 +734,98 @@ namespace winC2D
                     LoadAppDataFolders(); // 刷新列表
                 }
             }
+        }
+
+        // 排序器类
+        class ListViewItemComparer : System.Collections.IComparer
+        {
+            private int col;
+            private bool ascending;
+            public ListViewItemComparer(int column, bool asc)
+            {
+                col = column;
+                ascending = asc;
+            }
+            public int Compare(object x, object y)
+            {
+                var itemX = x as ListViewItem;
+                var itemY = y as ListViewItem;
+                // 按大小列时用数字比较
+                if (col == 2) // Size列
+                {
+                    long sx = 0, sy = 0;
+                    if (itemX.Tag is AppDataInfo infoX) sx = infoX.Size;
+                    if (itemY.Tag is AppDataInfo infoY) sy = infoY.Size;
+                    int cmp = sx.CompareTo(sy);
+                    return ascending ? cmp : -cmp;
+                }
+                else
+                {
+                    int cmp = string.Compare(itemX.SubItems[col].Text, itemY.SubItems[col].Text, StringComparison.CurrentCultureIgnoreCase);
+                    return ascending ? cmp : -cmp;
+                }
+            }
+        }
+
+        class ListViewItemComparerSoftware : System.Collections.IComparer
+        {
+            private int col;
+            private bool ascending;
+            public ListViewItemComparerSoftware(int column, bool asc)
+            {
+                col = column;
+                ascending = asc;
+            }
+            public int Compare(object x, object y)
+            {
+                var itemX = x as ListViewItem;
+                var itemY = y as ListViewItem;
+                // 按大小列时用数字比较
+                if (col == 2) // Size列
+                {
+                    long sx = 0, sy = 0;
+                    if (itemX.Tag is InstalledSoftware infoX) sx = infoX.SizeBytes;
+                    if (itemY.Tag is InstalledSoftware infoY) sy = infoY.SizeBytes;
+                    int cmp = sx.CompareTo(sy);
+                    return ascending ? cmp : -cmp;
+                }
+                else
+                {
+                    int cmp = string.Compare(itemX.SubItems[col].Text, itemY.SubItems[col].Text, StringComparison.CurrentCultureIgnoreCase);
+                    return ascending ? cmp : -cmp;
+                }
+            }
+        }
+
+        private int appDataSortColumn = 0;
+        private bool appDataSortAsc = true;
+        private int softwareSortColumn = 0;
+        private bool softwareSortAsc = true;
+
+        private void listViewAppData_ColumnClick(object sender, ColumnClickEventArgs e)
+        {
+            if (e.Column == appDataSortColumn)
+                appDataSortAsc = !appDataSortAsc;
+            else
+            {
+                appDataSortColumn = e.Column;
+                appDataSortAsc = true;
+            }
+            listViewAppData.ListViewItemSorter = new ListViewItemComparer(appDataSortColumn, appDataSortAsc);
+            listViewAppData.Sort();
+        }
+
+        private void listViewSoftware_ColumnClick(object sender, ColumnClickEventArgs e)
+        {
+            if (e.Column == softwareSortColumn)
+                softwareSortAsc = !softwareSortAsc;
+            else
+            {
+                softwareSortColumn = e.Column;
+                softwareSortAsc = true;
+            }
+            listViewSoftware.ListViewItemSorter = new ListViewItemComparerSoftware(softwareSortColumn, softwareSortAsc);
+            listViewSoftware.Sort();
         }
 
         protected override void WndProc(ref Message m)
