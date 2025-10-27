@@ -10,7 +10,7 @@ namespace winC2D
         public static void MigrateSoftware(InstalledSoftware sw, string parentTargetPath)
         {
             if (!Directory.Exists(sw.InstallLocation))
-                throw new DirectoryNotFoundException($"未找到软件目录: {sw.InstallLocation}");
+                throw new DirectoryNotFoundException(string.Format(Localization.T("Msg.SourceDirNotFoundFmt"), sw.InstallLocation));
 
             // 在用户选择的路径下创建以软件名称命名的子目录
             string targetPath = Path.Combine(parentTargetPath, sw.Name);
@@ -21,19 +21,17 @@ namespace winC2D
             // 检查目标路径是否为文件夹
             if (Directory.Exists(targetPath))
             {
-                throw new IOException($"目标子目录已存在: {targetPath}");
+                throw new IOException(string.Format(Localization.T("Msg.TargetDirExistsFmt"), targetPath));
             }
             else if (File.Exists(targetPath))
             {
-                throw new IOException($"目标路径是一个文件，而非文件夹: {targetPath}");
+                throw new IOException(string.Format(Localization.T("Msg.TargetPathIsFileFmt"), targetPath));
             }
 
-            bool copySuccess = false;
             try
             {
                 // 1. 复制文件夹内容到目标路径
                 CopyDirectory(sw.InstallLocation, targetPath);
-                copySuccess = true;
 
                 // 2. 修正注册表
                 UpdateRegistryInstallLocation(sw.InstallLocation, targetPath);
@@ -46,12 +44,14 @@ namespace winC2D
             }
             catch (Exception ex)
             {
-                // 如果复制已完成但后续失败，清理目标路径，但不删除源目录
-                if (copySuccess && Directory.Exists(targetPath))
+                // 只要迁移失败，尝试清理目标路径（包括部分复制的文件夹和文件）
+                if (Directory.Exists(targetPath))
                 {
                     try { Directory.Delete(targetPath, true); } catch { }
                 }
-                throw new Exception($"迁移失败: {ex.Message}", ex);
+                // 全部用本地化字符串
+                string msg = string.Format(Localization.T("Msg.MigrateFailedFmt"), sw.Name, ex.Message);
+                throw new Exception(msg, ex);
             }
         }
 

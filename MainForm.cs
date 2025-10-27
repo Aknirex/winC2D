@@ -314,6 +314,7 @@ namespace winC2D
                 {
                     string targetRoot = fbd.SelectedPath;
                     int success = 0, fail = 0;
+                    var errorList = new List<(string name, string message)>();
                     using (var wait = new WaitForm(Localization.T("Msg.Migrating")))
                     {
                         Task.Run(() =>
@@ -346,8 +347,7 @@ namespace winC2D
                                         Status = "Fail",
                                         Message = Localization.T("Msg.AccessDenied")
                                     });
-                                    this.Invoke(new Action(() =>
-                                        LocalizedMessageBox.Show(string.Format(Localization.T("Msg.MigrateFailedFmt"), sw.Name, Localization.T("Msg.AccessDenied")), Localization.T("Title.Error"), MessageBoxButtons.OK, MessageBoxIcon.Error)));
+                                    errorList.Add((sw.Name, Localization.T("Msg.AccessDenied")));
                                 }
                                 catch (Exception ex)
                                 {
@@ -361,13 +361,17 @@ namespace winC2D
                                         Status = "Fail",
                                         Message = ex.Message
                                     });
-                                    this.Invoke(new Action(() =>
-                                        LocalizedMessageBox.Show(string.Format(Localization.T("Msg.MigrateFailedFmt"), sw.Name, ex.Message), Localization.T("Title.Error"), MessageBoxButtons.OK, MessageBoxIcon.Error)));
+                                    errorList.Add((sw.Name, ex.Message));
                                 }
                             }
                             this.Invoke(new Action(() => wait.Close()));
                         });
                         wait.ShowDialog();
+                    }
+                    // 统一在UI线程弹窗，避免卡顿
+                    foreach (var err in errorList)
+                    {
+                        LocalizedMessageBox.Show(string.Format(Localization.T("Msg.MigrateFailedFmt"), err.name, err.message), Localization.T("Title.Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     LocalizedMessageBox.Show(string.Format(Localization.T("Msg.MigrateCompleted"), success, fail), Localization.T("Title.Tip"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                     LoadInstalledSoftware(); // 刷新列表
