@@ -107,7 +107,7 @@ namespace winC2D
             {
                 this.Invoke(new Action(() => {
                     listViewSoftware.Items.Clear();
-                    MessageBox.Show(string.Format(Localization.T("Msg.ScanSoftwareFailedFmt"), ex.Message), Localization.T("Title.Tip"));
+                    LocalizedMessageBox.Show(string.Format(Localization.T("Msg.ScanSoftwareFailedFmt"), ex.Message), Localization.T("Title.Tip"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }));
             }
         }
@@ -286,7 +286,7 @@ namespace winC2D
             }
             catch (Exception ex)
             {
-                MessageBox.Show(string.Format(Localization.T("Msg.ScanSoftwareFailedFmt"), ex.Message), Localization.T("Title.Tip"));
+                LocalizedMessageBox.Show(string.Format(Localization.T("Msg.ScanSoftwareFailedFmt"), ex.Message), Localization.T("Title.Tip"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -303,7 +303,7 @@ namespace winC2D
             var selected = listViewSoftware.CheckedItems.Cast<ListViewItem>().Select(i => i.Tag as InstalledSoftware).ToList();
             if (selected.Count == 0)
             {
-                MessageBox.Show(Localization.T("Msg.SelectSoftware"), Localization.T("Title.Tip"));
+                LocalizedMessageBox.Show(Localization.T("Msg.SelectSoftware"), Localization.T("Title.Tip"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
             using (var fbd = new FolderBrowserDialog())
@@ -314,38 +314,62 @@ namespace winC2D
                 {
                     string targetRoot = fbd.SelectedPath;
                     int success = 0, fail = 0;
-                    foreach (var sw in selected)
+                    using (var wait = new WaitForm(Localization.T("Msg.Migrating")))
                     {
-                        try
+                        Task.Run(() =>
                         {
-                            SoftwareMigrator.MigrateSoftware(sw, targetRoot);
-                            success++;
-                            MigrationLogger.Log(new MigrationLogEntry
+                            foreach (var sw in selected)
                             {
-                                Time = DateTime.Now,
-                                SoftwareName = sw.Name,
-                                OldPath = sw.InstallLocation,
-                                NewPath = Path.Combine(targetRoot, Path.GetFileName(sw.InstallLocation)),
-                                Status = "Success",
-                                Message = string.Empty
-                            });
-                        }
-                        catch (Exception ex)
-                        {
-                            fail++;
-                            MigrationLogger.Log(new MigrationLogEntry
-                            {
-                                Time = DateTime.Now,
-                                SoftwareName = sw.Name,
-                                OldPath = sw.InstallLocation,
-                                NewPath = Path.Combine(targetRoot, Path.GetFileName(sw.InstallLocation)),
-                                Status = "Fail",
-                                Message = ex.Message
-                            });
-                            MessageBox.Show(string.Format(Localization.T("Msg.MigrateFailedFmt"), sw.Name, ex.Message), Localization.T("Title.Error"));
-                        }
+                                try
+                                {
+                                    SoftwareMigrator.MigrateSoftware(sw, targetRoot);
+                                    success++;
+                                    MigrationLogger.Log(new MigrationLogEntry
+                                    {
+                                        Time = DateTime.Now,
+                                        SoftwareName = sw.Name,
+                                        OldPath = sw.InstallLocation,
+                                        NewPath = Path.Combine(targetRoot, Path.GetFileName(sw.InstallLocation)),
+                                        Status = "Success",
+                                        Message = string.Empty
+                                });
+                                }
+                                catch (UnauthorizedAccessException)
+                                {
+                                    fail++;
+                                    MigrationLogger.Log(new MigrationLogEntry
+                                    {
+                                        Time = DateTime.Now,
+                                        SoftwareName = sw.Name,
+                                        OldPath = sw.InstallLocation,
+                                        NewPath = Path.Combine(targetRoot, Path.GetFileName(sw.InstallLocation)),
+                                        Status = "Fail",
+                                        Message = Localization.T("Msg.AccessDenied")
+                                    });
+                                    this.Invoke(new Action(() =>
+                                        LocalizedMessageBox.Show(string.Format(Localization.T("Msg.MigrateFailedFmt"), sw.Name, Localization.T("Msg.AccessDenied")), Localization.T("Title.Error"), MessageBoxButtons.OK, MessageBoxIcon.Error)));
+                                }
+                                catch (Exception ex)
+                                {
+                                    fail++;
+                                    MigrationLogger.Log(new MigrationLogEntry
+                                    {
+                                        Time = DateTime.Now,
+                                        SoftwareName = sw.Name,
+                                        OldPath = sw.InstallLocation,
+                                        NewPath = Path.Combine(targetRoot, Path.GetFileName(sw.InstallLocation)),
+                                        Status = "Fail",
+                                        Message = ex.Message
+                                    });
+                                    this.Invoke(new Action(() =>
+                                        LocalizedMessageBox.Show(string.Format(Localization.T("Msg.MigrateFailedFmt"), sw.Name, ex.Message), Localization.T("Title.Error"), MessageBoxButtons.OK, MessageBoxIcon.Error)));
+                                }
+                            }
+                            this.Invoke(new Action(() => wait.Close()));
+                        });
+                        wait.ShowDialog();
                     }
-                    MessageBox.Show(string.Format(Localization.T("Msg.MigrateCompleted"), success, fail), Localization.T("Title.Tip"));
+                    LocalizedMessageBox.Show(string.Format(Localization.T("Msg.MigrateCompleted"), success, fail), Localization.T("Title.Tip"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                     LoadInstalledSoftware(); // 刷新列表
                 }
             }

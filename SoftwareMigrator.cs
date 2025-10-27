@@ -28,26 +28,28 @@ namespace winC2D
                 throw new IOException($"目标路径是一个文件，而非文件夹: {targetPath}");
             }
 
+            bool copySuccess = false;
             try
             {
                 // 1. 复制文件夹内容到目标路径
                 CopyDirectory(sw.InstallLocation, targetPath);
+                copySuccess = true;
 
-                // 2. 删除源文件夹
-                Directory.Delete(sw.InstallLocation, true);
-
-                // 3. 修正注册表
+                // 2. 修正注册表
                 UpdateRegistryInstallLocation(sw.InstallLocation, targetPath);
 
-                // 4. 修正快捷方式
+                // 3. 修正快捷方式
                 try { ShortcutHelper.FixShortcuts(sw.InstallLocation, targetPath); } catch { }
+
+                // 4. 所有步骤成功后，删除源文件夹
+                Directory.Delete(sw.InstallLocation, true);
             }
             catch (Exception ex)
             {
-                // 如果迁移失败，清理目标路径
-                if (Directory.Exists(targetPath))
+                // 如果复制已完成但后续失败，清理目标路径，但不删除源目录
+                if (copySuccess && Directory.Exists(targetPath))
                 {
-                    Directory.Delete(targetPath, true);
+                    try { Directory.Delete(targetPath, true); } catch { }
                 }
                 throw new Exception($"迁移失败: {ex.Message}", ex);
             }
