@@ -16,6 +16,11 @@
 winC2D 帮助用户便捷迁移 C 盘已安装软件和常用文件夹到其他磁盘，并支持修改系统默认安装位置和用户文件夹路径。  
 支持多语言界面（简体中文、繁体中文、英文、日语、韩语、俄语、葡萄牙语等）。
 
+### 温馨提示
+本工具在迁移已安装的软件后，会使用符号链接（symlink）的方式使原路径继续可用，这样已迁移的软件通常能在新位置运行而无需修改程序本身或快捷方式。默认的迁移操作本身不会修改注册表项。
+
+注意：工具中提供的“修改默认安装路径”功能会修改系统注册表以更改新应用的默认安装位置。如果在更改后遇到问题，请在设置中恢复为默认安装路径，或使用系统还原点/备份回滚更改。
+
 ### 主要功能
 - 扫描 C 盘已安装软件和常用用户文件夹，支持多选迁移
 - 支持批量迁移和单项迁移
@@ -42,6 +47,11 @@ winC2D 帮助用户便捷迁移 C 盘已安装软件和常用文件夹到其他�
 ### Introduction
 winC2D helps users easily migrate installed software and common folders from the C drive to other disks, and supports modifying the system default installation location and user folder paths.  
 Multi-language UI supported (Simplified Chinese, Traditional Chinese, English, Japanese, Korean, Russian, Portuguese, etc).
+
+### reminder
+When this tool migrates installed software it creates symbolic links so the original paths continue to work — this lets moved software run from the new location without changing the applications or their shortcuts. The standard migration operation does not modify registry entries.
+
+Note: The "change default install location" feature modifies the system registry to change where new apps are installed. If you experience problems after changing this setting, please restore the default install location in the app settings or roll back using a system restore/backup.
 
 ### Features
 - Scan installed software and common user folders on C drive, support multi-selection migration
