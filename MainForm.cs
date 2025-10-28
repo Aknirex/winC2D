@@ -88,7 +88,19 @@ namespace winC2D
         {
             try
             {
-                var list = SoftwareScanner.GetInstalledSoftwareOnC();
+                // 获取当前设置和系统默认路径
+                var paths = new List<string>();
+                string user64 = textBoxProgramFiles.InvokeRequired ? (string)textBoxProgramFiles.Invoke(new Func<string>(() => textBoxProgramFiles.Text.Trim())) : textBoxProgramFiles.Text.Trim();
+                string userX86 = textBoxProgramFilesX86.InvokeRequired ? (string)textBoxProgramFilesX86.Invoke(new Func<string>(() => textBoxProgramFilesX86.Text.Trim())) : textBoxProgramFilesX86.Text.Trim();
+                if (!string.IsNullOrEmpty(user64)) paths.Add(user64);
+                if (Environment.Is64BitOperatingSystem && !string.IsNullOrEmpty(userX86)) paths.Add(userX86);
+                // 系统默认
+                string sys64 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                string sysX86 = Environment.Is64BitOperatingSystem ? Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) : null;
+                if (!string.IsNullOrEmpty(sys64) && !paths.Contains(sys64, StringComparer.OrdinalIgnoreCase)) paths.Add(sys64);
+                if (!string.IsNullOrEmpty(sysX86) && !paths.Contains(sysX86, StringComparer.OrdinalIgnoreCase)) paths.Add(sysX86);
+
+                var list = SoftwareScanner.GetInstalledSoftwareOnC(paths);
                 this.Invoke(new Action(() => {
                     listViewSoftware.Items.Clear();
                     foreach (var sw in list)
@@ -458,6 +470,10 @@ namespace winC2D
                                 textBoxProgramFilesX86.Text = path32;
                             else
                                 textBoxProgramFilesX86.Text = DEFAULT_PROGRAM_FILES_X86;
+                            // 初始时禁用自定义
+                            checkBoxCustomX86.Checked = false;
+                            textBoxProgramFilesX86.Enabled = false;
+                            buttonBrowseProgramFilesX86.Enabled = false;
                         }
                         else
                         {
@@ -478,12 +494,7 @@ namespace winC2D
             // 如果未勾选自定义32位路径，自动设置
             if (!checkBoxCustomX86.Checked && Environment.Is64BitOperatingSystem)
             {
-                string path64 = textBoxProgramFiles.Text;
-                if (!string.IsNullOrEmpty(path64))
-                {
-                    string pathX86 = path64.Replace("Program Files", "Program Files (x86)");
-                    textBoxProgramFilesX86.Text = pathX86;
-                }
+                textBoxProgramFilesX86.Text = textBoxProgramFiles.Text;
             }
         }
 
@@ -494,9 +505,10 @@ namespace winC2D
             textBoxProgramFilesX86.Enabled = customEnabled;
             buttonBrowseProgramFilesX86.Enabled = customEnabled;
 
-            if (!customEnabled)
+            if (!customEnabled && Environment.Is64BitOperatingSystem)
             {
-                textBoxProgramFiles_TextChanged(null, null);
+                // 关闭自定义时，32位路径等于64位路径，且不可编辑
+                textBoxProgramFilesX86.Text = textBoxProgramFiles.Text;
             }
         }
 
@@ -534,6 +546,28 @@ namespace winC2D
         {
             string path64 = textBoxProgramFiles.Text.Trim();
             string pathX86 = textBoxProgramFilesX86.Text.Trim();
+
+            // 自动创建不存在的目录
+            try
+            {
+                if (!string.IsNullOrEmpty(path64) && !Directory.Exists(path64))
+                {
+                    Directory.CreateDirectory(path64);
+                }
+                if (Environment.Is64BitOperatingSystem && !string.IsNullOrEmpty(pathX86) && !Directory.Exists(pathX86))
+                {
+                    Directory.CreateDirectory(pathX86);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    string.Format(Localization.T("Msg.SettingsFailed"), ex.Message),
+                    Localization.T("Title.Error"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
 
             if (string.IsNullOrEmpty(path64) || !Directory.Exists(path64))
             {
