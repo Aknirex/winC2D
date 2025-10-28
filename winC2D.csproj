@@ -18,4 +18,9 @@
    </COMReference>
    <EmbeddedResource Include="winc2d.ico" />
  </ItemGroup>
+ <ItemGroup>
+   <EmbeddedResource Update="Strings.en.resx">
+     <SubType>Designer</SubType>
+   </EmbeddedResource>
+ </ItemGroup>
 </Project>

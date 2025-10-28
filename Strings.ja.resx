@@ -143,4 +143,30 @@
     <value>ロールバックする移行ログエントリを選択してください。</value>
   </data>
   <data name="Msg.NewPathNotExist" xml:space="preserve">
-    <value>新しいパスが存在しないため
+    <value>新しいパスが存在しないため、ロールバックできません。</value>
+  </data>
+  <data name="Msg.OldPathExists" xml:space="preserve">
+    <value>旧パスが既に存在するため、ロールバックできません。</value>
+  </data>
+  <data name="Msg.RollbackSuccess" xml:space="preserve">
+    <value>ロールバックが成功しました！</value>
+  </data>
+  <data name="Msg.RollbackFailedFmt" xml:space="preserve">
+    <value>ロールバックに失敗しました: {0}</value>
+  </data>
+  <data name="Msg.Loading" xml:space="preserve">
+    <value>読み込み中...</value>
+  </data>
+  <data name="Column.SoftwareName" xml:space="preserve">
+    <value>ソフトウェア名</value>
+  </data>
+  <data name="Column.InstallPath" xml:space="preserve">
+    <value>インストールパス</value>
+  </data>
+  <data name="Column.Size" xml:space="preserve">
+    <value>サイズ</value>
+  </data>
+  <data name="Button.MigrateSelected" xml:space="preserve">
+    <value>選択した項目を移行</value>
+  </data>
+</root>

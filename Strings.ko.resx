@@ -1,172 +1,172 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-  <resheader name="resmimetype">
-    <value>text/microsoft-resx</value>
-  </resheader>
-  <resheader name="version">
-    <value>2.0</value>
-  </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
-  <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
-  <data name="Msg.ScanSoftwareFailedFmt" xml:space="preserve">
+	<resheader name="resmimetype">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name="version">
+		<value>2.0</value>
+	</resheader>
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<resheader name="writer">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<data name="Msg.ScanSoftwareFailedFmt" xml:space="preserve">
     <value>소프트웨어 스캔 실패: {0}</value>
   </data>
-  <data name="Title.Tip" xml:space="preserve">
+	<data name="Title.Tip" xml:space="preserve">
     <value>정보</value>
   </data>
-  <data name="Title.Error" xml:space="preserve">
+	<data name="Title.Error" xml:space="preserve">
     <value>오류</value>
   </data>
-  <data name="Msg.MigrateFailedFmt" xml:space="preserve">
+	<data name="Msg.MigrateFailedFmt" xml:space="preserve">
     <value>마이그레이션 실패: {0}
 {1}</value>
   </data>
-  <data name="Msg.MigrateCompleted" xml:space="preserve">
+	<data name="Msg.MigrateCompleted" xml:space="preserve">
     <value>마이그레이션 완료! 성공: {0}, 실패: {1}</value>
   </data>
-  <data name="Msg.SelectSoftware" xml:space="preserve">
+	<data name="Msg.SelectSoftware" xml:space="preserve">
     <value>마이그레이션할 소프트웨어를 선택하세요.</value>
   </data>
-  <data name="Desc.TargetFolderForSoftware" xml:space="preserve">
+	<data name="Desc.TargetFolderForSoftware" xml:space="preserve">
     <value>대상 폴더 선택 (예: D:\Program Files)</value>
   </data>
-  <data name="Title.MainWindow" xml:space="preserve">
+	<data name="Title.MainWindow" xml:space="preserve">
     <value>winC2D</value>
   </data>
-  <data name="Menu.Log" xml:space="preserve">
+	<data name="Menu.Log" xml:space="preserve">
     <value>마이그레이션 로그</value>
   </data>
-  <data name="Menu.Language" xml:space="preserve">
+	<data name="Menu.Language" xml:space="preserve">
     <value>언어</value>
   </data>
-  <data name="Tab.SoftwareMigration" xml:space="preserve">
+	<data name="Tab.SoftwareMigration" xml:space="preserve">
     <value>소프트웨어 마이그레이션</value>
   </data>
-  <data name="Tab.AppData" xml:space="preserve">
+	<data name="Tab.AppData" xml:space="preserve">
     <value>AppData</value>
   </data>
-  <data name="Msg.SelectAppData" xml:space="preserve">
+	<data name="Msg.SelectAppData" xml:space="preserve">
     <value>마이그레이션할 AppData 폴더를 선택하세요.</value>
   </data>
-  <data name="Desc.TargetFolderForAppData" xml:space="preserve">
+	<data name="Desc.TargetFolderForAppData" xml:space="preserve">
     <value>대상 폴더 선택 (mklink 심볼릭 링크 사용)</value>
   </data>
-  <data name="Msg.MklinkNote" xml:space="preserve">
+	<data name="Msg.MklinkNote" xml:space="preserve">
     <value>ℹ 참고: 이 작업은 mklink를 사용하여 심볼릭 링크를 생성합니다.</value>
   </data>
-  <data name="Button.RefreshAppData" xml:space="preserve">
+	<data name="Button.RefreshAppData" xml:space="preserve">
     <value>목록 새로 고침</value>
   </data>
-  <data name="Settings.Title" xml:space="preserve">
+	<data name="Settings.Title" xml:space="preserve">
     <value>설정</value>
   </data>
-  <data name="Settings.ProgramFilesPath" xml:space="preserve">
+	<data name="Settings.ProgramFilesPath" xml:space="preserve">
     <value>기본 Program Files 위치 (64비트):</value>
   </data>
-  <data name="Settings.ProgramFilesPathX86" xml:space="preserve">
+	<data name="Settings.ProgramFilesPathX86" xml:space="preserve">
     <value>기본 Program Files 위치 (32비트):</value>
   </data>
-  <data name="Settings.CustomX86Path" xml:space="preserve">
+	<data name="Settings.CustomX86Path" xml:space="preserve">
     <value>32비트 프로그램 경로 사용자 지정</value>
   </data>
-  <data name="Button.Browse" xml:space="preserve">
+	<data name="Button.Browse" xml:space="preserve">
     <value>찾아보기</value>
   </data>
-  <data name="Button.Apply" xml:space="preserve">
+	<data name="Button.Apply" xml:space="preserve">
     <value>적용</value>
   </data>
-  <data name="Button.Reset" xml:space="preserve">
+	<data name="Button.Reset" xml:space="preserve">
     <value>기본값으로 재설정</value>
   </data>
-  <data name="Msg.InvalidPath" xml:space="preserve">
+	<data name="Msg.InvalidPath" xml:space="preserve">
     <value>유효한 폴더 경로를 입력하세요.</value>
   </data>
-  <data name="Msg.SettingsApplied" xml:space="preserve">
+	<data name="Msg.SettingsApplied" xml:space="preserve">
     <value>설정이 성공적으로 적용되었습니다!</value>
   </data>
-  <data name="Msg.SettingsFailed" xml:space="preserve">
+	<data name="Msg.SettingsFailed" xml:space="preserve">
     <value>설정 적용 실패: {0}</value>
   </data>
-  <data name="Msg.SelectFolder" xml:space="preserve">
+	<data name="Msg.SelectFolder" xml:space="preserve">
     <value>기본 Program Files 위치 선택</value>
   </data>
-  <data name="Msg.ResetConfirm" xml:space="preserve">
+	<data name="Msg.ResetConfirm" xml:space="preserve">
     <value>기본 위치(C:\Program Files)로 재설정하시겠습니까?</value>
   </data>
-  <data name="Settings.ProgramFilesSection" xml:space="preserve">
+	<data name="Settings.ProgramFilesSection" xml:space="preserve">
     <value>Program Files 위치 (기존 데스크톱 프로그램)</value>
   </data>
-  <data name="Settings.ProgramFilesNote" xml:space="preserve">
+	<data name="Settings.ProgramFilesNote" xml:space="preserve">
     <value>ℹ 이 설정은 설치 프로그램(.exe, .msi)을 통해 설치된 기존 데스크톱 프로그램에 영향을 줍니다. 대부분의 타사 소프트웨어가 이 위치를 사용합니다.</value>
   </data>
-  <data name="Settings.StoragePolicySection" xml:space="preserve">
+	<data name="Settings.StoragePolicySection" xml:space="preserve">
     <value>새 콘텐츠 저장 위치 (Microsoft Store 앱 및 사용자 콘텐츠)</value>
   </data>
-  <data name="Settings.StoragePolicyNote" xml:space="preserve">
+	<data name="Settings.StoragePolicyNote" xml:space="preserve">
     <value>ℹ 이 설정은 Microsoft Store 앱 및 새 사용자 콘텐츠(문서, 사진 등)에 영향을 줍니다. Windows 10 이상이 필요합니다.</value>
   </data>
-  <data name="Button.OpenWindowsStorage" xml:space="preserve">
+	<data name="Button.OpenWindowsStorage" xml:space="preserve">
     <value>Windows 설정 열기</value>
   </data>
-  <data name="GroupBox.SystemSettings" xml:space="preserve">
+	<data name="GroupBox.SystemSettings" xml:space="preserve">
     <value>시스템 설정</value>
   </data>
-  <data name="Log.Title" xml:space="preserve">
+	<data name="Log.Title" xml:space="preserve">
     <value>마이그레이션 로그</value>
   </data>
-  <data name="Log.Time" xml:space="preserve">
+	<data name="Log.Time" xml:space="preserve">
     <value>시간</value>
   </data>
-  <data name="Log.SoftwareName" xml:space="preserve">
+	<data name="Log.SoftwareName" xml:space="preserve">
     <value>소프트웨어 이름</value>
   </data>
-  <data name="Log.OldPath" xml:space="preserve">
+	<data name="Log.OldPath" xml:space="preserve">
     <value>이전 경로</value>
   </data>
-  <data name="Log.NewPath" xml:space="preserve">
+	<data name="Log.NewPath" xml:space="preserve">
     <value>새 경로</value>
   </data>
-  <data name="Log.Status" xml:space="preserve">
+	<data name="Log.Status" xml:space="preserve">
     <value>상태</value>
   </data>
-  <data name="Log.Message" xml:space="preserve">
+	<data name="Log.Message" xml:space="preserve">
     <value>메시지</value>
   </data>
-  <data name="Button.Rollback" xml:space="preserve">
+	<data name="Button.Rollback" xml:space="preserve">
     <value>선택 항목 롤백</value>
   </data>
-  <data name="Msg.SelectLogEntry" xml:space="preserve">
+	<data name="Msg.SelectLogEntry" xml:space="preserve">
     <value>롤백할 마이그레이션 로그 항목을 선택하세요.</value>
   </data>
-  <data name="Msg.NewPathNotExist" xml:space="preserve">
+	<data name="Msg.NewPathNotExist" xml:space="preserve">
     <value>새 경로가 존재하지 않아 롤백할 수 없습니다.</value>
   </data>
-  <data name="Msg.OldPathExists" xml:space="preserve">
+	<data name="Msg.OldPathExists" xml:space="preserve">
     <value>이전 경로가 이미 존재하여 롤백할 수 없습니다.</value>
   </data>
-  <data name="Msg.RollbackSuccess" xml:space="preserve">
+	<data name="Msg.RollbackSuccess" xml:space="preserve">
     <value>롤백 성공!</value>
   </data>
-  <data name="Msg.RollbackFailedFmt" xml:space="preserve">
+	<data name="Msg.RollbackFailedFmt" xml:space="preserve">
     <value>롤백 실패: {0}</value>
   </data>
-  <data name="Msg.Loading" xml:space="preserve">
+	<data name="Msg.Loading" xml:space="preserve">
     <value>로드 중...</value>
   </data>
-  <data name="Column.SoftwareName" xml:space="preserve">
+	<data name="Column.SoftwareName" xml:space="preserve">
     <value>소프트웨어 이름</value>
   </data>
-  <data name="Column.InstallPath" xml:space="preserve">
+	<data name="Column.InstallPath" xml:space="preserve">
     <value>설치 경로</value>
   </data>
-  <data name="Column.Size" xml:space="preserve">
+	<data name="Column.Size" xml:space="preserve">
     <value>크기</value>
   </data>
-  <data name="Button.MigrateSelected" xml:space="preserve">
+	<data name="Button.MigrateSelected" xml:space="preserve">
     <value>선택 항목 마이그레이션</value>
   </data>
 </root>
