@@ -75,12 +75,21 @@ namespace winC2D
                     Localization.T("Title.Error"));
                 return;
             }
+            // 合法性检查：如果旧路径存在且为符号链接，先删除符号链接；如果存在且不是符号链接，提示错误
             if (Directory.Exists(oldPath))
             {
-                MessageBox.Show(
-                    Localization.T("Msg.OldPathExists"), 
-                    Localization.T("Title.Error"));
-                return;
+                if ((File.GetAttributes(oldPath) & FileAttributes.ReparsePoint) != 0)
+                {
+                    // 是符号链接，删除
+                    Directory.Delete(oldPath);
+                }
+                else
+                {
+                    MessageBox.Show(
+                        Localization.T("Msg.OldPathExists"),
+                        Localization.T("Title.Error"));
+                    return;
+                }
             }
             try
             {

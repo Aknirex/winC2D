@@ -12,13 +12,9 @@ namespace winC2D
             if (!Directory.Exists(sw.InstallLocation))
                 throw new DirectoryNotFoundException(string.Format(Localization.T("Msg.SourceDirNotFoundFmt"), sw.InstallLocation));
 
-            // 在用户选择的路径下创建以软件名称命名的子目录
             string targetPath = Path.Combine(parentTargetPath, sw.Name);
-
-            // 调试路径拼接
             Console.WriteLine($"检查目标路径: {targetPath}");
 
-            // 检查目标路径是否为文件夹
             if (Directory.Exists(targetPath))
             {
                 throw new IOException(string.Format(Localization.T("Msg.TargetDirExistsFmt"), targetPath));
@@ -33,23 +29,18 @@ namespace winC2D
                 // 1. 复制文件夹内容到目标路径
                 CopyDirectory(sw.InstallLocation, targetPath);
 
-                // 2. 修正注册表
-                UpdateRegistryInstallLocation(sw.InstallLocation, targetPath);
-
-                // 3. 修正快捷方式
-                try { ShortcutHelper.FixShortcuts(sw.InstallLocation, targetPath); } catch { }
-
-                // 4. 所有步骤成功后，删除源文件夹
+                // 2. 删除源文件夹
                 Directory.Delete(sw.InstallLocation, true);
+
+                // 3. 创建符号链接（目录链接）
+                CreateDirectorySymlink(sw.InstallLocation, targetPath);
             }
             catch (Exception ex)
             {
-                // 只要迁移失败，尝试清理目标路径（包括部分复制的文件夹和文件）
                 if (Directory.Exists(targetPath))
                 {
                     try { Directory.Delete(targetPath, true); } catch { }
                 }
-                // 全部用本地化字符串
                 string msg = string.Format(Localization.T("Msg.MigrateFailedFmt"), sw.Name, ex.Message);
                 throw new Exception(msg, ex);
             }
@@ -69,6 +60,75 @@ namespace winC2D
             {
                 string targetSubDir = Path.Combine(targetDir, Path.GetFileName(directory));
                 CopyDirectory(directory, targetSubDir);
+            }
+        }
+
+        private static void CreateDirectorySymlink(string linkPath, string targetPath)
+        {
+            try
+            {
+#if NET6_0_OR_GREATER
+                // .NET 6+ 支持
+                Directory.CreateSymbolicLink(linkPath, targetPath);
+#else
+                // 低版本用cmd
+                var psi = new System.Diagnostics.ProcessStartInfo("cmd.exe", $"/c mklink /D \"{linkPath}\" \"{targetPath}\"")
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                };
+                var proc = System.Diagnostics.Process.Start(psi);
+                proc.WaitForExit();
+                if (proc.ExitCode != 0)
+                    throw new Exception("mklink failed");
+#endif
+            }
+            catch (Exception ex)
+            {
+                throw new IOException($"Failed to create symlink: {ex.Message}", ex);
+            }
+        }
+
+        private static bool IsSymlink(string path)
+        {
+            return (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
+        }
+
+        /// <summary>
+        /// 回滚迁移：将新位置内容迁回原位置，处理符号链接，失败时自动恢复符号链接
+        /// </summary>
+        /// <param name="oldPath">原安装路径</param>
+        /// <param name="newPath">迁移后路径</param>
+        public static void RollbackSoftware(string oldPath, string newPath)
+        {
+            bool symlinkDeleted = false;
+            // 1. 合法性检查与符号链接处理
+            if (Directory.Exists(oldPath))
+            {
+                if (IsSymlink(oldPath))
+                {
+                    Directory.Delete(oldPath); // 删除符号链接
+                    symlinkDeleted = true;
+                }
+                else
+                {
+                    throw new IOException("原路径已存在且不是符号链接，无法回滚");
+                }
+            }
+            try
+            {
+                // 2. 执行回滚（如将 newPath 内容复制回 oldPath）
+                CopyDirectory(newPath, oldPath);
+                Directory.Delete(newPath, true);
+            }
+            catch (Exception)
+            {
+                // 3. 回滚失败，恢复符号链接
+                if (symlinkDeleted)
+                {
+                    CreateDirectorySymlink(oldPath, newPath);
+                }
+                throw;
             }
         }
 
