@@ -8,19 +8,14 @@
    <ApplicationIcon>winc2d.ico</ApplicationIcon>
  </PropertyGroup>
  <ItemGroup>
-   <COMReference Include="IWshRuntimeLibrary">
-     <Guid>{F935DC22-1CF0-11D0-ADB9-00C04FD58A0B}</Guid>
-     <VersionMajor>1</VersionMajor>
-     <VersionMinor>0</VersionMinor>
-     <Lcid>0</Lcid>
-     <WrapperTool>tlbimp</WrapperTool>
-     <Isolated>false</Isolated>
-   </COMReference>
    <EmbeddedResource Include="winc2d.ico" />
  </ItemGroup>
  <ItemGroup>
    <EmbeddedResource Update="Strings.en.resx">
      <SubType>Designer</SubType>
    </EmbeddedResource>
+ </ItemGroup>
+ <ItemGroup>
+   <PackageReference Include="Interop.IWshRuntimeLibrary" Version="1.0.1" />
  </ItemGroup>
 </Project>
