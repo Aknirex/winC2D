@@ -47,7 +47,7 @@
     <value>Migração de Software</value>
   </data>
   <data name="Tab.AppData" xml:space="preserve">
-    <value>Dados do Aplicativo</value>
+    <value>AppData</value>
   </data>
   <data name="Msg.SelectAppData" xml:space="preserve">
     <value>Por favor, selecione as pastas AppData para migrar.</value>
@@ -71,7 +71,7 @@
     <value>Localização padrão do Program Files (32-bit):</value>
   </data>
   <data name="Settings.CustomX86Path" xml:space="preserve">
-    <value>Personalizar caminho do programa 32-bit</value>
+    <value>Personalizar caminho de programas 32-bit</value>
   </data>
   <data name="Button.Browse" xml:space="preserve">
     <value>Procurar</value>
@@ -95,7 +95,7 @@
     <value>Selecione a localização padrão do Program Files</value>
   </data>
   <data name="Msg.ResetConfirm" xml:space="preserve">
-    <value>Tem certeza que deseja restaurar para a localização padrão (C:\Program Files)?</value>
+    <value>Tem certeza que deseja restaurar a localização padrão (C:\Program Files)?</value>
   </data>
   <data name="Settings.ProgramFilesSection" xml:space="preserve">
     <value>Localização do Program Files (Programas de Desktop Tradicionais)</value>
@@ -104,7 +104,7 @@
     <value>ℹ Esta configuração afeta programas de desktop tradicionais instalados via instaladores (.exe, .msi). A maioria dos softwares de terceiros usa esta localização.</value>
   </data>
   <data name="Settings.StoragePolicySection" xml:space="preserve">
-    <value>Local de Salvamento de Novo Conteúdo (Aplicativos Microsoft Store e Conteúdo do Usuário)</value>
+    <value>Local de Salvamento de Novo Conteúdo (Apps Microsoft Store e Conteúdo do Usuário)</value>
   </data>
   <data name="Settings.StoragePolicyNote" xml:space="preserve">
     <value>ℹ Esta configuração afeta aplicativos Microsoft Store e novo conteúdo do usuário (documentos, fotos, etc.). Requer Windows 10 ou superior.</value>
@@ -137,10 +137,10 @@
     <value>Mensagem</value>
   </data>
   <data name="Button.Rollback" xml:space="preserve">
-    <value>Reverter Selecionados</value>
+    <value>Reverter Selecionado</value>
   </data>
   <data name="Msg.SelectLogEntry" xml:space="preserve">
-    <value>Por favor, selecione uma entrada do log de migração para reverter.</value>
+    <value>Por favor, selecione uma entrada do log para reverter.</value>
   </data>
   <data name="Msg.NewPathNotExist" xml:space="preserve">
     <value>O novo caminho não existe, não é possível reverter.</value>
@@ -167,6 +167,6 @@
     <value>Tamanho</value>
   </data>
   <data name="Button.MigrateSelected" xml:space="preserve">
-    <value>Migrar Selecionados</value>
+    <value>Migrar Selecionado</value>
   </data>
 </root>

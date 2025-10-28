@@ -13,7 +13,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Msg.ScanSoftwareFailedFmt" xml:space="preserve">
-    <value>Не удалось просканировать программное обеспечение: {0}</value>
+    <value>Не удалось просканировать ПО: {0}</value>
   </data>
   <data name="Title.Tip" xml:space="preserve">
     <value>Информация</value>
@@ -22,14 +22,14 @@
     <value>Ошибка</value>
   </data>
   <data name="Msg.MigrateFailedFmt" xml:space="preserve">
-    <value>Миграция не удалась: {0}
+    <value>Ошибка миграции: {0}
 {1}</value>
   </data>
   <data name="Msg.MigrateCompleted" xml:space="preserve">
     <value>Миграция завершена! Успешно: {0}, Ошибок: {1}</value>
   </data>
   <data name="Msg.SelectSoftware" xml:space="preserve">
-    <value>Пожалуйста, выберите программное обеспечение для миграции.</value>
+    <value>Пожалуйста, выберите программы для миграции.</value>
   </data>
   <data name="Desc.TargetFolderForSoftware" xml:space="preserve">
     <value>Выберите целевую папку (например, D:\Program Files)</value>
@@ -47,16 +47,16 @@
     <value>Миграция ПО</value>
   </data>
   <data name="Tab.AppData" xml:space="preserve">
-    <value>Данные приложений</value>
+    <value>AppData</value>
   </data>
   <data name="Msg.SelectAppData" xml:space="preserve">
     <value>Пожалуйста, выберите папки AppData для миграции.</value>
   </data>
   <data name="Desc.TargetFolderForAppData" xml:space="preserve">
-    <value>Выберите целевую папку (используя mklink символические ссылки)</value>
+    <value>Выберите целевую папку (используется mklink для символьных ссылок)</value>
   </data>
   <data name="Msg.MklinkNote" xml:space="preserve">
-    <value>ℹ Примечание: Эта операция использует mklink для создания символических ссылок.</value>
+    <value>ℹ Примечание: Эта операция использует mklink для создания символьных ссылок.</value>
   </data>
   <data name="Button.RefreshAppData" xml:space="preserve">
     <value>Обновить список</value>
@@ -83,7 +83,7 @@
     <value>Сбросить настройки</value>
   </data>
   <data name="Msg.InvalidPath" xml:space="preserve">
-    <value>Пожалуйста, введите действительный путь к папке.</value>
+    <value>Пожалуйста, введите корректный путь к папке.</value>
   </data>
   <data name="Msg.SettingsApplied" xml:space="preserve">
     <value>Настройки успешно применены!</value>
@@ -95,16 +95,16 @@
     <value>Выберите расположение Program Files по умолчанию</value>
   </data>
   <data name="Msg.ResetConfirm" xml:space="preserve">
-    <value>Вы уверены, что хотите сбросить настройки расположения (C:\Program Files)?</value>
+    <value>Вы уверены, что хотите сбросить расположение на значение по умолчанию (C:\Program Files)?</value>
   </data>
   <data name="Settings.ProgramFilesSection" xml:space="preserve">
-    <value>Расположение Program Files (Классические приложения)</value>
+    <value>Расположение Program Files (классические приложения)</value>
   </data>
   <data name="Settings.ProgramFilesNote" xml:space="preserve">
     <value>ℹ Эта настройка влияет на классические приложения, установленные через установщики (.exe, .msi). Большинство стороннего ПО использует это расположение.</value>
   </data>
   <data name="Settings.StoragePolicySection" xml:space="preserve">
-    <value>Расположение для нового контента (Приложения Microsoft Store и пользовательский контент)</value>
+    <value>Расположение для нового контента (приложения Microsoft Store и пользовательский контент)</value>
   </data>
   <data name="Settings.StoragePolicyNote" xml:space="preserve">
     <value>ℹ Эта настройка влияет на приложения Microsoft Store и новый пользовательский контент (документы, фото и т.д.). Требуется Windows 10 или новее.</value>
@@ -140,7 +140,7 @@
     <value>Откатить выбранное</value>
   </data>
   <data name="Msg.SelectLogEntry" xml:space="preserve">
-    <value>Пожалуйста, выберите запись в журнале миграции для отката.</value>
+    <value>Пожалуйста, выберите запись в журнале для отката.</value>
   </data>
   <data name="Msg.NewPathNotExist" xml:space="preserve">
     <value>Новый путь не существует, откат невозможен.</value>
@@ -152,7 +152,7 @@
     <value>Откат выполнен успешно!</value>
   </data>
   <data name="Msg.RollbackFailedFmt" xml:space="preserve">
-    <value>Откат не удался: {0}</value>
+    <value>Ошибка отката: {0}</value>
   </data>
   <data name="Msg.Loading" xml:space="preserve">
     <value>Загрузка...</value>

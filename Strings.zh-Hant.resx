@@ -1,172 +1,172 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
-	<resheader name="resmimetype">
-		<value>text/microsoft-resx</value>
-	</resheader>
-	<resheader name="version">
-		<value>2.0</value>
-	</resheader>
-	<resheader name="reader">
-		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
-	<resheader name="writer">
-		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
-	<data name="Msg.ScanSoftwareFailedFmt" xml:space="preserve">
-    <value>掃描軟體失敗: {0}</value>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Msg.ScanSoftwareFailedFmt" xml:space="preserve">
+    <value>掃描軟體失敗：{0}</value>
   </data>
-	<data name="Title.Tip" xml:space="preserve">
-    <value>資訊</value>
+  <data name="Title.Tip" xml:space="preserve">
+    <value>提示</value>
   </data>
-	<data name="Title.Error" xml:space="preserve">
+  <data name="Title.Error" xml:space="preserve">
     <value>錯誤</value>
   </data>
-	<data name="Msg.MigrateFailedFmt" xml:space="preserve">
-    <value>遷移失敗: {0}
+  <data name="Msg.MigrateFailedFmt" xml:space="preserve">
+    <value>遷移失敗：{0}
 {1}</value>
   </data>
-	<data name="Msg.MigrateCompleted" xml:space="preserve">
-    <value>遷移完成！成功: {0}, 失敗: {1}</value>
+  <data name="Msg.MigrateCompleted" xml:space="preserve">
+    <value>遷移完成！成功：{0}，失敗：{1}</value>
   </data>
-	<data name="Msg.SelectSoftware" xml:space="preserve">
+  <data name="Msg.SelectSoftware" xml:space="preserve">
     <value>請選擇要遷移的軟體。</value>
   </data>
-	<data name="Desc.TargetFolderForSoftware" xml:space="preserve">
-    <value>選擇目標資料夾 (例如: D:\Program Files)</value>
+  <data name="Desc.TargetFolderForSoftware" xml:space="preserve">
+    <value>選擇目標資料夾（例如：D:\Program Files）</value>
   </data>
-	<data name="Title.MainWindow" xml:space="preserve">
+  <data name="Title.MainWindow" xml:space="preserve">
     <value>winC2D</value>
   </data>
-	<data name="Menu.Log" xml:space="preserve">
+  <data name="Menu.Log" xml:space="preserve">
     <value>遷移日誌</value>
   </data>
-	<data name="Menu.Language" xml:space="preserve">
+  <data name="Menu.Language" xml:space="preserve">
     <value>語言</value>
   </data>
-	<data name="Tab.SoftwareMigration" xml:space="preserve">
+  <data name="Tab.SoftwareMigration" xml:space="preserve">
     <value>軟體遷移</value>
   </data>
-	<data name="Tab.AppData" xml:space="preserve">
-    <value>應用程式資料</value>
+  <data name="Tab.AppData" xml:space="preserve">
+    <value>應用資料</value>
   </data>
-	<data name="Msg.SelectAppData" xml:space="preserve">
+  <data name="Msg.SelectAppData" xml:space="preserve">
     <value>請選擇要遷移的 AppData 資料夾。</value>
   </data>
-	<data name="Desc.TargetFolderForAppData" xml:space="preserve">
-    <value>選擇目標資料夾 (使用 mklink 符號連結)</value>
+  <data name="Desc.TargetFolderForAppData" xml:space="preserve">
+    <value>選擇目標資料夾（使用 mklink 符號連結）</value>
   </data>
-	<data name="Msg.MklinkNote" xml:space="preserve">
+  <data name="Msg.MklinkNote" xml:space="preserve">
     <value>ℹ 注意：此操作使用 mklink 建立符號連結。</value>
   </data>
-	<data name="Button.RefreshAppData" xml:space="preserve">
+  <data name="Button.RefreshAppData" xml:space="preserve">
     <value>重新整理清單</value>
   </data>
-	<data name="Settings.Title" xml:space="preserve">
+  <data name="Settings.Title" xml:space="preserve">
     <value>設定</value>
   </data>
-	<data name="Settings.ProgramFilesPath" xml:space="preserve">
-    <value>預設 Program Files 位置 (64 位元):</value>
+  <data name="Settings.ProgramFilesPath" xml:space="preserve">
+    <value>預設程式檔案位置（64 位元）：</value>
   </data>
-	<data name="Settings.ProgramFilesPathX86" xml:space="preserve">
-    <value>預設 Program Files 位置 (32 位元):</value>
+  <data name="Settings.ProgramFilesPathX86" xml:space="preserve">
+    <value>預設程式檔案位置（32 位元）：</value>
   </data>
-	<data name="Settings.CustomX86Path" xml:space="preserve">
+  <data name="Settings.CustomX86Path" xml:space="preserve">
     <value>自訂 32 位元程式路徑</value>
   </data>
-	<data name="Button.Browse" xml:space="preserve">
+  <data name="Button.Browse" xml:space="preserve">
     <value>瀏覽</value>
   </data>
-	<data name="Button.Apply" xml:space="preserve">
+  <data name="Button.Apply" xml:space="preserve">
     <value>套用</value>
   </data>
-	<data name="Button.Reset" xml:space="preserve">
-    <value>重設為預設值</value>
+  <data name="Button.Reset" xml:space="preserve">
+    <value>恢復預設</value>
   </data>
-	<data name="Msg.InvalidPath" xml:space="preserve">
+  <data name="Msg.InvalidPath" xml:space="preserve">
     <value>請輸入有效的資料夾路徑。</value>
   </data>
-	<data name="Msg.SettingsApplied" xml:space="preserve">
-    <value>設定已成功套用！</value>
+  <data name="Msg.SettingsApplied" xml:space="preserve">
+    <value>設定套用成功！</value>
   </data>
-	<data name="Msg.SettingsFailed" xml:space="preserve">
-    <value>套用設定失敗: {0}</value>
+  <data name="Msg.SettingsFailed" xml:space="preserve">
+    <value>套用設定失敗：{0}</value>
   </data>
-	<data name="Msg.SelectFolder" xml:space="preserve">
+  <data name="Msg.SelectFolder" xml:space="preserve">
     <value>選擇預設 Program Files 位置</value>
   </data>
-	<data name="Msg.ResetConfirm" xml:space="preserve">
-    <value>您確定要重設為預設位置 (C:\Program Files) 嗎？</value>
+  <data name="Msg.ResetConfirm" xml:space="preserve">
+    <value>確定要重置為預設位置（C:\Program Files）嗎？</value>
   </data>
-	<data name="Settings.ProgramFilesSection" xml:space="preserve">
-    <value>Program Files 位置 (傳統桌面程式)</value>
+  <data name="Settings.ProgramFilesSection" xml:space="preserve">
+    <value>程式檔案位置（傳統桌面程式）</value>
   </data>
-	<data name="Settings.ProgramFilesNote" xml:space="preserve">
-    <value>ℹ 此設定影響透過安裝程式 (.exe, .msi) 安裝的傳統桌面程式。大多數第三方軟體使用此位置。</value>
+  <data name="Settings.ProgramFilesNote" xml:space="preserve">
+    <value>ℹ 此設定影響透過安裝程式（.exe、.msi）安裝的傳統桌面程式。大多數第三方軟體使用此位置。</value>
   </data>
-	<data name="Settings.StoragePolicySection" xml:space="preserve">
-    <value>新內容儲存位置 (Microsoft Store 應用程式和使用者內容)</value>
+  <data name="Settings.StoragePolicySection" xml:space="preserve">
+    <value>新內容儲存位置（Microsoft Store 應用和使用者內容）</value>
   </data>
-	<data name="Settings.StoragePolicyNote" xml:space="preserve">
-    <value>ℹ 此設定影響 Microsoft Store 應用程式和新的使用者內容 (文件、照片等)。需要 Windows 10 或更新版本。</value>
+  <data name="Settings.StoragePolicyNote" xml:space="preserve">
+    <value>ℹ 此設定影響 Microsoft Store 應用和新使用者內容（文件、照片等）。需要 Windows 10 或更新版本。</value>
   </data>
-	<data name="Button.OpenWindowsStorage" xml:space="preserve">
+  <data name="Button.OpenWindowsStorage" xml:space="preserve">
     <value>開啟 Windows 設定</value>
   </data>
-	<data name="GroupBox.SystemSettings" xml:space="preserve">
+  <data name="GroupBox.SystemSettings" xml:space="preserve">
     <value>系統設定</value>
   </data>
-	<data name="Log.Title" xml:space="preserve">
+  <data name="Log.Title" xml:space="preserve">
     <value>遷移日誌</value>
   </data>
-	<data name="Log.Time" xml:space="preserve">
+  <data name="Log.Time" xml:space="preserve">
     <value>時間</value>
   </data>
-	<data name="Log.SoftwareName" xml:space="preserve">
+  <data name="Log.SoftwareName" xml:space="preserve">
     <value>軟體名稱</value>
   </data>
-	<data name="Log.OldPath" xml:space="preserve">
-    <value>舊路徑</value>
+  <data name="Log.OldPath" xml:space="preserve">
+    <value>原路徑</value>
   </data>
-	<data name="Log.NewPath" xml:space="preserve">
+  <data name="Log.NewPath" xml:space="preserve">
     <value>新路徑</value>
   </data>
-	<data name="Log.Status" xml:space="preserve">
+  <data name="Log.Status" xml:space="preserve">
     <value>狀態</value>
   </data>
-	<data name="Log.Message" xml:space="preserve">
+  <data name="Log.Message" xml:space="preserve">
     <value>訊息</value>
   </data>
-	<data name="Button.Rollback" xml:space="preserve">
-    <value>還原選取的項目</value>
+  <data name="Button.Rollback" xml:space="preserve">
+    <value>回復所選</value>
   </data>
-	<data name="Msg.SelectLogEntry" xml:space="preserve">
-    <value>請選擇要還原的遷移日誌項目。</value>
+  <data name="Msg.SelectLogEntry" xml:space="preserve">
+    <value>請選擇要回復的遷移日誌條目。</value>
   </data>
-	<data name="Msg.NewPathNotExist" xml:space="preserve">
-    <value>新路徑不存在，無法還原。</value>
+  <data name="Msg.NewPathNotExist" xml:space="preserve">
+    <value>新路徑不存在，無法回復。</value>
   </data>
-	<data name="Msg.OldPathExists" xml:space="preserve">
-    <value>舊路徑已存在，無法還原。</value>
+  <data name="Msg.OldPathExists" xml:space="preserve">
+    <value>原路徑已存在，無法回復。</value>
   </data>
-	<data name="Msg.RollbackSuccess" xml:space="preserve">
-    <value>還原成功！</value>
+  <data name="Msg.RollbackSuccess" xml:space="preserve">
+    <value>回復成功！</value>
   </data>
-	<data name="Msg.RollbackFailedFmt" xml:space="preserve">
-    <value>還原失敗: {0}</value>
+  <data name="Msg.RollbackFailedFmt" xml:space="preserve">
+    <value>回復失敗：{0}</value>
   </data>
-	<data name="Msg.Loading" xml:space="preserve">
+  <data name="Msg.Loading" xml:space="preserve">
     <value>載入中...</value>
   </data>
-	<data name="Column.SoftwareName" xml:space="preserve">
+  <data name="Column.SoftwareName" xml:space="preserve">
     <value>軟體名稱</value>
   </data>
-	<data name="Column.InstallPath" xml:space="preserve">
+  <data name="Column.InstallPath" xml:space="preserve">
     <value>安裝路徑</value>
   </data>
-	<data name="Column.Size" xml:space="preserve">
+  <data name="Column.Size" xml:space="preserve">
     <value>大小</value>
   </data>
-	<data name="Button.MigrateSelected" xml:space="preserve">
-    <value>遷移選取的項目</value>
+  <data name="Button.MigrateSelected" xml:space="preserve">
+    <value>遷移所選</value>
   </data>
 </root>

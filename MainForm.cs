@@ -92,6 +92,7 @@ namespace winC2D
                 var paths = new List<string>();
                 string user64 = textBoxProgramFiles.InvokeRequired ? (string)textBoxProgramFiles.Invoke(new Func<string>(() => textBoxProgramFiles.Text.Trim())) : textBoxProgramFiles.Text.Trim();
                 string userX86 = textBoxProgramFilesX86.InvokeRequired ? (string)textBoxProgramFilesX86.Invoke(new Func<string>(() => textBoxProgramFilesX86.Text.Trim())) : textBoxProgramFilesX86.Text.Trim();
+                // 用户设置
                 if (!string.IsNullOrEmpty(user64)) paths.Add(user64);
                 if (Environment.Is64BitOperatingSystem && !string.IsNullOrEmpty(userX86)) paths.Add(userX86);
                 // 系统默认
@@ -99,13 +100,26 @@ namespace winC2D
                 string sysX86 = Environment.Is64BitOperatingSystem ? Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) : null;
                 if (!string.IsNullOrEmpty(sys64) && !paths.Contains(sys64, StringComparer.OrdinalIgnoreCase)) paths.Add(sys64);
                 if (!string.IsNullOrEmpty(sysX86) && !paths.Contains(sysX86, StringComparer.OrdinalIgnoreCase)) paths.Add(sysX86);
+                // 始终包含C盘标准路径
+                if (!paths.Contains(@"C:\Program Files", StringComparer.OrdinalIgnoreCase)) paths.Add(@"C:\Program Files");
+                if (Environment.Is64BitOperatingSystem && !paths.Contains(@"C:\Program Files (x86)", StringComparer.OrdinalIgnoreCase)) paths.Add(@"C:\Program Files (x86)");
 
                 var list = SoftwareScanner.GetInstalledSoftwareOnC(paths);
                 this.Invoke(new Action(() => {
                     listViewSoftware.Items.Clear();
                     foreach (var sw in list)
                     {
-                        var item = new ListViewItem(new string[] { sw.Name, sw.InstallLocation, sw.SizeText });
+                        string name = sw.Name;
+                        string path = sw.InstallLocation;
+                        try
+                        {
+                            if (Directory.Exists(path) && (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+                            {
+                                name = "[" + Localization.T("Msg.Migrated") + "] " + name;
+                            }
+                        }
+                        catch { }
+                        var item = new ListViewItem(new string[] { name, sw.InstallLocation, sw.SizeText });
                         item.Tag = sw;
                         listViewSoftware.Items.Add(item);
                     }
@@ -113,6 +127,7 @@ namespace winC2D
                     softwareSortAsc = true;
                     listViewSoftware.ListViewItemSorter = new ListViewItemComparerSoftware(softwareSortColumn, softwareSortAsc);
                     listViewSoftware.Sort();
+                    UpdateColumnHeaderSortIndicator(listViewSoftware, softwareSortColumn, softwareSortAsc);
                 }));
             }
             catch (Exception ex)
@@ -291,7 +306,17 @@ namespace winC2D
                 listViewSoftware.Items.Clear();
                 foreach (var sw in list)
                 {
-                    var item = new ListViewItem(new string[] { sw.Name, sw.InstallLocation, sw.SizeText });
+                    string name = sw.Name;
+                    string path = sw.InstallLocation;
+                    try
+                    {
+                        if (Directory.Exists(path) && (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+                        {
+                            name = "[" + Localization.T("Msg.Migrated") + "] " + name;
+                        }
+                    }
+                    catch { }
+                    var item = new ListViewItem(new string[] { name, sw.InstallLocation, sw.SizeText });
                     item.Tag = sw;
                     listViewSoftware.Items.Add(item);
                 }
@@ -875,6 +900,7 @@ namespace winC2D
             }
             listViewAppData.ListViewItemSorter = new ListViewItemComparer(appDataSortColumn, appDataSortAsc);
             listViewAppData.Sort();
+            UpdateColumnHeaderSortIndicator(listViewAppData, appDataSortColumn, appDataSortAsc);
         }
 
         private void listViewSoftware_ColumnClick(object sender, ColumnClickEventArgs e)
@@ -888,6 +914,7 @@ namespace winC2D
             }
             listViewSoftware.ListViewItemSorter = new ListViewItemComparerSoftware(softwareSortColumn, softwareSortAsc);
             listViewSoftware.Sort();
+            UpdateColumnHeaderSortIndicator(listViewSoftware, softwareSortColumn, softwareSortAsc);
         }
 
         protected override void WndProc(ref Message m)
@@ -907,6 +934,24 @@ namespace winC2D
                 return;
             }
             base.WndProc(ref m);
+        }
+
+        private void UpdateColumnHeaderSortIndicator(ListView listView, int sortColumn, bool ascending)
+        {
+            // 清除所有列名的三角符号
+            for (int i = 0; i < listView.Columns.Count; i++)
+            {
+                var col = listView.Columns[i];
+                string text = col.Text;
+                text = text.Replace(" ▲", "").Replace(" ▼", "");
+                col.Text = text;
+            }
+            // 给当前排序列加三角
+            if (sortColumn >= 0 && sortColumn < listView.Columns.Count)
+            {
+                var col = listView.Columns[sortColumn];
+                col.Text = col.Text + (ascending ? " ▲" : " ▼");
+            }
         }
     }
 }

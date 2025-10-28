@@ -12,7 +12,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <!-- 只保留 Strings.resx 中存在的 key -->
   <data name="Msg.ScanSoftwareFailedFmt" xml:space="preserve">
     <value>扫描软件失败：{0}</value>
   </data>
@@ -33,7 +32,7 @@
     <value>请选择要迁移的软件。</value>
   </data>
   <data name="Desc.TargetFolderForSoftware" xml:space="preserve">
-    <value>选择目标文件夹（如：D:\Program Files）</value>
+    <value>选择目标文件夹（例如：D:\Program Files）</value>
   </data>
   <data name="Title.MainWindow" xml:space="preserve">
     <value>winC2D</value>
@@ -47,23 +46,11 @@
   <data name="Tab.SoftwareMigration" xml:space="preserve">
     <value>软件迁移</value>
   </data>
-  <data name="Column.SoftwareName" xml:space="preserve">
-    <value>软件名称</value>
-  </data>
-  <data name="Column.InstallPath" xml:space="preserve">
-    <value>安装路径</value>
-  </data>
-  <data name="Column.Size" xml:space="preserve">
-    <value>大小</value>
-  </data>
-  <data name="Button.MigrateSelected" xml:space="preserve">
-    <value>迁移所选</value>
-  </data>
   <data name="Tab.AppData" xml:space="preserve">
-    <value>AppData</value>
+    <value>应用数据</value>
   </data>
   <data name="Msg.SelectAppData" xml:space="preserve">
-    <value>请选择要迁移的AppData文件夹。</value>
+    <value>请选择要迁移的 AppData 文件夹。</value>
   </data>
   <data name="Desc.TargetFolderForAppData" xml:space="preserve">
     <value>选择目标文件夹（使用 mklink 符号链接）</value>
@@ -78,13 +65,13 @@
     <value>设置</value>
   </data>
   <data name="Settings.ProgramFilesPath" xml:space="preserve">
-    <value>Program Files 默认位置（64位）：</value>
+    <value>默认程序文件位置（64 位）：</value>
   </data>
   <data name="Settings.ProgramFilesPathX86" xml:space="preserve">
-    <value>Program Files 默认位置（32位）：</value>
+    <value>默认程序文件位置（32 位）：</value>
   </data>
   <data name="Settings.CustomX86Path" xml:space="preserve">
-    <value>自定义 32位 程序路径</value>
+    <value>自定义 32 位程序路径</value>
   </data>
   <data name="Button.Browse" xml:space="preserve">
     <value>浏览</value>
@@ -99,19 +86,19 @@
     <value>请输入有效的文件夹路径。</value>
   </data>
   <data name="Msg.SettingsApplied" xml:space="preserve">
-    <value>设置已成功应用！</value>
+    <value>设置应用成功！</value>
   </data>
   <data name="Msg.SettingsFailed" xml:space="preserve">
-    <value>设置应用失败：{0}</value>
+    <value>应用设置失败：{0}</value>
   </data>
   <data name="Msg.SelectFolder" xml:space="preserve">
-    <value>选择 Program Files 默认位置</value>
+    <value>选择默认 Program Files 位置</value>
   </data>
   <data name="Msg.ResetConfirm" xml:space="preserve">
-    <value>确定要恢复到默认位置（C:\Program Files）吗？</value>
+    <value>确定要重置为默认位置（C:\Program Files）吗？</value>
   </data>
   <data name="Settings.ProgramFilesSection" xml:space="preserve">
-    <value>Program Files 位置（传统桌面程序）</value>
+    <value>程序文件位置（传统桌面程序）</value>
   </data>
   <data name="Settings.ProgramFilesNote" xml:space="preserve">
     <value>ℹ 此设置影响通过安装程序（.exe、.msi）安装的传统桌面程序。大多数第三方软件使用此位置。</value>
@@ -147,16 +134,16 @@
     <value>状态</value>
   </data>
   <data name="Log.Message" xml:space="preserve">
-    <value>信息</value>
+    <value>消息</value>
   </data>
   <data name="Button.Rollback" xml:space="preserve">
     <value>回滚所选</value>
   </data>
   <data name="Msg.SelectLogEntry" xml:space="preserve">
-    <value>请先选择要回滚的迁移记录。</value>
+    <value>请选择要回滚的迁移日志条目。</value>
   </data>
   <data name="Msg.NewPathNotExist" xml:space="preserve">
-    <value>新路径目录不存在，无法回滚。</value>
+    <value>新路径不存在，无法回滚。</value>
   </data>
   <data name="Msg.OldPathExists" xml:space="preserve">
     <value>原路径已存在，无法回滚。</value>
@@ -168,6 +155,18 @@
     <value>回滚失败：{0}</value>
   </data>
   <data name="Msg.Loading" xml:space="preserve">
-    <value>正在加载...</value>
+    <value>加载中...</value>
+  </data>
+  <data name="Column.SoftwareName" xml:space="preserve">
+    <value>软件名称</value>
+  </data>
+  <data name="Column.InstallPath" xml:space="preserve">
+    <value>安装路径</value>
+  </data>
+  <data name="Column.Size" xml:space="preserve">
+    <value>大小</value>
+  </data>
+  <data name="Button.MigrateSelected" xml:space="preserve">
+    <value>迁移所选</value>
   </data>
 </root>
