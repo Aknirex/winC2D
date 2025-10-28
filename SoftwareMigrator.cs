@@ -12,54 +12,67 @@ namespace winC2D
             if (!Directory.Exists(sw.InstallLocation))
                 throw new DirectoryNotFoundException(string.Format(Localization.T("Msg.SourceDirNotFoundFmt"), sw.InstallLocation));
 
+            string sourcePath = sw.InstallLocation;
+            string sourceTempPath = sourcePath + "_migrating_" + Guid.NewGuid().ToString("N");
             string targetPath = Path.Combine(parentTargetPath, sw.Name);
+            string tempTargetPath = targetPath + "_temp";
             Console.WriteLine($"检查目标路径: {targetPath}");
 
-            if (Directory.Exists(targetPath))
-            {
+            if (Directory.Exists(targetPath) || Directory.Exists(tempTargetPath))
                 throw new IOException(string.Format(Localization.T("Msg.TargetDirExistsFmt"), targetPath));
-            }
-            else if (File.Exists(targetPath))
-            {
+            if (File.Exists(targetPath) || File.Exists(tempTargetPath))
                 throw new IOException(string.Format(Localization.T("Msg.TargetPathIsFileFmt"), targetPath));
-            }
 
+            bool renamed = false;
             try
             {
-                // 1. 复制文件夹内容到目标路径
-                CopyDirectory(sw.InstallLocation, targetPath);
+                // 1. 尝试重命名源目录，判断是否有文件被占用
+                Directory.Move(sourcePath, sourceTempPath);
+                renamed = true;
 
-                // 2. 删除源文件夹
-                Directory.Delete(sw.InstallLocation, true);
+                // 2. 复制到临时目录，遇到异常立即终止
+                CopyDirectoryAllOrFail(sourceTempPath, tempTargetPath);
 
-                // 3. 创建符号链接（目录链接）
-                CreateDirectorySymlink(sw.InstallLocation, targetPath);
+                // 3. 原子重命名临时目录为目标目录
+                Directory.Move(tempTargetPath, targetPath);
+
+                // 4. 删除重命名后的源目录
+                Directory.Delete(sourceTempPath, true);
+
+                // 5. 创建符号链接
+                CreateDirectorySymlink(sourcePath, targetPath);
             }
             catch (Exception ex)
             {
-                if (Directory.Exists(targetPath))
+                // 失败时清理临时目录
+                if (Directory.Exists(tempTargetPath))
                 {
-                    try { Directory.Delete(targetPath, true); } catch { }
+                    try { Directory.Delete(tempTargetPath, true); } catch { }
+                }
+                // 如果重命名成功但后续失败，尝试恢复原目录名
+                if (renamed && Directory.Exists(sourceTempPath) && !Directory.Exists(sourcePath))
+                {
+                    try { Directory.Move(sourceTempPath, sourcePath); } catch { }
                 }
                 string msg = string.Format(Localization.T("Msg.MigrateFailedFmt"), sw.Name, ex.Message);
                 throw new Exception(msg, ex);
             }
         }
 
-        private static void CopyDirectory(string sourceDir, string targetDir)
+        // 递归复制，遇到任何异常立即抛出，保证原子性
+        private static void CopyDirectoryAllOrFail(string sourceDir, string targetDir)
         {
             Directory.CreateDirectory(targetDir);
 
             foreach (var file in Directory.GetFiles(sourceDir))
             {
                 string targetFile = Path.Combine(targetDir, Path.GetFileName(file));
-                File.Copy(file, targetFile);
+                File.Copy(file, targetFile, overwrite: false); // 不覆盖，遇到异常直接抛出
             }
-
             foreach (var directory in Directory.GetDirectories(sourceDir))
             {
                 string targetSubDir = Path.Combine(targetDir, Path.GetFileName(directory));
-                CopyDirectory(directory, targetSubDir);
+                CopyDirectoryAllOrFail(directory, targetSubDir); // 递归，遇到异常直接抛出
             }
         }
 
@@ -118,7 +131,7 @@ namespace winC2D
             try
             {
                 // 2. 执行回滚（如将 newPath 内容复制回 oldPath）
-                CopyDirectory(newPath, oldPath);
+                CopyDirectoryAllOrFail(newPath, oldPath);
                 Directory.Delete(newPath, true);
             }
             catch (Exception)
