@@ -1,5 +1,11 @@
 # winC2D - Windows Storage Migration Assistant
 
+[![Build](https://img.shields.io/github/actions/workflow/status/SKR7lex/winC2D/dotnet.yml?branch=main&label=build)](https://github.com/SKR7lex/winC2D/actions)
+[![.NET](https://img.shields.io/badge/.NET-6.0-blue)](https://dotnet.microsoft.com/)
+[![License](https://img.shields.io/github/license/SKR7lex/winC2D)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/SKR7lex/winC2D?include_prereleases)](https://github.com/SKR7lex/winC2D/releases)
+[![GitHub stars](https://img.shields.io/github/stars/SKR7lex/winC2D?style=social)](https://github.com/SKR7lex/winC2D/stargazers)
+
 [简体中文](#简体中文) | [English](#english)
 
 ---
@@ -24,7 +30,8 @@ winC2D 帮助用户便捷迁移 C 盘已安装软件和常用文件夹到其他�
 - .NET 6.0
 - Windows Forms
 
-### 运行说明
+### 下载与安装
+- [前往 Releases 页面下载最新版本](https://github.com/SKR7lex/winC2D/releases)
 - 需以管理员身份运行
 - 支持 Windows 10/11
 
@@ -50,7 +57,8 @@ Multi-language UI supported (Simplified Chinese, Traditional Chinese, English, J
 - .NET 6.0
 - Windows Forms
 
-### Usage
+### Download & Install
+- [Go to Releases to download the latest version](https://github.com/SKR7lex/winC2D/releases)
 - Run as administrator
 - Supports Windows 10/11
 
