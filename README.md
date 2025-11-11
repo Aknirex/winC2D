@@ -1,7 +1,7 @@
 # winC2D - Windows Storage Migration Assistant
 
 [![Build](https://img.shields.io/github/actions/workflow/status/SKR7lex/winC2D/dotnet.yml?branch=main&label=build)](https://github.com/SKR7lex/winC2D/actions)
-[![.NET](https://img.shields.io/badge/.NET-6.0-blue)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-8.0-blue)](https://dotnet.microsoft.com/)
 [![License](https://img.shields.io/github/license/SKR7lex/winC2D)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/SKR7lex/winC2D?include_prereleases)](https://github.com/SKR7lex/winC2D/releases)
 [![GitHub stars](https://img.shields.io/github/stars/SKR7lex/winC2D?style=social)](https://github.com/SKR7lex/winC2D/stargazers)
@@ -32,7 +32,7 @@ winC2D 帮助用户便捷迁移 C 盘已安装软件和常用文件夹到其他�
 
 ### 技术栈
 - C#
-- .NET 6.0
+- .NET 8.0
 - Windows Forms
 
 ### 下载与安装
@@ -64,7 +64,7 @@ Note: The "change default install location" feature modifies the system registry
 
 ### Tech Stack
 - C#
-- .NET 6.0
+- .NET 8.0
 - Windows Forms
 
 ### Download & Install
