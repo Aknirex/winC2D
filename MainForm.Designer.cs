@@ -103,6 +103,7 @@ namespace winC2D
             columnHeaderPath = new ColumnHeader();
             columnHeaderSize = new ColumnHeader();
             buttonMigrateSoftware = new Button();
+            buttonRefreshSoftware = new Button();
             tabPageAppData = new TabPage();
             listViewAppData = new ListView();
             columnHeaderAppName = new ColumnHeader();
@@ -111,7 +112,6 @@ namespace winC2D
             columnHeaderAppType = new ColumnHeader();
             buttonMigrateAppData = new Button();
             buttonRefreshAppData = new Button();
-            buttonRefreshSoftware = new Button();
             menuStrip1.SuspendLayout();
             tabControl1.SuspendLayout();
             tabPageSettings.SuspendLayout();
@@ -149,58 +149,58 @@ namespace winC2D
             // menuLanguageEnglish
             // 
             menuLanguageEnglish.Name = "menuLanguageEnglish";
-            menuLanguageEnglish.Size = new System.Drawing.Size(179, 22);
+            menuLanguageEnglish.Size = new System.Drawing.Size(180, 22);
             menuLanguageEnglish.Text = "English";
             menuLanguageEnglish.Click += menuLanguageEnglish_Click;
             // 
             // menuLanguageChinese
             // 
             menuLanguageChinese.Name = "menuLanguageChinese";
-            menuLanguageChinese.Size = new System.Drawing.Size(179, 22);
-            menuLanguageChinese.Text = "中文";
+            menuLanguageChinese.Size = new System.Drawing.Size(180, 22);
+            menuLanguageChinese.Text = "简体中文";
             menuLanguageChinese.Click += menuLanguageChinese_Click;
             // 
             // menuLanguageChineseTraditional
             // 
             menuLanguageChineseTraditional.Name = "menuLanguageChineseTraditional";
-            menuLanguageChineseTraditional.Size = new System.Drawing.Size(179, 22);
+            menuLanguageChineseTraditional.Size = new System.Drawing.Size(180, 22);
             menuLanguageChineseTraditional.Text = "繁體中文";
             menuLanguageChineseTraditional.Click += menuLanguageChineseTraditional_Click;
             // 
             // menuLanguageJapanese
             // 
             menuLanguageJapanese.Name = "menuLanguageJapanese";
-            menuLanguageJapanese.Size = new System.Drawing.Size(179, 22);
+            menuLanguageJapanese.Size = new System.Drawing.Size(180, 22);
             menuLanguageJapanese.Text = "日本語";
             menuLanguageJapanese.Click += menuLanguageJapanese_Click;
             // 
             // menuLanguageKorean
             // 
             menuLanguageKorean.Name = "menuLanguageKorean";
-            menuLanguageKorean.Size = new System.Drawing.Size(179, 22);
+            menuLanguageKorean.Size = new System.Drawing.Size(180, 22);
             menuLanguageKorean.Text = "한국어";
             menuLanguageKorean.Click += menuLanguageKorean_Click;
             // 
             // menuLanguageRussian
             // 
             menuLanguageRussian.Name = "menuLanguageRussian";
-            menuLanguageRussian.Size = new System.Drawing.Size(179, 22);
+            menuLanguageRussian.Size = new System.Drawing.Size(180, 22);
             menuLanguageRussian.Text = "Русский";
             menuLanguageRussian.Click += menuLanguageRussian_Click;
             // 
             // menuLanguagePortuguese
             // 
             menuLanguagePortuguese.Name = "menuLanguagePortuguese";
-            menuLanguagePortuguese.Size = new System.Drawing.Size(179, 22);
+            menuLanguagePortuguese.Size = new System.Drawing.Size(180, 22);
             menuLanguagePortuguese.Text = "Português (Brasil)";
             menuLanguagePortuguese.Click += menuLanguagePortuguese_Click;
             // 
             // tabControl1
             // 
             tabControl1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            tabControl1.Controls.Add(tabPageSettings);
             tabControl1.Controls.Add(tabPageSoftware);
             tabControl1.Controls.Add(tabPageAppData);
+            tabControl1.Controls.Add(tabPageSettings); // 系统设置放到最后
             tabControl1.Location = new System.Drawing.Point(10, 30);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
