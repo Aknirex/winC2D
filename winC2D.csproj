@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+<Project Sdk="Microsoft.NET.Sdk">
  <PropertyGroup>
    <OutputType>WinExe</OutputType>
    <TargetFramework>net6.0-windows</TargetFramework>
@@ -14,8 +14,5 @@
    <EmbeddedResource Update="Strings.en.resx">
      <SubType>Designer</SubType>
    </EmbeddedResource>
- </ItemGroup>
- <ItemGroup>
-   <PackageReference Include="Interop.IWshRuntimeLibrary" Version="1.0.1" />
  </ItemGroup>
 </Project>
