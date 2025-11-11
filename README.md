@@ -4,6 +4,7 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0-blue)](https://dotnet.microsoft.com/)
 [![License](https://img.shields.io/github/license/SKR7lex/winC2D)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/SKR7lex/winC2D?include_prereleases)](https://github.com/SKR7lex/winC2D/releases)
+[![Downloads](https://img.shields.io/github/downloads/SKR7lex/winC2D/total?label=downloads)](https://github.com/SKR7lex/winC2D/releases)
 [![GitHub stars](https://img.shields.io/github/stars/SKR7lex/winC2D?style=social)](https://github.com/SKR7lex/winC2D/stargazers)
 
 [简体中文](#简体中文) | [English](#english)
