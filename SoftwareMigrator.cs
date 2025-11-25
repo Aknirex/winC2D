@@ -14,7 +14,20 @@ namespace winC2D
 
             string sourcePath = sw.InstallLocation;
             string sourceTempPath = sourcePath + "_migrating_" + Guid.NewGuid().ToString("N");
-            string targetPath = Path.Combine(parentTargetPath, sw.Name);
+
+            // 使用原安装目录名而非 DisplayName，并清洗非法字符/尾部空格句点
+            string originalFolderName = Path.GetFileName(sourcePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            if (string.IsNullOrEmpty(originalFolderName))
+                originalFolderName = sw.Name; // 兜底
+            foreach (var c in Path.GetInvalidFileNameChars())
+            {
+                originalFolderName = originalFolderName.Replace(c, '_');
+            }
+            originalFolderName = originalFolderName.Trim().TrimEnd('.');
+            if (string.IsNullOrEmpty(originalFolderName))
+                originalFolderName = "MigratedApp"; // 再次兜底
+
+            string targetPath = Path.Combine(parentTargetPath, originalFolderName);
             string tempTargetPath = targetPath + "_temp";
             Console.WriteLine($"检查目标路径: {targetPath}");
 
