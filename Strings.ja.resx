@@ -169,4 +169,13 @@
   <data name="Button.MigrateSelected" xml:space="preserve">
     <value>選択した項目を移行</value>
   </data>
+  <data name="Column.Status" xml:space="preserve">
+    <value>ステータス</value>
+  </data>
+  <data name="Status.Directory" xml:space="preserve">
+    <value>ディレクトリ</value>
+  </data>
+  <data name="Status.Symlink" xml:space="preserve">
+    <value>シンボリック リンク</value>
+  </data>
 </root>

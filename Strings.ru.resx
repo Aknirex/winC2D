@@ -169,4 +169,13 @@
   <data name="Button.MigrateSelected" xml:space="preserve">
     <value>Мигрировать выбранное</value>
   </data>
+  <data name="Column.Status" xml:space="preserve">
+    <value>Статус</value>
+  </data>
+  <data name="Status.Directory" xml:space="preserve">
+    <value>Каталог</value>
+  </data>
+  <data name="Status.Symlink" xml:space="preserve">
+    <value>Символическая ссылка</value>
+  </data>
 </root>

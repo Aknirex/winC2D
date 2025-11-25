@@ -274,4 +274,13 @@
   <data name="Button.MigrateSelected" xml:space="preserve">
     <value>遷移所選</value>
   </data>
+  <data name="Column.Status" xml:space="preserve">
+    <value>狀態</value>
+  </data>
+  <data name="Status.Directory" xml:space="preserve">
+    <value>目錄</value>
+  </data>
+  <data name="Status.Symlink" xml:space="preserve">
+    <value>符號連結</value>
+  </data>
 </root>

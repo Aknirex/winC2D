@@ -274,4 +274,14 @@
   <data name="Button.MigrateSelected" xml:space="preserve">
     <value>Migrate Selected</value>
   </data>
+  <!-- 新增状态列本地化键 -->
+  <data name="Column.Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Status.Directory" xml:space="preserve">
+    <value>Directory</value>
+  </data>
+  <data name="Status.Symlink" xml:space="preserve">
+    <value>Symbolic Link</value>
+  </data>
 </root>

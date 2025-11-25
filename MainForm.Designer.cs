@@ -13,6 +13,7 @@ namespace winC2D
         private System.Windows.Forms.ColumnHeader columnHeaderName;
         private System.Windows.Forms.ColumnHeader columnHeaderPath;
         private System.Windows.Forms.ColumnHeader columnHeaderSize;
+        private System.Windows.Forms.ColumnHeader columnHeaderStatus; // 新增状态列
         private System.Windows.Forms.Button buttonMigrateSoftware;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem menuLog;
@@ -41,7 +42,7 @@ namespace winC2D
         private System.Windows.Forms.ColumnHeader columnHeaderAppName;
         private System.Windows.Forms.ColumnHeader columnHeaderAppPath;
         private System.Windows.Forms.ColumnHeader columnHeaderAppSize;
-        private System.Windows.Forms.ColumnHeader columnHeaderAppType;
+        private System.Windows.Forms.ColumnHeader columnHeaderAppStatus; // 将类型列改为状态列
         private System.Windows.Forms.Button buttonMigrateAppData;
         private System.Windows.Forms.Button buttonRefreshAppData;
         private System.Windows.Forms.ToolStripMenuItem menuLanguage;
@@ -102,6 +103,7 @@ namespace winC2D
             columnHeaderName = new ColumnHeader();
             columnHeaderPath = new ColumnHeader();
             columnHeaderSize = new ColumnHeader();
+            columnHeaderStatus = new ColumnHeader();
             buttonMigrateSoftware = new Button();
             buttonRefreshSoftware = new Button();
             tabPageAppData = new TabPage();
@@ -109,7 +111,7 @@ namespace winC2D
             columnHeaderAppName = new ColumnHeader();
             columnHeaderAppPath = new ColumnHeader();
             columnHeaderAppSize = new ColumnHeader();
-            columnHeaderAppType = new ColumnHeader();
+            columnHeaderAppStatus = new ColumnHeader();
             buttonMigrateAppData = new Button();
             buttonRefreshAppData = new Button();
             menuStrip1.SuspendLayout();
@@ -128,7 +130,7 @@ namespace winC2D
             menuStrip1.Location = new System.Drawing.Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Padding = new Padding(5, 2, 0, 2);
-            menuStrip1.Size = new System.Drawing.Size(700, 25);
+            menuStrip1.Size = new System.Drawing.Size(1000, 25);
             menuStrip1.TabIndex = 0;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -204,7 +206,7 @@ namespace winC2D
             tabControl1.Location = new System.Drawing.Point(10, 30);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new System.Drawing.Size(679, 420);
+            tabControl1.Size = new System.Drawing.Size(979, 560);
             tabControl1.TabIndex = 1;
             // 
             // tabPageSettings
@@ -214,7 +216,7 @@ namespace winC2D
             tabPageSettings.Location = new System.Drawing.Point(4, 26);
             tabPageSettings.Name = "tabPageSettings";
             tabPageSettings.Padding = new Padding(3);
-            tabPageSettings.Size = new System.Drawing.Size(671, 390);
+            tabPageSettings.Size = new System.Drawing.Size(971, 530);
             tabPageSettings.TabIndex = 0;
             tabPageSettings.Text = "系统设置";
             tabPageSettings.UseVisualStyleBackColor = true;
@@ -226,7 +228,7 @@ namespace winC2D
             groupBoxStoragePolicy.Controls.Add(labelStoragePolicyNote);
             groupBoxStoragePolicy.Location = new System.Drawing.Point(13, 238);
             groupBoxStoragePolicy.Name = "groupBoxStoragePolicy";
-            groupBoxStoragePolicy.Size = new System.Drawing.Size(643, 85);
+            groupBoxStoragePolicy.Size = new System.Drawing.Size(943, 85);
             groupBoxStoragePolicy.TabIndex = 1;
             groupBoxStoragePolicy.TabStop = false;
             groupBoxStoragePolicy.Text = "新内容保存位置（Microsoft Store 应用和用户内容）";
@@ -234,7 +236,7 @@ namespace winC2D
             // buttonOpenWindowsStorage
             // 
             buttonOpenWindowsStorage.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            buttonOpenWindowsStorage.Location = new System.Drawing.Point(481, 30);
+            buttonOpenWindowsStorage.Location = new System.Drawing.Point(781, 30);
             buttonOpenWindowsStorage.Name = "buttonOpenWindowsStorage";
             buttonOpenWindowsStorage.Size = new System.Drawing.Size(149, 42);
             buttonOpenWindowsStorage.TabIndex = 1;
@@ -248,7 +250,7 @@ namespace winC2D
             labelStoragePolicyNote.ForeColor = System.Drawing.Color.DarkBlue;
             labelStoragePolicyNote.Location = new System.Drawing.Point(13, 26);
             labelStoragePolicyNote.Name = "labelStoragePolicyNote";
-            labelStoragePolicyNote.Size = new System.Drawing.Size(451, 51);
+            labelStoragePolicyNote.Size = new System.Drawing.Size(751, 51);
             labelStoragePolicyNote.TabIndex = 0;
             labelStoragePolicyNote.Text = "ℹ 此设置影响 Microsoft Store 应用和新用户内容（文档、照片等）。需要 Windows 10 或更高版本。";
             // 
@@ -267,7 +269,7 @@ namespace winC2D
             groupBoxProgramFiles.Controls.Add(labelProgramFiles);
             groupBoxProgramFiles.Location = new System.Drawing.Point(13, 13);
             groupBoxProgramFiles.Name = "groupBoxProgramFiles";
-            groupBoxProgramFiles.Size = new System.Drawing.Size(643, 212);
+            groupBoxProgramFiles.Size = new System.Drawing.Size(943, 212);
             groupBoxProgramFiles.TabIndex = 0;
             groupBoxProgramFiles.TabStop = false;
             groupBoxProgramFiles.Text = "Program Files 位置（传统桌面程序）";
@@ -278,14 +280,14 @@ namespace winC2D
             labelProgramFilesNote.ForeColor = System.Drawing.Color.DarkBlue;
             labelProgramFilesNote.Location = new System.Drawing.Point(13, 157);
             labelProgramFilesNote.Name = "labelProgramFilesNote";
-            labelProgramFilesNote.Size = new System.Drawing.Size(617, 42);
+            labelProgramFilesNote.Size = new System.Drawing.Size(917, 42);
             labelProgramFilesNote.TabIndex = 9;
             labelProgramFilesNote.Text = "ℹ 此设置影响通过安装程序（.exe、.msi）安装的传统桌面程序。大多数第三方软件使用此位置。";
             // 
             // buttonResetProgramFiles
             // 
             buttonResetProgramFiles.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            buttonResetProgramFiles.Location = new System.Drawing.Point(560, 46);
+            buttonResetProgramFiles.Location = new System.Drawing.Point(860, 46);
             buttonResetProgramFiles.Name = "buttonResetProgramFiles";
             buttonResetProgramFiles.Size = new System.Drawing.Size(70, 25);
             buttonResetProgramFiles.TabIndex = 8;
@@ -296,7 +298,7 @@ namespace winC2D
             // buttonApplyProgramFiles
             // 
             buttonApplyProgramFiles.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            buttonApplyProgramFiles.Location = new System.Drawing.Point(481, 46);
+            buttonApplyProgramFiles.Location = new System.Drawing.Point(781, 46);
             buttonApplyProgramFiles.Name = "buttonApplyProgramFiles";
             buttonApplyProgramFiles.Size = new System.Drawing.Size(70, 25);
             buttonApplyProgramFiles.TabIndex = 7;
@@ -308,7 +310,7 @@ namespace winC2D
             // 
             buttonBrowseProgramFilesX86.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             buttonBrowseProgramFilesX86.Enabled = false;
-            buttonBrowseProgramFilesX86.Location = new System.Drawing.Point(402, 127);
+            buttonBrowseProgramFilesX86.Location = new System.Drawing.Point(702, 127);
             buttonBrowseProgramFilesX86.Name = "buttonBrowseProgramFilesX86";
             buttonBrowseProgramFilesX86.Size = new System.Drawing.Size(70, 25);
             buttonBrowseProgramFilesX86.TabIndex = 6;
@@ -322,7 +324,7 @@ namespace winC2D
             textBoxProgramFilesX86.Enabled = false;
             textBoxProgramFilesX86.Location = new System.Drawing.Point(13, 128);
             textBoxProgramFilesX86.Name = "textBoxProgramFilesX86";
-            textBoxProgramFilesX86.Size = new System.Drawing.Size(381, 23);
+            textBoxProgramFilesX86.Size = new System.Drawing.Size(681, 23);
             textBoxProgramFilesX86.TabIndex = 5;
             // 
             // labelProgramFilesX86
@@ -349,7 +351,7 @@ namespace winC2D
             // buttonBrowseProgramFiles
             // 
             buttonBrowseProgramFiles.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            buttonBrowseProgramFiles.Location = new System.Drawing.Point(402, 46);
+            buttonBrowseProgramFiles.Location = new System.Drawing.Point(702, 46);
             buttonBrowseProgramFiles.Name = "buttonBrowseProgramFiles";
             buttonBrowseProgramFiles.Size = new System.Drawing.Size(70, 25);
             buttonBrowseProgramFiles.TabIndex = 2;
@@ -362,7 +364,7 @@ namespace winC2D
             textBoxProgramFiles.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             textBoxProgramFiles.Location = new System.Drawing.Point(13, 47);
             textBoxProgramFiles.Name = "textBoxProgramFiles";
-            textBoxProgramFiles.Size = new System.Drawing.Size(381, 23);
+            textBoxProgramFiles.Size = new System.Drawing.Size(681, 23);
             textBoxProgramFiles.TabIndex = 1;
             textBoxProgramFiles.TextChanged += textBoxProgramFiles_TextChanged;
             // 
@@ -383,7 +385,7 @@ namespace winC2D
             tabPageSoftware.Location = new System.Drawing.Point(4, 26);
             tabPageSoftware.Name = "tabPageSoftware";
             tabPageSoftware.Padding = new Padding(3);
-            tabPageSoftware.Size = new System.Drawing.Size(671, 390);
+            tabPageSoftware.Size = new System.Drawing.Size(971, 530);
             tabPageSoftware.TabIndex = 1;
             tabPageSoftware.Text = "软件迁移";
             tabPageSoftware.UseVisualStyleBackColor = true;
@@ -392,11 +394,11 @@ namespace winC2D
             // 
             listViewSoftware.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             listViewSoftware.CheckBoxes = true;
-            listViewSoftware.Columns.AddRange(new ColumnHeader[] { columnHeaderName, columnHeaderPath, columnHeaderSize });
+            listViewSoftware.Columns.AddRange(new ColumnHeader[] { columnHeaderName, columnHeaderPath, columnHeaderSize, columnHeaderStatus });
             listViewSoftware.FullRowSelect = true;
             listViewSoftware.Location = new System.Drawing.Point(5, 6);
             listViewSoftware.Name = "listViewSoftware";
-            listViewSoftware.Size = new System.Drawing.Size(662, 345);
+            listViewSoftware.Size = new System.Drawing.Size(960, 485);
             listViewSoftware.TabIndex = 0;
             listViewSoftware.UseCompatibleStateImageBehavior = false;
             listViewSoftware.View = View.Details;
@@ -404,22 +406,27 @@ namespace winC2D
             // columnHeaderName
             // 
             columnHeaderName.Text = "软件名称";
-            columnHeaderName.Width = 180;
+            columnHeaderName.Width = 220;
             // 
             // columnHeaderPath
             // 
             columnHeaderPath.Text = "安装路径";
-            columnHeaderPath.Width = 400;
+            columnHeaderPath.Width = 480;
             // 
             // columnHeaderSize
             // 
             columnHeaderSize.Text = "大小";
             columnHeaderSize.Width = 120;
             // 
+            // columnHeaderStatus
+            // 
+            columnHeaderStatus.Text = "状态";
+            columnHeaderStatus.Width = 120;
+            // 
             // buttonMigrateSoftware
             // 
             buttonMigrateSoftware.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            buttonMigrateSoftware.Location = new System.Drawing.Point(567, 357);
+            buttonMigrateSoftware.Location = new System.Drawing.Point(867, 497);
             buttonMigrateSoftware.Name = "buttonMigrateSoftware";
             buttonMigrateSoftware.Size = new System.Drawing.Size(98, 27);
             buttonMigrateSoftware.TabIndex = 1;
@@ -430,7 +437,7 @@ namespace winC2D
             // buttonRefreshSoftware
             // 
             buttonRefreshSoftware.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            buttonRefreshSoftware.Location = new System.Drawing.Point(463, 357);
+            buttonRefreshSoftware.Location = new System.Drawing.Point(763, 497);
             buttonRefreshSoftware.Name = "buttonRefreshSoftware";
             buttonRefreshSoftware.Size = new System.Drawing.Size(98, 27);
             buttonRefreshSoftware.TabIndex = 2;
@@ -446,7 +453,7 @@ namespace winC2D
             tabPageAppData.Location = new System.Drawing.Point(4, 26);
             tabPageAppData.Name = "tabPageAppData";
             tabPageAppData.Padding = new Padding(3);
-            tabPageAppData.Size = new System.Drawing.Size(671, 390);
+            tabPageAppData.Size = new System.Drawing.Size(971, 530);
             tabPageAppData.TabIndex = 3;
             tabPageAppData.Text = "AppData (mklink)";
             tabPageAppData.UseVisualStyleBackColor = true;
@@ -455,11 +462,11 @@ namespace winC2D
             // 
             listViewAppData.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             listViewAppData.CheckBoxes = true;
-            listViewAppData.Columns.AddRange(new ColumnHeader[] { columnHeaderAppName, columnHeaderAppPath, columnHeaderAppSize, columnHeaderAppType });
+            listViewAppData.Columns.AddRange(new ColumnHeader[] { columnHeaderAppName, columnHeaderAppPath, columnHeaderAppSize, columnHeaderAppStatus });
             listViewAppData.FullRowSelect = true;
             listViewAppData.Location = new System.Drawing.Point(5, 6);
             listViewAppData.Name = "listViewAppData";
-            listViewAppData.Size = new System.Drawing.Size(662, 345);
+            listViewAppData.Size = new System.Drawing.Size(960, 485);
             listViewAppData.TabIndex = 0;
             listViewAppData.UseCompatibleStateImageBehavior = false;
             listViewAppData.View = View.Details;
@@ -467,27 +474,27 @@ namespace winC2D
             // columnHeaderAppName
             // 
             columnHeaderAppName.Text = "应用名称";
-            columnHeaderAppName.Width = 200;
+            columnHeaderAppName.Width = 260;
             // 
             // columnHeaderAppPath
             // 
             columnHeaderAppPath.Text = "路径";
-            columnHeaderAppPath.Width = 350;
+            columnHeaderAppPath.Width = 500;
             // 
             // columnHeaderAppSize
             // 
             columnHeaderAppSize.Text = "大小";
-            columnHeaderAppSize.Width = 100;
+            columnHeaderAppSize.Width = 120;
             // 
-            // columnHeaderAppType
+            // columnHeaderAppStatus
             // 
-            columnHeaderAppType.Text = "类型";
-            columnHeaderAppType.Width = 80;
+            columnHeaderAppStatus.Text = "状态";
+            columnHeaderAppStatus.Width = 80;
             // 
             // buttonMigrateAppData
             // 
             buttonMigrateAppData.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            buttonMigrateAppData.Location = new System.Drawing.Point(567, 357);
+            buttonMigrateAppData.Location = new System.Drawing.Point(867, 497);
             buttonMigrateAppData.Name = "buttonMigrateAppData";
             buttonMigrateAppData.Size = new System.Drawing.Size(98, 27);
             buttonMigrateAppData.TabIndex = 1;
@@ -498,7 +505,7 @@ namespace winC2D
             // buttonRefreshAppData
             // 
             buttonRefreshAppData.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            buttonRefreshAppData.Location = new System.Drawing.Point(463, 357);
+            buttonRefreshAppData.Location = new System.Drawing.Point(763, 497);
             buttonRefreshAppData.Name = "buttonRefreshAppData";
             buttonRefreshAppData.Size = new System.Drawing.Size(98, 27);
             buttonRefreshAppData.TabIndex = 2;
@@ -510,11 +517,11 @@ namespace winC2D
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(700, 460);
+            ClientSize = new System.Drawing.Size(1000, 600);
             Controls.Add(tabControl1);
             Controls.Add(menuStrip1);
             MainMenuStrip = menuStrip1;
-            MinimumSize = new System.Drawing.Size(527, 388);
+            MinimumSize = new System.Drawing.Size(700, 460);
             Name = "MainForm";
             Text = "Windows存储迁移助手";
             menuStrip1.ResumeLayout(false);

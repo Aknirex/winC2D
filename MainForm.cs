@@ -111,15 +111,21 @@ namespace winC2D
                     {
                         string name = sw.Name;
                         string path = sw.InstallLocation;
+                        string statusText = string.Empty;
                         try
                         {
-                            if (Directory.Exists(path) && (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+                            if (Directory.Exists(path))
                             {
-                                name = "[" + Localization.T("Msg.Migrated") + "] " + name;
+                                var isSymlink = (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
+                                statusText = isSymlink ? Localization.T("Status.Symlink") : Localization.T("Status.Directory");
+                            }
+                            else
+                            {
+                                statusText = Localization.T("Status.Directory");
                             }
                         }
                         catch { }
-                        var item = new ListViewItem(new string[] { name, sw.InstallLocation, sw.SizeText });
+                        var item = new ListViewItem(new string[] { name, sw.InstallLocation, sw.SizeText, statusText });
                         item.Tag = sw;
                         listViewSoftware.Items.Add(item);
                     }
@@ -164,12 +170,26 @@ namespace winC2D
                                     Size = size,
                                     Type = type
                                 };
+                                string statusText = string.Empty;
+                                try
+                                {
+                                    if (Directory.Exists(appData.Path))
+                                    {
+                                        var isSymlink = (File.GetAttributes(appData.Path) & FileAttributes.ReparsePoint) != 0;
+                                        statusText = isSymlink ? Localization.T("Status.Symlink") : Localization.T("Status.Directory");
+                                    }
+                                    else
+                                    {
+                                        statusText = Localization.T("Status.Directory");
+                                    }
+                                }
+                                catch { }
                                 var item = new ListViewItem(new string[]
                                 {
                                     appData.Name,
                                     appData.Path,
                                     appData.SizeText,
-                                    appData.Type
+                                    statusText
                                 });
                                 item.Tag = appData;
                                 items.Add(item);
@@ -256,12 +276,13 @@ namespace winC2D
             columnHeaderName.Text = Localization.T("Column.SoftwareName");
             columnHeaderPath.Text = Localization.T("Column.InstallPath");
             columnHeaderSize.Text = Localization.T("Column.Size");
+            columnHeaderStatus.Text = Localization.T("Column.Status");
 
             // AppData 列表列名（与软件迁移列名一致）
             columnHeaderAppName.Text = Localization.T("Column.SoftwareName");
             columnHeaderAppPath.Text = Localization.T("Column.InstallPath");
             columnHeaderAppSize.Text = Localization.T("Column.Size");
-            columnHeaderAppType.Text = Localization.T("Column.Type");
+            columnHeaderAppStatus.Text = Localization.T("Column.Status");
 
             // Buttons
             buttonMigrateSoftware.Text = Localization.T("Button.MigrateSelected");
@@ -308,15 +329,21 @@ namespace winC2D
                 {
                     string name = sw.Name;
                     string path = sw.InstallLocation;
+                    string statusText = string.Empty;
                     try
                     {
-                        if (Directory.Exists(path) && (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+                        if (Directory.Exists(path))
                         {
-                            name = "[" + Localization.T("Msg.Migrated") + "] " + name;
+                            var isSymlink = (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
+                            statusText = isSymlink ? Localization.T("Status.Symlink") : Localization.T("Status.Directory");
+                        }
+                        else
+                        {
+                            statusText = Localization.T("Status.Directory");
                         }
                     }
                     catch { }
-                    var item = new ListViewItem(new string[] { name, sw.InstallLocation, sw.SizeText });
+                    var item = new ListViewItem(new string[] { name, sw.InstallLocation, sw.SizeText, statusText });
                     item.Tag = sw;
                     listViewSoftware.Items.Add(item);
                 }
@@ -751,13 +778,27 @@ namespace winC2D
                                 Size = size,
                                 Type = type
                             };
+                            string statusText = string.Empty;
+                            try
+                            {
+                                if (Directory.Exists(appData.Path))
+                                {
+                                    var isSymlink = (File.GetAttributes(appData.Path) & FileAttributes.ReparsePoint) != 0;
+                                    statusText = isSymlink ? Localization.T("Status.Symlink") : Localization.T("Status.Directory");
+                                }
+                                else
+                                {
+                                    statusText = Localization.T("Status.Directory");
+                                }
+                            }
+                            catch { }
 
                             var item = new ListViewItem(new string[]
                             {
                                 appData.Name,
                                 appData.Path,
                                 appData.SizeText,
-                                appData.Type
+                                statusText
                             });
                             item.Tag = appData;
                             listViewAppData.Items.Add(item);
