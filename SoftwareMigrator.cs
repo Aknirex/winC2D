@@ -93,12 +93,18 @@ namespace winC2D
         {
             try
             {
+                // 1. 去除路径末尾的分隔符
+                linkPath = linkPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                targetPath = targetPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 #if NET6_0_OR_GREATER
                 // .NET 6+ 支持
                 Directory.CreateSymbolicLink(linkPath, targetPath);
 #else
                 // 低版本用cmd
-                var psi = new System.Diagnostics.ProcessStartInfo("cmd.exe", $"/c mklink /D \"{linkPath}\" \"{targetPath}\"")
+                // 2. 路径参数内的双引号转义
+                string safeLinkPath = linkPath.Replace("\"", "^\"");
+                string safeTargetPath = targetPath.Replace("\"", "^\"");
+                var psi = new System.Diagnostics.ProcessStartInfo("cmd.exe", $"/c mklink /D \"{safeLinkPath}\" \"{safeTargetPath}\"")
                 {
                     CreateNoWindow = true,
                     UseShellExecute = false
