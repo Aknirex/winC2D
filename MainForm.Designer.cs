@@ -45,6 +45,7 @@ namespace winC2D
         private System.Windows.Forms.ColumnHeader columnHeaderAppStatus; // 将类型列改为状态列
         private System.Windows.Forms.Button buttonMigrateAppData;
         private System.Windows.Forms.Button buttonRefreshAppData;
+        private System.Windows.Forms.Button buttonCheckSuspiciousAppData;
         private System.Windows.Forms.ToolStripMenuItem menuLanguage;
         private System.Windows.Forms.ToolStripMenuItem menuLanguageEnglish;
         private System.Windows.Forms.ToolStripMenuItem menuLanguageChinese;
@@ -103,6 +104,7 @@ namespace winC2D
             columnHeaderAppStatus = new ColumnHeader();
             buttonMigrateAppData = new Button();
             buttonRefreshAppData = new Button();
+            buttonCheckSuspiciousAppData = new Button();
             tabPageSettings = new TabPage();
             groupBoxStoragePolicy = new GroupBox();
             buttonOpenWindowsStorage = new Button();
@@ -310,6 +312,7 @@ namespace winC2D
             tabPageAppData.Controls.Add(listViewAppData);
             tabPageAppData.Controls.Add(buttonMigrateAppData);
             tabPageAppData.Controls.Add(buttonRefreshAppData);
+            tabPageAppData.Controls.Add(buttonCheckSuspiciousAppData);
             tabPageAppData.Location = new System.Drawing.Point(4, 26);
             tabPageAppData.Name = "tabPageAppData";
             tabPageAppData.Padding = new Padding(3);
@@ -372,6 +375,17 @@ namespace winC2D
             buttonRefreshAppData.Text = "刷新列表";
             buttonRefreshAppData.UseVisualStyleBackColor = true;
             buttonRefreshAppData.Click += buttonRefreshAppData_Click;
+            // 
+            // buttonCheckSuspiciousAppData
+            // 
+            buttonCheckSuspiciousAppData.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonCheckSuspiciousAppData.Location = new System.Drawing.Point(659, 497);
+            buttonCheckSuspiciousAppData.Name = "buttonCheckSuspiciousAppData";
+            buttonCheckSuspiciousAppData.Size = new System.Drawing.Size(98, 27);
+            buttonCheckSuspiciousAppData.TabIndex = 3;
+            buttonCheckSuspiciousAppData.Text = "检查可疑";
+            buttonCheckSuspiciousAppData.UseVisualStyleBackColor = true;
+            buttonCheckSuspiciousAppData.Click += buttonCheckSuspiciousAppData_Click;
             // 
             // tabPageSettings
             // 

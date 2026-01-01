@@ -179,7 +179,7 @@
     <value>シンボリックリンク</value>
   </data>
   <data name="Status.Suspicious" xml:space="preserve">
-    <value>疑わしいディレクトリ</value>
+    <value>要確認</value>
   </data>
   <data name="Status.Empty" xml:space="preserve">
     <value>空のディレクトリ</value>
@@ -191,13 +191,13 @@
     <value>サイズはまだ計算されていません。チェックして計算します。</value>
   </data>
   <data name="Tooltip.StatusSuspicious" xml:space="preserve">
-    <value>サイズが非常に小さいため、チェックしてさらに判定します。</value>
+    <value>手動確認が必要です。</value>
   </data>
   <data name="Menu.CopyName" xml:space="preserve">
     <value>名前をコピー</value>
   </data>
   <data name="Menu.CopyPath" xml:space="preserve">
-    <value>インストールパスをコピー</value>
+    <value>パスをコピー</value>
   </data>
   <data name="Menu.OpenInExplorer" xml:space="preserve">
     <value>エクスプローラーで開く</value>

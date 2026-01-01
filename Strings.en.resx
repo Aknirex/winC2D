@@ -287,12 +287,18 @@
     <value>Size not calculated yet, run check to compute.</value>
   </data>
   <data name="Tooltip.StatusSuspicious" xml:space="preserve">
-    <value>Very small, run check to inspect executables.</value>
+    <value>Needs manual check to confirm status.</value>
+  </data>
+  <data name="Menu.CopyName" xml:space="preserve">
+    <value>Copy Name</value>
+  </data>
+  <data name="Menu.CopyPath" xml:space="preserve">
+    <value>Copy Path</value>
+  </data>
+  <data name="Menu.OpenInExplorer" xml:space="preserve">
+    <value>Open in Explorer</value>
   </data>
   <data name="Menu.Check" xml:space="preserve">
     <value>Check</value>
-  </data>
-  <data name="Msg.CheckingSuspicious" xml:space="preserve">
-    <value>Checking size/status...</value>
   </data>
 </root>

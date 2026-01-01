@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace winC2D
 {
@@ -150,14 +151,91 @@ namespace winC2D
             }
             return $"{len:0.##} {sizes[order]}";
         }
+
+        /// <summary>
+        /// 对 AppData 目录进行检查：计算大小并判定状态（空/残留/目录/符号链接）
+        /// </summary>
+        public static void CheckAppDataDirectory(AppDataInfo info)
+        {
+            if (info == null || string.IsNullOrWhiteSpace(info.Path)) return;
+            var path = info.Path;
+            if (!Directory.Exists(path))
+            {
+                info.Status = SoftwareStatus.Residual;
+                info.SizeBytes = 0;
+                info.SizeChecked = true;
+                return;
+            }
+
+            bool isSymlink = false;
+            try
+            {
+                isSymlink = (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
+            }
+            catch { }
+
+            bool hasEntry = false;
+            long size = 0;
+            try
+            {
+                foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
+                {
+                    hasEntry = true;
+                    try
+                    {
+                        size += new FileInfo(file).Length;
+                    }
+                    catch { }
+                }
+                if (!hasEntry)
+                {
+                    foreach (var dir in Directory.EnumerateDirectories(path, "*", SearchOption.AllDirectories))
+                    {
+                        hasEntry = true;
+                        break;
+                    }
+                }
+            }
+            catch { }
+
+            info.SizeBytes = size;
+            info.SizeChecked = true;
+            info.IsSymlink = isSymlink;
+
+            if (!hasEntry)
+                info.Status = SoftwareStatus.Empty;
+            else if (isSymlink)
+                info.Status = SoftwareStatus.Symlink;
+            else
+                info.Status = SoftwareStatus.Directory;
+        }
     }
 
     public class AppDataInfo
     {
         public string Name { get; set; }
         public string Path { get; set; }
-        public long Size { get; set; }
-        public string SizeText => AppDataMigrator.FormatSize(Size);
+        public long SizeBytes { get; set; }
+        public bool SizeChecked { get; set; }
+        public bool IsSymlink { get; set; }
+        public SoftwareStatus Status { get; set; }
         public string Type { get; set; } // Roaming, Local, LocalLow
+
+        public string SizeText
+        {
+            get
+            {
+                if (SizeBytes <= 0 && !SizeChecked) return Localization.T("Msg.UnknownSize");
+                if (SizeBytes <= 0) return "0 KB";
+                if (SizeBytes < 1024 * 1024)
+                {
+                    var kb = Math.Max(1, SizeBytes / 1024);
+                    return kb + " KB";
+                }
+                return (SizeBytes / (1024 * 1024)) + " MB";
+            }
+        }
     }
+
+    // Remove duplicate SoftwareStatus enum; use the one in SoftwareScanner
 }

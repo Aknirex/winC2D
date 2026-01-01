@@ -179,7 +179,7 @@
     <value>Символическая ссылка</value>
   </data>
   <data name="Status.Suspicious" xml:space="preserve">
-    <value>Подозрительный каталог</value>
+    <value>Требует проверки</value>
   </data>
   <data name="Status.Empty" xml:space="preserve">
     <value>Пустой каталог</value>
@@ -225,5 +225,17 @@
   </data>
   <data name="Msg.CannotDeleteDefault" xml:space="preserve">
     <value>Стандартные пути нельзя удалить.</value>
+  </data>
+  <data name="Menu.CopyName" xml:space="preserve">
+    <value>Копировать имя</value>
+  </data>
+  <data name="Menu.CopyPath" xml:space="preserve">
+    <value>Копировать путь</value>
+  </data>
+  <data name="Menu.OpenInExplorer" xml:space="preserve">
+    <value>Открыть в Проводнике</value>
+  </data>
+  <data name="Tooltip.StatusSuspicious" xml:space="preserve">
+    <value>Требуется ручная проверка статуса.</value>
   </data>
 </root>

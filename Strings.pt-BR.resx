@@ -179,7 +179,7 @@
     <value>Link simbólico</value>
   </data>
   <data name="Status.Suspicious" xml:space="preserve">
-    <value>Diretório suspeito</value>
+    <value>Aguardando verificação</value>
   </data>
   <data name="Status.Empty" xml:space="preserve">
     <value>Diretório vazio</value>
@@ -225,5 +225,17 @@
   </data>
   <data name="Msg.CannotDeleteDefault" xml:space="preserve">
     <value>Caminhos padrão não podem ser removidos.</value>
+  </data>
+  <data name="Menu.CopyName" xml:space="preserve">
+    <value>Copiar nome</value>
+  </data>
+  <data name="Menu.CopyPath" xml:space="preserve">
+    <value>Copiar caminho</value>
+  </data>
+  <data name="Menu.OpenInExplorer" xml:space="preserve">
+    <value>Abrir no Explorer</value>
+  </data>
+  <data name="Tooltip.StatusSuspicious" xml:space="preserve">
+    <value>Necessita verificação manual para confirmar o status.</value>
   </data>
 </root>

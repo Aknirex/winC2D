@@ -284,7 +284,7 @@
     <value>符號連結</value>
   </data>
   <data name="Status.Suspicious" xml:space="preserve">
-    <value>可疑目錄</value>
+    <value>待確認</value>
   </data>
   <data name="Status.Empty" xml:space="preserve">
     <value>空目錄</value>
@@ -330,5 +330,29 @@
   </data>
   <data name="Msg.CannotDeleteDefault" xml:space="preserve">
     <value>預設路徑不能刪除。</value>
+  </data>
+  <data name="Menu.CopyName" xml:space="preserve">
+    <value>複製名稱</value>
+  </data>
+  <data name="Menu.CopyPath" xml:space="preserve">
+    <value>複製路徑</value>
+  </data>
+  <data name="Menu.OpenInExplorer" xml:space="preserve">
+    <value>在檔案總管中開啟</value>
+  </data>
+  <data name="Tooltip.StatusDirectory" xml:space="preserve">
+    <value>安裝目錄</value>
+  </data>
+  <data name="Tooltip.StatusSymlink" xml:space="preserve">
+    <value>符號連結</value>
+  </data>
+  <data name="Tooltip.StatusSuspicious" xml:space="preserve">
+    <value>需手動檢查以確認狀態。</value>
+  </data>
+  <data name="Tooltip.StatusEmpty" xml:space="preserve">
+    <value>空目錄</value>
+  </data>
+  <data name="Tooltip.StatusResidual" xml:space="preserve">
+    <value>解除安裝殘留</value>
   </data>
 </root>

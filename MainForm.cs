@@ -25,6 +25,7 @@ namespace winC2D
 
         private readonly ToolTip listToolTip = new ToolTip();
         private ContextMenuStrip softwareContextMenu;
+        private ContextMenuStrip appDataContextMenu;
 
         public MainForm()
         {
@@ -49,6 +50,7 @@ namespace winC2D
             listViewSoftware.MouseMove += listViewSoftware_MouseMove;
             listViewSoftware.MouseLeave += (s, e) => listToolTip.Hide(listViewSoftware);
             InitializeSoftwareContextMenu();
+            InitializeAppDataContextMenu();
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -242,41 +244,17 @@ namespace winC2D
                     {
                         foreach (string dir in Directory.GetDirectories(basePath))
                         {
-                            DirectoryInfo di = new DirectoryInfo(dir);
-                            long size = AppDataMigrator.GetDirectorySize(dir);
-                            if (size > 1024 * 1024)
+                            var appData = new AppDataInfo
                             {
-                                var appData = new AppDataInfo
-                                {
-                                    Name = di.Name,
-                                    Path = dir,
-                                    Size = size,
-                                    Type = type
-                                };
-                                string statusText = string.Empty;
-                                try
-                                {
-                                    if (Directory.Exists(appData.Path))
-                                    {
-                                        var isSymlink = (File.GetAttributes(appData.Path) & FileAttributes.ReparsePoint) != 0;
-                                        statusText = isSymlink ? Localization.T("Status.Symlink") : Localization.T("Status.Directory");
-                                    }
-                                    else
-                                    {
-                                        statusText = Localization.T("Status.Directory");
-                                    }
-                                }
-                                catch { }
-                                var item = new ListViewItem(new string[]
-                                {
-                                    appData.Name,
-                                    appData.Path,
-                                    appData.SizeText,
-                                    statusText
-                                });
-                                item.Tag = appData;
-                                items.Add(item);
-                            }
+                                Name = Path.GetFileName(dir),
+                                Path = dir,
+                                SizeBytes = 0,
+                                SizeChecked = false,
+                                Type = type,
+                                Status = SoftwareStatus.Suspicious
+                            };
+
+                            items.Add(CreateAppDataListViewItem(appData));
                         }
                     }
                     catch { }
@@ -286,14 +264,12 @@ namespace winC2D
                 if (Directory.Exists(localLow))
                     Scan(localLow, "LocalLow");
                 this.Invoke(new Action(() => {
-                    // Use BeginUpdate/EndUpdate to minimize UI redraws while populating
                     listViewAppData.BeginUpdate();
                     try
                     {
                         listViewAppData.Items.Clear();
                         foreach (var item in items)
                             listViewAppData.Items.Add(item);
-                        // 默认按名称升序
                         appDataSortColumn = 0;
                         appDataSortAsc = true;
                         listViewAppData.ListViewItemSorter = new ListViewItemComparer(appDataSortColumn, appDataSortAsc);
@@ -335,7 +311,7 @@ namespace winC2D
             UpdateLanguageMenuItems();
             RefreshSoftwareListLocalization();
             // Refresh AppData list asynchronously to avoid blocking the UI during language switch
-            Task.Run(() => LoadAppDataFoldersSafe());
+            _ = Task.Run(() => LoadAppDataFoldersSafe());
         }
 
         private void ApplyLocalization()
@@ -384,6 +360,7 @@ namespace winC2D
             buttonRefreshAppData.Text = Localization.T("Button.RefreshAppData");
             buttonRefreshSoftware.Text = Localization.T("Button.RefreshAppData");
             buttonCheckSuspicious.Text = Localization.T("Button.CheckSuspicious");
+            buttonCheckSuspiciousAppData.Text = Localization.T("Button.CheckSuspicious");
             buttonManageScanPaths.Text = Localization.T("Button.ManageScanPaths");
             if (softwareContextMenu != null)
             {
@@ -391,6 +368,13 @@ namespace winC2D
                 softwareContextMenu.Items[1].Text = Localization.T("Menu.CopyPath");
                 softwareContextMenu.Items[2].Text = Localization.T("Menu.OpenInExplorer");
                 softwareContextMenu.Items[3].Text = Localization.T("Menu.Check");
+            }
+            if (appDataContextMenu != null)
+            {
+                appDataContextMenu.Items[0].Text = Localization.T("Menu.CopyName");
+                appDataContextMenu.Items[1].Text = Localization.T("Menu.CopyPath");
+                appDataContextMenu.Items[2].Text = Localization.T("Menu.OpenInExplorer");
+                appDataContextMenu.Items[3].Text = Localization.T("Menu.Check");
             }
         }
 
@@ -448,6 +432,16 @@ namespace winC2D
             softwareContextMenu.Items.Add(Localization.T("Menu.OpenInExplorer"), null, (s, e) => OpenSelectedSoftwareInExplorer());
             softwareContextMenu.Items.Add(Localization.T("Menu.Check"), null, async (s, e) => await CheckSelectedSoftwareAsync());
             listViewSoftware.ContextMenuStrip = softwareContextMenu;
+        }
+
+        private void InitializeAppDataContextMenu()
+        {
+            appDataContextMenu = new ContextMenuStrip();
+            appDataContextMenu.Items.Add(Localization.T("Menu.CopyName"), null, (s, e) => CopySelectedAppDataName());
+            appDataContextMenu.Items.Add(Localization.T("Menu.CopyPath"), null, (s, e) => CopySelectedAppDataPath());
+            appDataContextMenu.Items.Add(Localization.T("Menu.OpenInExplorer"), null, (s, e) => OpenSelectedAppDataInExplorer());
+            appDataContextMenu.Items.Add(Localization.T("Menu.Check"), null, async (s, e) => await CheckSelectedAppDataAsync());
+            listViewAppData.ContextMenuStrip = appDataContextMenu;
         }
 
         private ListViewItem CreateSoftwareListViewItem(InstalledSoftware sw)
@@ -571,7 +565,75 @@ namespace winC2D
                     }
                     LocalizedMessageBox.Show(string.Format(Localization.T("Msg.MigrateCompleted"), success, fail), Localization.T("Title.Tip"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                     // 刷新安装软件列表（异步）以避免阻塞 UI
-                    Task.Run(() => LoadInstalledSoftwareSafe());
+                    _ = Task.Run(() => LoadInstalledSoftwareSafe());
+                }
+            }
+        }
+
+        private void buttonManageScanPaths_Click(object sender, EventArgs e)
+        {
+            var cloneList = scanPaths.Select(ClonePath).ToList();
+            using (var dlg = new ScanPathsForm(cloneList))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    scanPaths = dlg.Paths.Select(ClonePath).ToList();
+                    EnsureDefaultScanPaths();
+                    _ = Task.Run(() => LoadInstalledSoftwareSafe());
+                }
+            }
+        }
+
+        private void buttonMigrateAppData_Click(object sender, EventArgs e)
+        {
+            var selected = listViewAppData.CheckedItems.Cast<ListViewItem>().Select(i => i.Tag as AppDataInfo).Where(a => a != null).ToList();
+            if (selected.Count == 0)
+            {
+                MessageBox.Show(Localization.T("Msg.SelectAppData"), Localization.T("Title.Tip"));
+                return;
+            }
+
+            using (var fbd = new FolderBrowserDialog())
+            {
+                fbd.Description = Localization.T("Desc.TargetFolderForAppData");
+                fbd.ShowNewFolderButton = true;
+                if (fbd.ShowDialog() == DialogResult.OK)
+                {
+                    string targetRoot = fbd.SelectedPath;
+                    int success = 0, fail = 0;
+                    foreach (var app in selected)
+                    {
+                        try
+                        {
+                            AppDataMigrator.MigrateWithMklink(app.Name, app.Path, targetRoot);
+                            success++;
+                            MigrationLogger.Log(new MigrationLogEntry
+                            {
+                                Time = DateTime.Now,
+                                SoftwareName = $"{app.Name} (AppData-{app.Type})",
+                                OldPath = app.Path,
+                                NewPath = Path.Combine(targetRoot, "AppData", app.Name),
+                                Status = "Success",
+                                Message = "Migrated using mklink"
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            fail++;
+                            MigrationLogger.Log(new MigrationLogEntry
+                            {
+                                Time = DateTime.Now,
+                                SoftwareName = $"{app.Name} (AppData-{app.Type})",
+                                OldPath = app.Path,
+                                NewPath = Path.Combine(targetRoot, "AppData", app.Name),
+                                Status = "Fail",
+                                Message = ex.Message
+                            });
+                            MessageBox.Show(string.Format(Localization.T("Msg.MigrateFailedFmt"), app.Name, ex.Message), Localization.T("Title.Error"));
+                        }
+                    }
+                    MessageBox.Show(string.Format(Localization.T("Msg.MigrateCompleted"), success, fail), Localization.T("Title.Tip"));
+                    _ = Task.Run(() => LoadAppDataFoldersSafe());
                 }
             }
         }
@@ -870,139 +932,14 @@ namespace winC2D
             }
         }
 
-        private void LoadAppDataFolders()
-        {
-            listViewAppData.Items.Clear();
-
-            // 获取 AppData 各个路径
-            string roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string localLow = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData\\LocalLow");
-
-            // 扫描 Roaming
-            ScanAppDataFolder(roaming, "Roaming");
-
-            // 扫描 Local
-            ScanAppDataFolder(local, "Local");
-
-            // 扫描 LocalLow
-            if (Directory.Exists(localLow))
-            {
-                ScanAppDataFolder(localLow, "LocalLow");
-            }
-        }
-
-        private void ScanAppDataFolder(string basePath, string type)
-        {
-            try
-            {
-                foreach (string dir in Directory.GetDirectories(basePath))
-                {
-                    try
-                    {
-                        DirectoryInfo di = new DirectoryInfo(dir);
-                        long size = AppDataMigrator.GetDirectorySize(dir);
-
-                        // 只显示大于 1MB 的文件夹
-                        if (size > 1024 * 1024)
-                        {
-                            var appData = new AppDataInfo
-                            {
-                                Name = di.Name,
-                                Path = dir,
-                                Size = size,
-                                Type = type
-                            };
-                            string statusText = string.Empty;
-                            try
-                            {
-                                if (Directory.Exists(appData.Path))
-                                {
-                                    var isSymlink = (File.GetAttributes(appData.Path) & FileAttributes.ReparsePoint) != 0;
-                                    statusText = isSymlink ? Localization.T("Status.Symlink") : Localization.T("Status.Directory");
-                                }
-                                else
-                                {
-                                    statusText = Localization.T("Status.Directory");
-                                }
-                            }
-                            catch { }
-
-                            var item = new ListViewItem(new string[]
-                            {
-                                appData.Name,
-                                appData.Path,
-                                appData.SizeText,
-                                statusText
-                            });
-                            item.Tag = appData;
-                            listViewAppData.Items.Add(item);
-                        }
-                    }
-                    catch { }
-                }
-            }
-            catch { }
-        }
-
-        private void buttonMigrateAppData_Click(object sender, EventArgs e)
-        {
-            var selected = listViewAppData.CheckedItems.Cast<ListViewItem>().Select(i => i.Tag as AppDataInfo).ToList();
-            if (selected.Count == 0)
-            {
-                MessageBox.Show(Localization.T("Msg.SelectAppData"), Localization.T("Title.Tip"));
-                return;
-            }
-
-            using (var fbd = new FolderBrowserDialog())
-            {
-                fbd.Description = Localization.T("Desc.TargetFolderForAppData");
-                fbd.ShowNewFolderButton = true;
-                if (fbd.ShowDialog() == DialogResult.OK)
-                {
-                    string targetRoot = fbd.SelectedPath;
-                    int success = 0, fail = 0;
-                    foreach (var app in selected)
-                    {
-                        try
-                        {
-                            AppDataMigrator.MigrateWithMklink(app.Name, app.Path, targetRoot);
-                            success++;
-                            MigrationLogger.Log(new MigrationLogEntry
-                            {
-                                Time = DateTime.Now,
-                                SoftwareName = $"{app.Name} (AppData-{app.Type})",
-                                OldPath = app.Path,
-                                NewPath = Path.Combine(targetRoot, "AppData", app.Name),
-                                Status = "Success",
-                                Message = "Migrated using mklink"
-                            });
-                        }
-                        catch (Exception ex)
-                        {
-                            fail++;
-                            MigrationLogger.Log(new MigrationLogEntry
-                            {
-                                Time = DateTime.Now,
-                                SoftwareName = $"{app.Name} (AppData-{app.Type})",
-                                OldPath = app.Path,
-                                NewPath = Path.Combine(targetRoot, "AppData", app.Name),
-                                Status = "Fail",
-                                Message = ex.Message
-                            });
-                            MessageBox.Show(string.Format(Localization.T("Msg.MigrateFailedFmt"), app.Name, ex.Message), Localization.T("Title.Error"));
-                        }
-                    }
-                    MessageBox.Show(string.Format(Localization.T("Msg.MigrateCompleted"), success, fail), Localization.T("Title.Tip"));
-                    // Refresh AppData list asynchronously to avoid blocking UI
-                    Task.Run(() => LoadAppDataFoldersSafe());
-                }
-            }
-        }
-
         private async void buttonCheckSuspiciousSoftware_Click(object sender, EventArgs e)
         {
             await CheckItemsAsync(listViewSoftware.Items.Cast<ListViewItem>());
+        }
+
+        private async void buttonCheckSuspiciousAppData_Click(object sender, EventArgs e)
+        {
+            await CheckAppDataItemsAsync(listViewAppData.Items.Cast<ListViewItem>());
         }
 
         private async Task CheckSelectedSoftwareAsync()
@@ -1198,15 +1135,120 @@ namespace winC2D
             }
         }
 
-        private void buttonManageScanPaths_Click(object sender, EventArgs e)
+        private void CopySelectedAppDataName()
         {
-            EnsureDefaultScanPaths();
-            using var dlg = new ScanPathsForm(scanPaths.Select(p => ClonePath(p)).ToList());
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            if (listViewAppData.FocusedItem?.Tag is AppDataInfo info)
             {
-                scanPaths = dlg.Paths;
-                buttonRefreshSoftware.PerformClick();
+                try { Clipboard.SetText(info.Name ?? string.Empty); } catch { }
             }
+        }
+
+        private void CopySelectedAppDataPath()
+        {
+            if (listViewAppData.FocusedItem?.Tag is AppDataInfo info)
+            {
+                try { Clipboard.SetText(info.Path ?? string.Empty); } catch { }
+            }
+        }
+
+        private void OpenSelectedAppDataInExplorer()
+        {
+            if (listViewAppData.FocusedItem?.Tag is AppDataInfo info)
+            {
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(info.Path) && Directory.Exists(info.Path))
+                    {
+                        Process.Start("explorer.exe", info.Path);
+                    }
+                }
+                catch { }
+            }
+        }
+
+        private async Task CheckSelectedAppDataAsync()
+        {
+            var items = listViewAppData.SelectedItems.Cast<ListViewItem>().ToList();
+            if (items.Count == 0 && listViewAppData.FocusedItem != null)
+                items.Add(listViewAppData.FocusedItem);
+            if (items.Count == 0) return;
+            await CheckAppDataItemsAsync(items);
+        }
+
+        private async Task CheckAppDataItemsAsync(IEnumerable<ListViewItem> items)
+        {
+            var targetItems = items.Where(i => i?.Tag is AppDataInfo).ToList();
+            if (targetItems.Count == 0) return;
+
+            using (var wait = new WaitForm(Localization.T("Msg.CheckingSuspicious")))
+            {
+                Task.Run(() =>
+                {
+                    foreach (var item in targetItems)
+                    {
+                        if (item.Tag is AppDataInfo info)
+                        {
+                            AppDataMigrator.CheckAppDataDirectory(info);
+                        }
+                    }
+                    try { this.Invoke(new Action(() => wait.Close())); } catch { }
+                });
+                wait.ShowDialog();
+            }
+
+            listViewAppData.BeginUpdate();
+            try
+            {
+                foreach (var item in targetItems)
+                {
+                    UpdateAppDataListViewItem(item);
+                }
+                listViewAppData.Sort();
+                UpdateColumnHeaderSortIndicator(listViewAppData, appDataSortColumn, appDataSortAsc);
+            }
+            finally
+            {
+                listViewAppData.EndUpdate();
+            }
+        }
+
+        private ListViewItem CreateAppDataListViewItem(AppDataInfo appData)
+        {
+            var item = new ListViewItem(new string[]
+            {
+                appData.Name,
+                appData.Path,
+                appData.SizeText,
+                GetAppDataStatusText(appData)
+            })
+            {
+                Tag = appData,
+                Checked = false
+            };
+            return item;
+        }
+
+        private void UpdateAppDataListViewItem(ListViewItem item)
+        {
+            if (item?.Tag is not AppDataInfo info) return;
+            item.SubItems[0].Text = info.Name;
+            item.SubItems[1].Text = info.Path;
+            item.SubItems[2].Text = info.SizeText;
+            item.SubItems[3].Text = GetAppDataStatusText(info);
+        }
+
+        private string GetAppDataStatusText(AppDataInfo info)
+        {
+            if (info == null) return string.Empty;
+            return info.Status switch
+            {
+                SoftwareStatus.Directory => Localization.T("Status.Directory"),
+                SoftwareStatus.Symlink => Localization.T("Status.Symlink"),
+                SoftwareStatus.Suspicious => Localization.T("Status.Suspicious"),
+                SoftwareStatus.Empty => Localization.T("Status.Empty"),
+                SoftwareStatus.Residual => Localization.T("Status.Residual"),
+                _ => string.Empty
+            };
         }
 
         // 排序器类
@@ -1227,8 +1269,8 @@ namespace winC2D
                 if (col == 2) // Size列
                 {
                     long sx = 0, sy = 0;
-                    if (itemX.Tag is AppDataInfo infoX) sx = infoX.Size;
-                    if (itemY.Tag is AppDataInfo infoY) sy = infoY.Size;
+                    if (itemX.Tag is AppDataInfo infoX) sx = infoX.SizeBytes;
+                    if (itemY.Tag is AppDataInfo infoY) sy = infoY.SizeBytes;
                     int cmp = sx.CompareTo(sy);
                     return ascending ? cmp : -cmp;
                 }
