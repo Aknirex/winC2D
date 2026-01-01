@@ -54,6 +54,8 @@ namespace winC2D
         private System.Windows.Forms.ToolStripMenuItem menuLanguageChineseTraditional;
         private System.Windows.Forms.ToolStripMenuItem menuLanguagePortuguese;
         private System.Windows.Forms.Button buttonRefreshSoftware;
+        private System.Windows.Forms.Button buttonCheckSuspicious;
+        private System.Windows.Forms.Button buttonManageScanPaths;
 
         /// <summary>
         ///  Clean up any resources being used.
@@ -83,6 +85,24 @@ namespace winC2D
             menuLanguageRussian = new ToolStripMenuItem();
             menuLanguagePortuguese = new ToolStripMenuItem();
             tabControl1 = new TabControl();
+            tabPageSoftware = new TabPage();
+            listViewSoftware = new ListView();
+            columnHeaderName = new ColumnHeader();
+            columnHeaderPath = new ColumnHeader();
+            columnHeaderSize = new ColumnHeader();
+            columnHeaderStatus = new ColumnHeader();
+            buttonMigrateSoftware = new Button();
+            buttonRefreshSoftware = new Button();
+            buttonCheckSuspicious = new Button();
+            buttonManageScanPaths = new Button();
+            tabPageAppData = new TabPage();
+            listViewAppData = new ListView();
+            columnHeaderAppName = new ColumnHeader();
+            columnHeaderAppPath = new ColumnHeader();
+            columnHeaderAppSize = new ColumnHeader();
+            columnHeaderAppStatus = new ColumnHeader();
+            buttonMigrateAppData = new Button();
+            buttonRefreshAppData = new Button();
             tabPageSettings = new TabPage();
             groupBoxStoragePolicy = new GroupBox();
             buttonOpenWindowsStorage = new Button();
@@ -98,29 +118,13 @@ namespace winC2D
             buttonBrowseProgramFiles = new Button();
             textBoxProgramFiles = new TextBox();
             labelProgramFiles = new Label();
-            tabPageSoftware = new TabPage();
-            listViewSoftware = new ListView();
-            columnHeaderName = new ColumnHeader();
-            columnHeaderPath = new ColumnHeader();
-            columnHeaderSize = new ColumnHeader();
-            columnHeaderStatus = new ColumnHeader();
-            buttonMigrateSoftware = new Button();
-            buttonRefreshSoftware = new Button();
-            tabPageAppData = new TabPage();
-            listViewAppData = new ListView();
-            columnHeaderAppName = new ColumnHeader();
-            columnHeaderAppPath = new ColumnHeader();
-            columnHeaderAppSize = new ColumnHeader();
-            columnHeaderAppStatus = new ColumnHeader();
-            buttonMigrateAppData = new Button();
-            buttonRefreshAppData = new Button();
             menuStrip1.SuspendLayout();
             tabControl1.SuspendLayout();
+            tabPageSoftware.SuspendLayout();
+            tabPageAppData.SuspendLayout();
             tabPageSettings.SuspendLayout();
             groupBoxStoragePolicy.SuspendLayout();
             groupBoxProgramFiles.SuspendLayout();
-            tabPageSoftware.SuspendLayout();
-            tabPageAppData.SuspendLayout();
             SuspendLayout();
             // 
             // menuStrip1
@@ -151,49 +155,49 @@ namespace winC2D
             // menuLanguageEnglish
             // 
             menuLanguageEnglish.Name = "menuLanguageEnglish";
-            menuLanguageEnglish.Size = new System.Drawing.Size(180, 22);
+            menuLanguageEnglish.Size = new System.Drawing.Size(179, 22);
             menuLanguageEnglish.Text = "English";
             menuLanguageEnglish.Click += menuLanguageEnglish_Click;
             // 
             // menuLanguageChinese
             // 
             menuLanguageChinese.Name = "menuLanguageChinese";
-            menuLanguageChinese.Size = new System.Drawing.Size(180, 22);
+            menuLanguageChinese.Size = new System.Drawing.Size(179, 22);
             menuLanguageChinese.Text = "简体中文";
             menuLanguageChinese.Click += menuLanguageChinese_Click;
             // 
             // menuLanguageChineseTraditional
             // 
             menuLanguageChineseTraditional.Name = "menuLanguageChineseTraditional";
-            menuLanguageChineseTraditional.Size = new System.Drawing.Size(180, 22);
+            menuLanguageChineseTraditional.Size = new System.Drawing.Size(179, 22);
             menuLanguageChineseTraditional.Text = "繁體中文";
             menuLanguageChineseTraditional.Click += menuLanguageChineseTraditional_Click;
             // 
             // menuLanguageJapanese
             // 
             menuLanguageJapanese.Name = "menuLanguageJapanese";
-            menuLanguageJapanese.Size = new System.Drawing.Size(180, 22);
+            menuLanguageJapanese.Size = new System.Drawing.Size(179, 22);
             menuLanguageJapanese.Text = "日本語";
             menuLanguageJapanese.Click += menuLanguageJapanese_Click;
             // 
             // menuLanguageKorean
             // 
             menuLanguageKorean.Name = "menuLanguageKorean";
-            menuLanguageKorean.Size = new System.Drawing.Size(180, 22);
+            menuLanguageKorean.Size = new System.Drawing.Size(179, 22);
             menuLanguageKorean.Text = "한국어";
             menuLanguageKorean.Click += menuLanguageKorean_Click;
             // 
             // menuLanguageRussian
             // 
             menuLanguageRussian.Name = "menuLanguageRussian";
-            menuLanguageRussian.Size = new System.Drawing.Size(180, 22);
+            menuLanguageRussian.Size = new System.Drawing.Size(179, 22);
             menuLanguageRussian.Text = "Русский";
             menuLanguageRussian.Click += menuLanguageRussian_Click;
             // 
             // menuLanguagePortuguese
             // 
             menuLanguagePortuguese.Name = "menuLanguagePortuguese";
-            menuLanguagePortuguese.Size = new System.Drawing.Size(180, 22);
+            menuLanguagePortuguese.Size = new System.Drawing.Size(179, 22);
             menuLanguagePortuguese.Text = "Português (Brasil)";
             menuLanguagePortuguese.Click += menuLanguagePortuguese_Click;
             // 
@@ -202,12 +206,172 @@ namespace winC2D
             tabControl1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             tabControl1.Controls.Add(tabPageSoftware);
             tabControl1.Controls.Add(tabPageAppData);
-            tabControl1.Controls.Add(tabPageSettings); // 系统设置放到最后
+            tabControl1.Controls.Add(tabPageSettings);
             tabControl1.Location = new System.Drawing.Point(10, 30);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
             tabControl1.Size = new System.Drawing.Size(979, 560);
             tabControl1.TabIndex = 1;
+            // 
+            // tabPageSoftware
+            // 
+            tabPageSoftware.Controls.Add(listViewSoftware);
+            tabPageSoftware.Controls.Add(buttonMigrateSoftware);
+            tabPageSoftware.Controls.Add(buttonRefreshSoftware);
+            tabPageSoftware.Controls.Add(buttonCheckSuspicious);
+            tabPageSoftware.Controls.Add(buttonManageScanPaths);
+            tabPageSoftware.Location = new System.Drawing.Point(4, 26);
+            tabPageSoftware.Name = "tabPageSoftware";
+            tabPageSoftware.Padding = new Padding(3);
+            tabPageSoftware.Size = new System.Drawing.Size(971, 530);
+            tabPageSoftware.TabIndex = 1;
+            tabPageSoftware.Text = "软件迁移";
+            tabPageSoftware.UseVisualStyleBackColor = true;
+            // 
+            // listViewSoftware
+            // 
+            listViewSoftware.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            listViewSoftware.CheckBoxes = true;
+            listViewSoftware.Columns.AddRange(new ColumnHeader[] { columnHeaderName, columnHeaderPath, columnHeaderSize, columnHeaderStatus });
+            listViewSoftware.FullRowSelect = true;
+            listViewSoftware.Location = new System.Drawing.Point(5, 6);
+            listViewSoftware.Name = "listViewSoftware";
+            listViewSoftware.Size = new System.Drawing.Size(960, 485);
+            listViewSoftware.TabIndex = 0;
+            listViewSoftware.UseCompatibleStateImageBehavior = false;
+            listViewSoftware.View = View.Details;
+            // 
+            // columnHeaderName
+            // 
+            columnHeaderName.Text = "软件名称";
+            columnHeaderName.Width = 220;
+            // 
+            // columnHeaderPath
+            // 
+            columnHeaderPath.Text = "安装路径";
+            columnHeaderPath.Width = 480;
+            // 
+            // columnHeaderSize
+            // 
+            columnHeaderSize.Text = "大小";
+            columnHeaderSize.Width = 120;
+            // 
+            // columnHeaderStatus
+            // 
+            columnHeaderStatus.Text = "状态";
+            columnHeaderStatus.Width = 120;
+            // 
+            // buttonMigrateSoftware
+            // 
+            buttonMigrateSoftware.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonMigrateSoftware.Location = new System.Drawing.Point(867, 497);
+            buttonMigrateSoftware.Name = "buttonMigrateSoftware";
+            buttonMigrateSoftware.Size = new System.Drawing.Size(98, 27);
+            buttonMigrateSoftware.TabIndex = 1;
+            buttonMigrateSoftware.Text = "迁移所选";
+            buttonMigrateSoftware.UseVisualStyleBackColor = true;
+            buttonMigrateSoftware.Click += buttonMigrateSoftware_Click;
+            // 
+            // buttonRefreshSoftware
+            // 
+            buttonRefreshSoftware.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonRefreshSoftware.Location = new System.Drawing.Point(763, 497);
+            buttonRefreshSoftware.Name = "buttonRefreshSoftware";
+            buttonRefreshSoftware.Size = new System.Drawing.Size(98, 27);
+            buttonRefreshSoftware.TabIndex = 2;
+            buttonRefreshSoftware.Text = "刷新列表";
+            buttonRefreshSoftware.UseVisualStyleBackColor = true;
+            buttonRefreshSoftware.Click += buttonRefreshSoftware_Click;
+            // 
+            // buttonCheckSuspicious
+            // 
+            buttonCheckSuspicious.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonCheckSuspicious.Location = new System.Drawing.Point(659, 497);
+            buttonCheckSuspicious.Name = "buttonCheckSuspicious";
+            buttonCheckSuspicious.Size = new System.Drawing.Size(98, 27);
+            buttonCheckSuspicious.TabIndex = 3;
+            buttonCheckSuspicious.Text = "检查可疑";
+            buttonCheckSuspicious.UseVisualStyleBackColor = true;
+            buttonCheckSuspicious.Click += buttonCheckSuspiciousSoftware_Click;
+            // 
+            // buttonManageScanPaths
+            // 
+            buttonManageScanPaths.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            buttonManageScanPaths.Location = new System.Drawing.Point(5, 497);
+            buttonManageScanPaths.Name = "buttonManageScanPaths";
+            buttonManageScanPaths.Size = new System.Drawing.Size(150, 27);
+            buttonManageScanPaths.TabIndex = 4;
+            buttonManageScanPaths.Text = "扫描路径";
+            buttonManageScanPaths.UseVisualStyleBackColor = true;
+            buttonManageScanPaths.Click += buttonManageScanPaths_Click;
+            // 
+            // tabPageAppData
+            // 
+            tabPageAppData.Controls.Add(listViewAppData);
+            tabPageAppData.Controls.Add(buttonMigrateAppData);
+            tabPageAppData.Controls.Add(buttonRefreshAppData);
+            tabPageAppData.Location = new System.Drawing.Point(4, 26);
+            tabPageAppData.Name = "tabPageAppData";
+            tabPageAppData.Padding = new Padding(3);
+            tabPageAppData.Size = new System.Drawing.Size(971, 530);
+            tabPageAppData.TabIndex = 3;
+            tabPageAppData.Text = "AppData (mklink)";
+            tabPageAppData.UseVisualStyleBackColor = true;
+            // 
+            // listViewAppData
+            // 
+            listViewAppData.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            listViewAppData.CheckBoxes = true;
+            listViewAppData.Columns.AddRange(new ColumnHeader[] { columnHeaderAppName, columnHeaderAppPath, columnHeaderAppSize, columnHeaderAppStatus });
+            listViewAppData.FullRowSelect = true;
+            listViewAppData.Location = new System.Drawing.Point(5, 6);
+            listViewAppData.Name = "listViewAppData";
+            listViewAppData.Size = new System.Drawing.Size(960, 485);
+            listViewAppData.TabIndex = 0;
+            listViewAppData.UseCompatibleStateImageBehavior = false;
+            listViewAppData.View = View.Details;
+            // 
+            // columnHeaderAppName
+            // 
+            columnHeaderAppName.Text = "应用名称";
+            columnHeaderAppName.Width = 260;
+            // 
+            // columnHeaderAppPath
+            // 
+            columnHeaderAppPath.Text = "路径";
+            columnHeaderAppPath.Width = 500;
+            // 
+            // columnHeaderAppSize
+            // 
+            columnHeaderAppSize.Text = "大小";
+            columnHeaderAppSize.Width = 120;
+            // 
+            // columnHeaderAppStatus
+            // 
+            columnHeaderAppStatus.Text = "状态";
+            columnHeaderAppStatus.Width = 80;
+            // 
+            // buttonMigrateAppData
+            // 
+            buttonMigrateAppData.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonMigrateAppData.Location = new System.Drawing.Point(867, 497);
+            buttonMigrateAppData.Name = "buttonMigrateAppData";
+            buttonMigrateAppData.Size = new System.Drawing.Size(98, 27);
+            buttonMigrateAppData.TabIndex = 1;
+            buttonMigrateAppData.Text = "迁移所选";
+            buttonMigrateAppData.UseVisualStyleBackColor = true;
+            buttonMigrateAppData.Click += buttonMigrateAppData_Click;
+            // 
+            // buttonRefreshAppData
+            // 
+            buttonRefreshAppData.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonRefreshAppData.Location = new System.Drawing.Point(763, 497);
+            buttonRefreshAppData.Name = "buttonRefreshAppData";
+            buttonRefreshAppData.Size = new System.Drawing.Size(98, 27);
+            buttonRefreshAppData.TabIndex = 2;
+            buttonRefreshAppData.Text = "刷新列表";
+            buttonRefreshAppData.UseVisualStyleBackColor = true;
+            buttonRefreshAppData.Click += buttonRefreshAppData_Click;
             // 
             // tabPageSettings
             // 
@@ -377,142 +541,6 @@ namespace winC2D
             labelProgramFiles.TabIndex = 0;
             labelProgramFiles.Text = "Program Files 默认位置（64位）：";
             // 
-            // tabPageSoftware
-            // 
-            tabPageSoftware.Controls.Add(listViewSoftware);
-            tabPageSoftware.Controls.Add(buttonMigrateSoftware);
-            tabPageSoftware.Controls.Add(buttonRefreshSoftware);
-            tabPageSoftware.Location = new System.Drawing.Point(4, 26);
-            tabPageSoftware.Name = "tabPageSoftware";
-            tabPageSoftware.Padding = new Padding(3);
-            tabPageSoftware.Size = new System.Drawing.Size(971, 530);
-            tabPageSoftware.TabIndex = 1;
-            tabPageSoftware.Text = "软件迁移";
-            tabPageSoftware.UseVisualStyleBackColor = true;
-            // 
-            // listViewSoftware
-            // 
-            listViewSoftware.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            listViewSoftware.CheckBoxes = true;
-            listViewSoftware.Columns.AddRange(new ColumnHeader[] { columnHeaderName, columnHeaderPath, columnHeaderSize, columnHeaderStatus });
-            listViewSoftware.FullRowSelect = true;
-            listViewSoftware.Location = new System.Drawing.Point(5, 6);
-            listViewSoftware.Name = "listViewSoftware";
-            listViewSoftware.Size = new System.Drawing.Size(960, 485);
-            listViewSoftware.TabIndex = 0;
-            listViewSoftware.UseCompatibleStateImageBehavior = false;
-            listViewSoftware.View = View.Details;
-            // 
-            // columnHeaderName
-            // 
-            columnHeaderName.Text = "软件名称";
-            columnHeaderName.Width = 220;
-            // 
-            // columnHeaderPath
-            // 
-            columnHeaderPath.Text = "安装路径";
-            columnHeaderPath.Width = 480;
-            // 
-            // columnHeaderSize
-            // 
-            columnHeaderSize.Text = "大小";
-            columnHeaderSize.Width = 120;
-            // 
-            // columnHeaderStatus
-            // 
-            columnHeaderStatus.Text = "状态";
-            columnHeaderStatus.Width = 120;
-            // 
-            // buttonMigrateSoftware
-            // 
-            buttonMigrateSoftware.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            buttonMigrateSoftware.Location = new System.Drawing.Point(867, 497);
-            buttonMigrateSoftware.Name = "buttonMigrateSoftware";
-            buttonMigrateSoftware.Size = new System.Drawing.Size(98, 27);
-            buttonMigrateSoftware.TabIndex = 1;
-            buttonMigrateSoftware.Text = "迁移所选";
-            buttonMigrateSoftware.UseVisualStyleBackColor = true;
-            buttonMigrateSoftware.Click += buttonMigrateSoftware_Click;
-            // 
-            // buttonRefreshSoftware
-            // 
-            buttonRefreshSoftware.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            buttonRefreshSoftware.Location = new System.Drawing.Point(763, 497);
-            buttonRefreshSoftware.Name = "buttonRefreshSoftware";
-            buttonRefreshSoftware.Size = new System.Drawing.Size(98, 27);
-            buttonRefreshSoftware.TabIndex = 2;
-            buttonRefreshSoftware.Text = "刷新列表";
-            buttonRefreshSoftware.UseVisualStyleBackColor = true;
-            buttonRefreshSoftware.Click += buttonRefreshSoftware_Click;
-            // 
-            // tabPageAppData
-            // 
-            tabPageAppData.Controls.Add(listViewAppData);
-            tabPageAppData.Controls.Add(buttonMigrateAppData);
-            tabPageAppData.Controls.Add(buttonRefreshAppData);
-            tabPageAppData.Location = new System.Drawing.Point(4, 26);
-            tabPageAppData.Name = "tabPageAppData";
-            tabPageAppData.Padding = new Padding(3);
-            tabPageAppData.Size = new System.Drawing.Size(971, 530);
-            tabPageAppData.TabIndex = 3;
-            tabPageAppData.Text = "AppData (mklink)";
-            tabPageAppData.UseVisualStyleBackColor = true;
-            // 
-            // listViewAppData
-            // 
-            listViewAppData.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            listViewAppData.CheckBoxes = true;
-            listViewAppData.Columns.AddRange(new ColumnHeader[] { columnHeaderAppName, columnHeaderAppPath, columnHeaderAppSize, columnHeaderAppStatus });
-            listViewAppData.FullRowSelect = true;
-            listViewAppData.Location = new System.Drawing.Point(5, 6);
-            listViewAppData.Name = "listViewAppData";
-            listViewAppData.Size = new System.Drawing.Size(960, 485);
-            listViewAppData.TabIndex = 0;
-            listViewAppData.UseCompatibleStateImageBehavior = false;
-            listViewAppData.View = View.Details;
-            // 
-            // columnHeaderAppName
-            // 
-            columnHeaderAppName.Text = "应用名称";
-            columnHeaderAppName.Width = 260;
-            // 
-            // columnHeaderAppPath
-            // 
-            columnHeaderAppPath.Text = "路径";
-            columnHeaderAppPath.Width = 500;
-            // 
-            // columnHeaderAppSize
-            // 
-            columnHeaderAppSize.Text = "大小";
-            columnHeaderAppSize.Width = 120;
-            // 
-            // columnHeaderAppStatus
-            // 
-            columnHeaderAppStatus.Text = "状态";
-            columnHeaderAppStatus.Width = 80;
-            // 
-            // buttonMigrateAppData
-            // 
-            buttonMigrateAppData.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            buttonMigrateAppData.Location = new System.Drawing.Point(867, 497);
-            buttonMigrateAppData.Name = "buttonMigrateAppData";
-            buttonMigrateAppData.Size = new System.Drawing.Size(98, 27);
-            buttonMigrateAppData.TabIndex = 1;
-            buttonMigrateAppData.Text = "迁移所选";
-            buttonMigrateAppData.UseVisualStyleBackColor = true;
-            buttonMigrateAppData.Click += buttonMigrateAppData_Click;
-            // 
-            // buttonRefreshAppData
-            // 
-            buttonRefreshAppData.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            buttonRefreshAppData.Location = new System.Drawing.Point(763, 497);
-            buttonRefreshAppData.Name = "buttonRefreshAppData";
-            buttonRefreshAppData.Size = new System.Drawing.Size(98, 27);
-            buttonRefreshAppData.TabIndex = 2;
-            buttonRefreshAppData.Text = "刷新列表";
-            buttonRefreshAppData.UseVisualStyleBackColor = true;
-            buttonRefreshAppData.Click += buttonRefreshAppData_Click;
-            // 
             // MainForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
@@ -527,12 +555,13 @@ namespace winC2D
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             tabControl1.ResumeLayout(false);
+            tabPageSoftware.ResumeLayout(false);
+            tabPageSoftware.PerformLayout();
+            tabPageAppData.ResumeLayout(false);
             tabPageSettings.ResumeLayout(false);
             groupBoxStoragePolicy.ResumeLayout(false);
             groupBoxProgramFiles.ResumeLayout(false);
             groupBoxProgramFiles.PerformLayout();
-            tabPageSoftware.ResumeLayout(false);
-            tabPageAppData.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }

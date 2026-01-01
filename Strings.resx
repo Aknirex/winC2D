@@ -284,4 +284,79 @@
   <data name="Status.Symlink" xml:space="preserve">
     <value>Symbolic Link</value>
   </data>
+  <data name="Status.Suspicious" xml:space="preserve">
+    <value>Suspicious Directory</value>
+  </data>
+  <data name="Status.Empty" xml:space="preserve">
+    <value>Empty Directory</value>
+  </data>
+  <data name="Status.Residual" xml:space="preserve">
+    <value>Residual / Uninstall Leftover</value>
+  </data>
+  <data name="Button.CheckSuspicious" xml:space="preserve">
+    <value>Check Suspicious</value>
+  </data>
+  <data name="Msg.UnknownSize" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="Msg.CheckingSuspicious" xml:space="preserve">
+    <value>Checking size and status...</value>
+  </data>
+  <data name="Label.CustomDrive" xml:space="preserve">
+    <value>Custom scan drive (e.g., D:)</value>
+  </data>
+  <data name="Label.ExtraPaths" xml:space="preserve">
+    <value>Extra scan paths (semicolon separated)</value>
+  </data>
+  <data name="Button.ApplyScanPaths" xml:space="preserve">
+    <value>Apply Scan Paths</value>
+  </data>
+  <data name="Button.ManageScanPaths" xml:space="preserve">
+    <value>Manage Scan Paths</value>
+  </data>
+  <data name="Dialog.ScanPaths.Title" xml:space="preserve">
+    <value>Scan Paths</value>
+  </data>
+  <data name="Dialog.ScanPaths.Hint" xml:space="preserve">
+    <value>Select which paths are scanned for installed software. Default paths cannot be deleted but can be disabled.</value>
+  </data>
+  <data name="Button.AddPath" xml:space="preserve">
+    <value>Add Path</value>
+  </data>
+  <data name="Button.RemovePath" xml:space="preserve">
+    <value>Remove Selected</value>
+  </data>
+  <data name="Button.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Button.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Column.Path" xml:space="preserve">
+    <value>Path</value>
+  </data>
+  <data name="Column.Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="Column.Removable" xml:space="preserve">
+    <value>Removable</value>
+  </data>
+  <data name="Msg.Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="Msg.No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Msg.CannotDeleteDefault" xml:space="preserve">
+    <value>Default paths cannot be removed.</value>
+  </data>
+  <data name="Tooltip.SizeUnknown" xml:space="preserve">
+    <value>Size not calculated yet, run check to compute.</value>
+  </data>
+  <data name="Tooltip.StatusSuspicious" xml:space="preserve">
+    <value>Very small, run check to inspect executables.</value>
+  </data>
+  <data name="Menu.Check" xml:space="preserve">
+    <value>Check</value>
+  </data>
 </root>

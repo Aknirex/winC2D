@@ -176,6 +176,54 @@
     <value>Diretório</value>
   </data>
   <data name="Status.Symlink" xml:space="preserve">
-    <value>Link Simbólico</value>
+    <value>Link simbólico</value>
+  </data>
+  <data name="Status.Suspicious" xml:space="preserve">
+    <value>Diretório suspeito</value>
+  </data>
+  <data name="Status.Empty" xml:space="preserve">
+    <value>Diretório vazio</value>
+  </data>
+  <data name="Status.Residual" xml:space="preserve">
+    <value>Resíduo / desinstalação</value>
+  </data>
+  <data name="Button.CheckSuspicious" xml:space="preserve">
+    <value>Verificar</value>
+  </data>
+  <data name="Button.ManageScanPaths" xml:space="preserve">
+    <value>Gerenciar caminhos de varredura</value>
+  </data>
+  <data name="Menu.Check" xml:space="preserve">
+    <value>Verificar</value>
+  </data>
+  <data name="Msg.CheckingSuspicious" xml:space="preserve">
+    <value>Verificando tamanho/estado...</value>
+  </data>
+  <data name="Dialog.ScanPaths.Title" xml:space="preserve">
+    <value>Caminhos de varredura</value>
+  </data>
+  <data name="Dialog.ScanPaths.Hint" xml:space="preserve">
+    <value>Selecione os caminhos a serem varridos. Caminhos padrão podem ser desativados, mas não removidos.</value>
+  </data>
+  <data name="Button.AddPath" xml:space="preserve">
+    <value>Adicionar caminho</value>
+  </data>
+  <data name="Button.RemovePath" xml:space="preserve">
+    <value>Remover selecionado</value>
+  </data>
+  <data name="Button.Save" xml:space="preserve">
+    <value>Salvar</value>
+  </data>
+  <data name="Button.Cancel" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="Column.Path" xml:space="preserve">
+    <value>Caminho</value>
+  </data>
+  <data name="Column.Removable" xml:space="preserve">
+    <value>Removível</value>
+  </data>
+  <data name="Msg.CannotDeleteDefault" xml:space="preserve">
+    <value>Caminhos padrão não podem ser removidos.</value>
   </data>
 </root>

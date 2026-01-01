@@ -178,4 +178,52 @@
 	<data name="Status.Symlink" xml:space="preserve">
     <value>심볼릭 링크</value>
   </data>
+	<data name="Status.Suspicious" xml:space="preserve">
+    <value>의심스러운 디렉터리</value>
+  </data>
+  <data name="Status.Empty" xml:space="preserve">
+    <value>빈 디렉터리</value>
+  </data>
+  <data name="Status.Residual" xml:space="preserve">
+    <value>제거 후 잔여물</value>
+  </data>
+	<data name="Button.CheckSuspicious" xml:space="preserve">
+    <value>검사</value>
+  </data>
+	<data name="Button.ManageScanPaths" xml:space="preserve">
+    <value>스캔 경로 관리</value>
+  </data>
+	<data name="Menu.Check" xml:space="preserve">
+    <value>검사</value>
+  </data>
+  <data name="Msg.CheckingSuspicious" xml:space="preserve">
+    <value>크기/상태를 확인 중...</value>
+  </data>
+  <data name="Dialog.ScanPaths.Title" xml:space="preserve">
+    <value>스캔 경로</value>
+  </data>
+  <data name="Dialog.ScanPaths.Hint" xml:space="preserve">
+    <value>스캔할 경로를 선택하세요. 기본 경로는 비활성화할 수 있지만 삭제할 수 없습니다.</value>
+  </data>
+  <data name="Button.AddPath" xml:space="preserve">
+    <value>경로 추가</value>
+  </data>
+  <data name="Button.RemovePath" xml:space="preserve">
+    <value>선택 삭제</value>
+  </data>
+  <data name="Button.Save" xml:space="preserve">
+    <value>저장</value>
+  </data>
+  <data name="Button.Cancel" xml:space="preserve">
+    <value>취소</value>
+  </data>
+  <data name="Column.Path" xml:space="preserve">
+    <value>경로</value>
+  </data>
+  <data name="Column.Removable" xml:space="preserve">
+    <value>삭제 가능</value>
+  </data>
+  <data name="Msg.CannotDeleteDefault" xml:space="preserve">
+    <value>기본 경로는 삭제할 수 없습니다.</value>
+  </data>
 </root>

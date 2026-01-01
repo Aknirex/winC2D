@@ -283,4 +283,16 @@
   <data name="Status.Symlink" xml:space="preserve">
     <value>Symbolic Link</value>
   </data>
+  <data name="Tooltip.SizeUnknown" xml:space="preserve">
+    <value>Size not calculated yet, run check to compute.</value>
+  </data>
+  <data name="Tooltip.StatusSuspicious" xml:space="preserve">
+    <value>Very small, run check to inspect executables.</value>
+  </data>
+  <data name="Menu.Check" xml:space="preserve">
+    <value>Check</value>
+  </data>
+  <data name="Msg.CheckingSuspicious" xml:space="preserve">
+    <value>Checking size/status...</value>
+  </data>
 </root>

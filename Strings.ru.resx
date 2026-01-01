@@ -178,4 +178,52 @@
   <data name="Status.Symlink" xml:space="preserve">
     <value>Символическая ссылка</value>
   </data>
+  <data name="Status.Suspicious" xml:space="preserve">
+    <value>Подозрительный каталог</value>
+  </data>
+  <data name="Status.Empty" xml:space="preserve">
+    <value>Пустой каталог</value>
+  </data>
+  <data name="Status.Residual" xml:space="preserve">
+    <value>Остатки после удаления</value>
+  </data>
+  <data name="Button.CheckSuspicious" xml:space="preserve">
+    <value>Проверить</value>
+  </data>
+  <data name="Button.ManageScanPaths" xml:space="preserve">
+    <value>Настроить пути сканирования</value>
+  </data>
+  <data name="Menu.Check" xml:space="preserve">
+    <value>Проверить</value>
+  </data>
+  <data name="Msg.CheckingSuspicious" xml:space="preserve">
+    <value>Проверка размера/состояния...</value>
+  </data>
+  <data name="Dialog.ScanPaths.Title" xml:space="preserve">
+    <value>Пути сканирования</value>
+  </data>
+  <data name="Dialog.ScanPaths.Hint" xml:space="preserve">
+    <value>Выберите пути для сканирования установленных программ. Стандартные пути можно отключить, но нельзя удалить.</value>
+  </data>
+  <data name="Button.AddPath" xml:space="preserve">
+    <value>Добавить путь</value>
+  </data>
+  <data name="Button.RemovePath" xml:space="preserve">
+    <value>Удалить выбранные</value>
+  </data>
+  <data name="Button.Save" xml:space="preserve">
+    <value>Сохранить</value>
+  </data>
+  <data name="Button.Cancel" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="Column.Path" xml:space="preserve">
+    <value>Путь</value>
+  </data>
+  <data name="Column.Removable" xml:space="preserve">
+    <value>Можно удалить</value>
+  </data>
+  <data name="Msg.CannotDeleteDefault" xml:space="preserve">
+    <value>Стандартные пути нельзя удалить.</value>
+  </data>
 </root>

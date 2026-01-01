@@ -12,7 +12,19 @@ namespace winC2D
     {
         private const string DEFAULT_PROGRAM_FILES = @"C:\Program Files";
         private const string DEFAULT_PROGRAM_FILES_X86 = @"C:\Program Files (x86)";
-        private const string REG_PATH = @"SOFTWARE\Microsoft\Windows\CurrentVersion";
+        private const string REG_PATH = @"SOFTWARE\\Microsoft\\Windows\\CurrentVersion";
+
+        private List<ScanPathItem> scanPaths = new();
+
+        private static ScanPathItem ClonePath(ScanPathItem p) => new ScanPathItem
+        {
+            Path = p.Path,
+            Enabled = p.Enabled,
+            IsDefault = p.IsDefault
+        };
+
+        private readonly ToolTip listToolTip = new ToolTip();
+        private ContextMenuStrip softwareContextMenu;
 
         public MainForm()
         {
@@ -33,6 +45,10 @@ namespace winC2D
             // 在构造函数或MainForm_Load中添加列排序事件绑定
             listViewAppData.ColumnClick += listViewAppData_ColumnClick;
             listViewSoftware.ColumnClick += listViewSoftware_ColumnClick;
+            //listViewSoftware.ItemActivate += listViewSoftware_ItemActivate; // 双击检查改为右键菜单
+            listViewSoftware.MouseMove += listViewSoftware_MouseMove;
+            listViewSoftware.MouseLeave += (s, e) => listToolTip.Hide(listViewSoftware);
+            InitializeSoftwareContextMenu();
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -45,11 +61,95 @@ namespace winC2D
             ApplyLocalization();
             UpdateLanguageMenuItems();
             LoadSystemSettings();
+            EnsureDefaultScanPaths();
             // 异步加载数据
             LoadAllDataAsync();
 
             // 绑定窗口图标点击事件
             this.MouseDown += MainForm_MouseDown;
+        }
+
+        private void EnsureDefaultScanPaths()
+        {
+            string Normalize(string path)
+            {
+                if (string.IsNullOrWhiteSpace(path)) return null;
+                var p = path.Trim().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                if (p.Length == 2 && p[1] == ':') p += "\\";
+                return p;
+            }
+
+            // Normalize existing paths first
+            scanPaths = scanPaths
+                .Select(p => new ScanPathItem
+                {
+                    Path = Normalize(p.Path),
+                    Enabled = p.Enabled,
+                    IsDefault = p.IsDefault
+                })
+                .Where(p => !string.IsNullOrEmpty(p.Path))
+                .GroupBy(p => p.Path, StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.First())
+                .ToList();
+
+            var defaults = GetDefaultScanPaths();
+            // 清除旧的默认标记
+            foreach (var item in scanPaths)
+            {
+                if (item.IsDefault && !defaults.Any(d => string.Equals(d, item.Path, StringComparison.OrdinalIgnoreCase)))
+                    item.IsDefault = false;
+            }
+            foreach (var def in defaults)
+            {
+                var existing = scanPaths.FirstOrDefault(p => string.Equals(p.Path, def, StringComparison.OrdinalIgnoreCase));
+                if (existing == null)
+                {
+                    scanPaths.Add(new ScanPathItem { Path = def, Enabled = true, IsDefault = true });
+                }
+                else
+                {
+                    existing.IsDefault = true;
+                }
+            }
+            // 去重
+            scanPaths = scanPaths.GroupBy(p => p.Path, StringComparer.OrdinalIgnoreCase)
+                                 .Select(g => g.First())
+                                 .ToList();
+        }
+
+        private List<string> GetDefaultScanPaths()
+        {
+            string Normalize(string path)
+            {
+                if (string.IsNullOrWhiteSpace(path)) return null;
+                var p = path.Trim().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                if (p.Length == 2 && p[1] == ':') p += "\\"; // keep drive root with backslash
+                return p;
+            }
+
+            var paths = new List<string>();
+            string user64 = textBoxProgramFiles.InvokeRequired ? (string)textBoxProgramFiles.Invoke(new Func<string>(() => textBoxProgramFiles.Text.Trim())) : textBoxProgramFiles.Text.Trim();
+            string userX86 = textBoxProgramFilesX86.InvokeRequired ? (string)textBoxProgramFilesX86.Invoke(new Func<string>(() => textBoxProgramFilesX86.Text.Trim())) : textBoxProgramFilesX86.Text.Trim();
+
+            var nUser64 = Normalize(user64);
+            var nUserX86 = Normalize(userX86);
+
+            if (!string.IsNullOrEmpty(nUser64)) paths.Add(nUser64);
+            if (Environment.Is64BitOperatingSystem && !string.IsNullOrEmpty(nUserX86)) paths.Add(nUserX86);
+
+            string sys64 = Normalize(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
+            string sysX86 = Environment.Is64BitOperatingSystem ? Normalize(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)) : null;
+            if (!string.IsNullOrEmpty(sys64)) paths.Add(sys64);
+            if (!string.IsNullOrEmpty(sysX86)) paths.Add(sysX86);
+
+            var default64 = Normalize(DEFAULT_PROGRAM_FILES);
+            var defaultX86 = Normalize(DEFAULT_PROGRAM_FILES_X86);
+
+            if (!paths.Contains(default64, StringComparer.OrdinalIgnoreCase)) paths.Add(default64);
+            if (Environment.Is64BitOperatingSystem && !paths.Contains(defaultX86, StringComparer.OrdinalIgnoreCase)) paths.Add(defaultX86);
+
+            // 去重
+            return paths.Where(p => !string.IsNullOrEmpty(p)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         }
 
         private void MainForm_MouseDown(object sender, MouseEventArgs e)
@@ -88,52 +188,35 @@ namespace winC2D
         {
             try
             {
-                // 获取当前设置和系统默认路径
-                var paths = new List<string>();
-                string user64 = textBoxProgramFiles.InvokeRequired ? (string)textBoxProgramFiles.Invoke(new Func<string>(() => textBoxProgramFiles.Text.Trim())) : textBoxProgramFiles.Text.Trim();
-                string userX86 = textBoxProgramFilesX86.InvokeRequired ? (string)textBoxProgramFilesX86.Invoke(new Func<string>(() => textBoxProgramFilesX86.Text.Trim())) : textBoxProgramFilesX86.Text.Trim();
-                // 用户设置
-                if (!string.IsNullOrEmpty(user64)) paths.Add(user64);
-                if (Environment.Is64BitOperatingSystem && !string.IsNullOrEmpty(userX86)) paths.Add(userX86);
-                // 系统默认
-                string sys64 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-                string sysX86 = Environment.Is64BitOperatingSystem ? Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) : null;
-                if (!string.IsNullOrEmpty(sys64) && !paths.Contains(sys64, StringComparer.OrdinalIgnoreCase)) paths.Add(sys64);
-                if (!string.IsNullOrEmpty(sysX86) && !paths.Contains(sysX86, StringComparer.OrdinalIgnoreCase)) paths.Add(sysX86);
-                // 始终包含C盘标准路径
-                if (!paths.Contains(@"C:\Program Files", StringComparer.OrdinalIgnoreCase)) paths.Add(@"C:\Program Files");
-                if (Environment.Is64BitOperatingSystem && !paths.Contains(@"C:\Program Files (x86)", StringComparer.OrdinalIgnoreCase)) paths.Add(@"C:\Program Files (x86)");
+                EnsureDefaultScanPaths();
+                var paths = scanPaths.Where(p => p.Enabled)
+                                     .Select(p => p.Path)
+                                     .Where(p => !string.IsNullOrWhiteSpace(p))
+                                     .Distinct(StringComparer.OrdinalIgnoreCase)
+                                     .ToList();
 
                 var list = SoftwareScanner.GetInstalledSoftwareOnC(paths);
                 this.Invoke(new Action(() => {
-                    listViewSoftware.Items.Clear();
-                    foreach (var sw in list)
+                    // Use BeginUpdate/EndUpdate to reduce UI redraws while populating
+                    listViewSoftware.BeginUpdate();
+                    try
                     {
-                        string name = sw.Name;
-                        string path = sw.InstallLocation;
-                        string statusText = string.Empty;
-                        try
+                        listViewSoftware.Items.Clear();
+                        foreach (var sw in list)
                         {
-                            if (Directory.Exists(path))
-                            {
-                                var isSymlink = (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
-                                statusText = isSymlink ? Localization.T("Status.Symlink") : Localization.T("Status.Directory");
-                            }
-                            else
-                            {
-                                statusText = Localization.T("Status.Directory");
-                            }
+                            var item = CreateSoftwareListViewItem(sw);
+                            listViewSoftware.Items.Add(item);
                         }
-                        catch { }
-                        var item = new ListViewItem(new string[] { name, sw.InstallLocation, sw.SizeText, statusText });
-                        item.Tag = sw;
-                        listViewSoftware.Items.Add(item);
+                        softwareSortColumn = 0;
+                        softwareSortAsc = true;
+                        listViewSoftware.ListViewItemSorter = new ListViewItemComparerSoftware(softwareSortColumn, softwareSortAsc);
+                        listViewSoftware.Sort();
+                        UpdateColumnHeaderSortIndicator(listViewSoftware, softwareSortColumn, softwareSortAsc);
                     }
-                    softwareSortColumn = 0;
-                    softwareSortAsc = true;
-                    listViewSoftware.ListViewItemSorter = new ListViewItemComparerSoftware(softwareSortColumn, softwareSortAsc);
-                    listViewSoftware.Sort();
-                    UpdateColumnHeaderSortIndicator(listViewSoftware, softwareSortColumn, softwareSortAsc);
+                    finally
+                    {
+                        listViewSoftware.EndUpdate();
+                    }
                 }));
             }
             catch (Exception ex)
@@ -203,14 +286,23 @@ namespace winC2D
                 if (Directory.Exists(localLow))
                     Scan(localLow, "LocalLow");
                 this.Invoke(new Action(() => {
-                    listViewAppData.Items.Clear();
-                    foreach (var item in items)
-                        listViewAppData.Items.Add(item);
-                    // 默认按名称升序
-                    appDataSortColumn = 0;
-                    appDataSortAsc = true;
-                    listViewAppData.ListViewItemSorter = new ListViewItemComparer(appDataSortColumn, appDataSortAsc);
-                    listViewAppData.Sort();
+                    // Use BeginUpdate/EndUpdate to minimize UI redraws while populating
+                    listViewAppData.BeginUpdate();
+                    try
+                    {
+                        listViewAppData.Items.Clear();
+                        foreach (var item in items)
+                            listViewAppData.Items.Add(item);
+                        // 默认按名称升序
+                        appDataSortColumn = 0;
+                        appDataSortAsc = true;
+                        listViewAppData.ListViewItemSorter = new ListViewItemComparer(appDataSortColumn, appDataSortAsc);
+                        listViewAppData.Sort();
+                    }
+                    finally
+                    {
+                        listViewAppData.EndUpdate();
+                    }
                 }));
             }
             catch
@@ -241,7 +333,9 @@ namespace winC2D
         {
             ApplyLocalization();
             UpdateLanguageMenuItems();
-            LoadAppDataFolders(); // Refresh AppData list
+            RefreshSoftwareListLocalization();
+            // Refresh AppData list asynchronously to avoid blocking the UI during language switch
+            Task.Run(() => LoadAppDataFoldersSafe());
         }
 
         private void ApplyLocalization()
@@ -265,7 +359,7 @@ namespace winC2D
             checkBoxCustomX86.Text = Localization.T("Settings.CustomX86Path");
             labelProgramFilesNote.Text = Localization.T("Settings.ProgramFilesNote");
             groupBoxStoragePolicy.Text = Localization.T("Settings.StoragePolicySection");
-            labelStoragePolicyNote.Text = Localization.T("Settings.StoragePolicyNote");
+            labelStoragePolicyNote.Text = Localization.T("Settings.ProgramFilesNote");
             buttonOpenWindowsStorage.Text = Localization.T("Button.OpenWindowsStorage");
             buttonBrowseProgramFiles.Text = Localization.T("Button.Browse");
             buttonBrowseProgramFilesX86.Text = Localization.T("Button.Browse");
@@ -289,6 +383,15 @@ namespace winC2D
             buttonMigrateAppData.Text = Localization.T("Button.MigrateSelected");
             buttonRefreshAppData.Text = Localization.T("Button.RefreshAppData");
             buttonRefreshSoftware.Text = Localization.T("Button.RefreshAppData");
+            buttonCheckSuspicious.Text = Localization.T("Button.CheckSuspicious");
+            buttonManageScanPaths.Text = Localization.T("Button.ManageScanPaths");
+            if (softwareContextMenu != null)
+            {
+                softwareContextMenu.Items[0].Text = Localization.T("Menu.CopyName");
+                softwareContextMenu.Items[1].Text = Localization.T("Menu.CopyPath");
+                softwareContextMenu.Items[2].Text = Localization.T("Menu.OpenInExplorer");
+                softwareContextMenu.Items[3].Text = Localization.T("Menu.Check");
+            }
         }
 
         private void UpdateLanguageMenuItems()
@@ -327,24 +430,7 @@ namespace winC2D
                 listViewSoftware.Items.Clear();
                 foreach (var sw in list)
                 {
-                    string name = sw.Name;
-                    string path = sw.InstallLocation;
-                    string statusText = string.Empty;
-                    try
-                    {
-                        if (Directory.Exists(path))
-                        {
-                            var isSymlink = (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
-                            statusText = isSymlink ? Localization.T("Status.Symlink") : Localization.T("Status.Directory");
-                        }
-                        else
-                        {
-                            statusText = Localization.T("Status.Directory");
-                        }
-                    }
-                    catch { }
-                    var item = new ListViewItem(new string[] { name, sw.InstallLocation, sw.SizeText, statusText });
-                    item.Tag = sw;
+                    var item = CreateSoftwareListViewItem(sw);
                     listViewSoftware.Items.Add(item);
                 }
             }
@@ -352,6 +438,52 @@ namespace winC2D
             {
                 LocalizedMessageBox.Show(string.Format(Localization.T("Msg.ScanSoftwareFailedFmt"), ex.Message), Localization.T("Title.Tip"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void InitializeSoftwareContextMenu()
+        {
+            softwareContextMenu = new ContextMenuStrip();
+            softwareContextMenu.Items.Add(Localization.T("Menu.CopyName"), null, (s, e) => CopySelectedSoftwareName());
+            softwareContextMenu.Items.Add(Localization.T("Menu.CopyPath"), null, (s, e) => CopySelectedSoftwarePath());
+            softwareContextMenu.Items.Add(Localization.T("Menu.OpenInExplorer"), null, (s, e) => OpenSelectedSoftwareInExplorer());
+            softwareContextMenu.Items.Add(Localization.T("Menu.Check"), null, async (s, e) => await CheckSelectedSoftwareAsync());
+            listViewSoftware.ContextMenuStrip = softwareContextMenu;
+        }
+
+        private ListViewItem CreateSoftwareListViewItem(InstalledSoftware sw)
+        {
+            var item = new ListViewItem(new string[]
+            {
+                sw.Name,
+                sw.InstallLocation,
+                sw.SizeText,
+                GetSoftwareStatusText(sw)
+            });
+            item.Tag = sw;
+            return item;
+        }
+
+        private void UpdateSoftwareListViewItem(ListViewItem item)
+        {
+            if (item?.Tag is not InstalledSoftware sw) return;
+            item.SubItems[0].Text = sw.Name;
+            item.SubItems[1].Text = sw.InstallLocation;
+            item.SubItems[2].Text = sw.SizeText;
+            item.SubItems[3].Text = GetSoftwareStatusText(sw);
+        }
+
+        private string GetSoftwareStatusText(InstalledSoftware sw)
+        {
+            if (sw == null) return string.Empty;
+            return sw.Status switch
+            {
+                SoftwareStatus.Directory => Localization.T("Status.Directory"),
+                SoftwareStatus.Symlink => Localization.T("Status.Symlink"),
+                SoftwareStatus.Suspicious => Localization.T("Status.Suspicious"),
+                SoftwareStatus.Empty => Localization.T("Status.Empty"),
+                SoftwareStatus.Residual => Localization.T("Status.Residual"),
+                _ => string.Empty
+            };
         }
 
         private void menuLog_Click(object sender, EventArgs e)
@@ -438,7 +570,8 @@ namespace winC2D
                         LocalizedMessageBox.Show(string.Format(Localization.T("Msg.MigrateFailedFmt"), err.name, err.message), Localization.T("Title.Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     LocalizedMessageBox.Show(string.Format(Localization.T("Msg.MigrateCompleted"), success, fail), Localization.T("Title.Tip"), MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    LoadInstalledSoftware(); // 刷新列表
+                    // 刷新安装软件列表（异步）以避免阻塞 UI
+                    Task.Run(() => LoadInstalledSoftwareSafe());
                 }
             }
         }
@@ -548,6 +681,7 @@ namespace winC2D
             {
                 textBoxProgramFilesX86.Text = textBoxProgramFiles.Text;
             }
+            EnsureDefaultScanPaths();
         }
 
         private void checkBoxCustomX86_CheckedChanged(object sender, EventArgs e)
@@ -562,6 +696,7 @@ namespace winC2D
                 // 关闭自定义时，32位路径等于64位路径，且不可编辑
                 textBoxProgramFilesX86.Text = textBoxProgramFiles.Text;
             }
+            EnsureDefaultScanPaths();
         }
 
         private void buttonBrowseProgramFiles_Click(object sender, EventArgs e)
@@ -859,69 +994,79 @@ namespace winC2D
                         }
                     }
                     MessageBox.Show(string.Format(Localization.T("Msg.MigrateCompleted"), success, fail), Localization.T("Title.Tip"));
-                    LoadAppDataFolders(); // 刷新列表
+                    // Refresh AppData list asynchronously to avoid blocking UI
+                    Task.Run(() => LoadAppDataFoldersSafe());
                 }
             }
         }
 
-        // 排序器类
-        class ListViewItemComparer : System.Collections.IComparer
+        private async void buttonCheckSuspiciousSoftware_Click(object sender, EventArgs e)
         {
-            private int col;
-            private bool ascending;
-            public ListViewItemComparer(int column, bool asc)
+            await CheckItemsAsync(listViewSoftware.Items.Cast<ListViewItem>());
+        }
+
+        private async Task CheckSelectedSoftwareAsync()
+        {
+            var items = listViewSoftware.SelectedItems.Cast<ListViewItem>().ToList();
+            if (items.Count == 0 && listViewSoftware.FocusedItem != null)
+                items.Add(listViewSoftware.FocusedItem);
+            if (items.Count == 0) return;
+            await CheckItemsAsync(items);
+        }
+
+        private async Task CheckItemsAsync(IEnumerable<ListViewItem> items)
+        {
+            var targetItems = items.Where(i => i?.Tag is InstalledSoftware).ToList();
+            if (targetItems.Count == 0) return;
+
+            using (var wait = new WaitForm(Localization.T("Msg.CheckingSuspicious")))
             {
-                col = column;
-                ascending = asc;
+                Task.Run(() =>
+                {
+                    foreach (var item in targetItems)
+                    {
+                        if (item.Tag is InstalledSoftware sw)
+                        {
+                            SoftwareScanner.CheckSuspiciousDirectory(sw);
+                        }
+                    }
+                    try { this.Invoke(new Action(() => wait.Close())); } catch { }
+                });
+                wait.ShowDialog();
             }
-            public int Compare(object x, object y)
+
+            listViewSoftware.BeginUpdate();
+            try
             {
-                var itemX = x as ListViewItem;
-                var itemY = y as ListViewItem;
-                // 按大小列时用数字比较
-                if (col == 2) // Size列
+                foreach (var item in targetItems)
                 {
-                    long sx = 0, sy = 0;
-                    if (itemX.Tag is AppDataInfo infoX) sx = infoX.Size;
-                    if (itemY.Tag is AppDataInfo infoY) sy = infoY.Size;
-                    int cmp = sx.CompareTo(sy);
-                    return ascending ? cmp : -cmp;
+                    UpdateSoftwareListViewItem(item);
                 }
-                else
-                {
-                    int cmp = string.Compare(itemX.SubItems[col].Text, itemY.SubItems[col].Text, StringComparison.CurrentCultureIgnoreCase);
-                    return ascending ? cmp : -cmp;
-                }
+                listViewSoftware.Sort();
+                UpdateColumnHeaderSortIndicator(listViewSoftware, softwareSortColumn, softwareSortAsc);
+            }
+            finally
+            {
+                listViewSoftware.EndUpdate();
             }
         }
 
-        class ListViewItemComparerSoftware : System.Collections.IComparer
+        // 刷新软件列表本地化
+        private void RefreshSoftwareListLocalization()
         {
-            private int col;
-            private bool ascending;
-            public ListViewItemComparerSoftware(int column, bool asc)
+            listViewSoftware.BeginUpdate();
+            try
             {
-                col = column;
-                ascending = asc;
+                foreach (ListViewItem item in listViewSoftware.Items)
+                {
+                    UpdateSoftwareListViewItem(item);
+                }
+                listViewSoftware.Sort();
+                UpdateColumnHeaderSortIndicator(listViewSoftware, softwareSortColumn, softwareSortAsc);
             }
-            public int Compare(object x, object y)
+            finally
             {
-                var itemX = x as ListViewItem;
-                var itemY = y as ListViewItem;
-                // 按大小列时用数字比较
-                if (col == 2) // Size列
-                {
-                    long sx = 0, sy = 0;
-                    if (itemX.Tag is InstalledSoftware infoX) sx = infoX.SizeBytes;
-                    if (itemY.Tag is InstalledSoftware infoY) sy = infoY.SizeBytes;
-                    int cmp = sx.CompareTo(sy);
-                    return ascending ? cmp : -cmp;
-                }
-                else
-                {
-                    int cmp = string.Compare(itemX.SubItems[col].Text, itemY.SubItems[col].Text, StringComparison.CurrentCultureIgnoreCase);
-                    return ascending ? cmp : -cmp;
-                }
+                listViewSoftware.EndUpdate();
             }
         }
 
@@ -992,6 +1137,136 @@ namespace winC2D
             {
                 var col = listView.Columns[sortColumn];
                 col.Text = col.Text + (ascending ? " ▲" : " ▼");
+            }
+        }
+
+        private void listViewSoftware_MouseMove(object sender, MouseEventArgs e)
+        {
+            var info = listViewSoftware.HitTest(e.Location);
+            if (info.Item == null) { listToolTip.Hide(listViewSoftware); return; }
+            var sw = info.Item.Tag as InstalledSoftware;
+            if (sw == null) { listToolTip.Hide(listViewSoftware); return; }
+            string tooltip = string.Empty;
+            // Size column index 2
+            if (info.SubItem != null && info.Item.SubItems.IndexOf(info.SubItem) == 2 && sw.SizeBytes <= 0)
+            {
+                tooltip = Localization.T("Tooltip.SizeUnknown");
+            }
+            // Status column index 3
+            if (info.SubItem != null && info.Item.SubItems.IndexOf(info.SubItem) == 3 && sw.Status == SoftwareStatus.Suspicious)
+            {
+                tooltip = Localization.T("Tooltip.StatusSuspicious");
+            }
+            if (!string.IsNullOrEmpty(tooltip))
+            {
+                listToolTip.Show(tooltip, listViewSoftware, e.Location.X + 15, e.Location.Y + 15, 4000);
+            }
+            else
+            {
+                listToolTip.Hide(listViewSoftware);
+            }
+        }
+
+        private void CopySelectedSoftwareName()
+        {
+            if (listViewSoftware.FocusedItem?.Tag is InstalledSoftware sw)
+            {
+                try { Clipboard.SetText(sw.Name ?? string.Empty); } catch { }
+            }
+        }
+
+        private void CopySelectedSoftwarePath()
+        {
+            if (listViewSoftware.FocusedItem?.Tag is InstalledSoftware sw)
+            {
+                try { Clipboard.SetText(sw.InstallLocation ?? string.Empty); } catch { }
+            }
+        }
+
+        private void OpenSelectedSoftwareInExplorer()
+        {
+            if (listViewSoftware.FocusedItem?.Tag is InstalledSoftware sw)
+            {
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(sw.InstallLocation) && Directory.Exists(sw.InstallLocation))
+                    {
+                        Process.Start("explorer.exe", sw.InstallLocation);
+                    }
+                }
+                catch { }
+            }
+        }
+
+        private void buttonManageScanPaths_Click(object sender, EventArgs e)
+        {
+            EnsureDefaultScanPaths();
+            using var dlg = new ScanPathsForm(scanPaths.Select(p => ClonePath(p)).ToList());
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                scanPaths = dlg.Paths;
+                buttonRefreshSoftware.PerformClick();
+            }
+        }
+
+        // 排序器类
+        class ListViewItemComparer : System.Collections.IComparer
+        {
+            private int col;
+            private bool ascending;
+            public ListViewItemComparer(int column, bool asc)
+            {
+                col = column;
+                ascending = asc;
+            }
+            public int Compare(object x, object y)
+            {
+                var itemX = x as ListViewItem;
+                var itemY = y as ListViewItem;
+                // 按大小列时用数字比较
+                if (col == 2) // Size列
+                {
+                    long sx = 0, sy = 0;
+                    if (itemX.Tag is AppDataInfo infoX) sx = infoX.Size;
+                    if (itemY.Tag is AppDataInfo infoY) sy = infoY.Size;
+                    int cmp = sx.CompareTo(sy);
+                    return ascending ? cmp : -cmp;
+                }
+                else
+                {
+                    int cmp = string.Compare(itemX.SubItems[col].Text, itemY.SubItems[col].Text, StringComparison.CurrentCultureIgnoreCase);
+                    return ascending ? cmp : -cmp;
+                }
+            }
+        }
+
+        class ListViewItemComparerSoftware : System.Collections.IComparer
+        {
+            private int col;
+            private bool ascending;
+            public ListViewItemComparerSoftware(int column, bool asc)
+            {
+                col = column;
+                ascending = asc;
+            }
+            public int Compare(object x, object y)
+            {
+                var itemX = x as ListViewItem;
+                var itemY = y as ListViewItem;
+                // 按大小列时用数字比较
+                if (col == 2) // Size列
+                {
+                    long sx = 0, sy = 0;
+                    if (itemX.Tag is InstalledSoftware infoX) sx = infoX.SizeBytes;
+                    if (itemY.Tag is InstalledSoftware infoY) sy = infoY.SizeBytes;
+                    int cmp = sx.CompareTo(sy);
+                    return ascending ? cmp : -cmp;
+                }
+                else
+                {
+                    int cmp = string.Compare(itemX.SubItems[col].Text, itemY.SubItems[col].Text, StringComparison.CurrentCultureIgnoreCase);
+                    return ascending ? cmp : -cmp;
+                }
             }
         }
     }
