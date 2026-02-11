@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,10 +27,20 @@ namespace winC2D
         private readonly ToolTip listToolTip = new ToolTip();
         private ContextMenuStrip softwareContextMenu;
         private ContextMenuStrip appDataContextMenu;
+        private ThemePalette currentPalette;
 
         public MainForm()
         {
             InitializeComponent();
+            this.Font = new Font("Segoe UI Variable", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            this.DoubleBuffered = true;
+            tabControl1.DrawItem += TabControl1_DrawItem;
+            tabControl1.DrawMode = TabDrawMode.OwnerDrawFixed;
+            tabControl1.SizeMode = TabSizeMode.Fixed;
+            tabControl1.ItemSize = new Size(150, 36);
+            tabControl1.Padding = new Point(12, 6);
+            ApplyTheme(ThemeManager.CurrentTheme);
+            ThemeManager.ThemeChanged += ThemeManager_ThemeChanged;
             this.Load += MainForm_Load;
             this.FormClosing += MainForm_FormClosing;
             Localization.LanguageChanged += OnLanguageChanged;
@@ -56,6 +67,7 @@ namespace winC2D
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             Localization.LanguageChanged -= OnLanguageChanged;
+            ThemeManager.ThemeChanged -= ThemeManager_ThemeChanged;
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -314,6 +326,18 @@ namespace winC2D
             _ = Task.Run(() => LoadAppDataFoldersSafe());
         }
 
+        private void ThemeManager_ThemeChanged(object sender, EventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => ApplyTheme(ThemeManager.CurrentTheme)));
+            }
+            else
+            {
+                ApplyTheme(ThemeManager.CurrentTheme);
+            }
+        }
+
         private void ApplyLocalization()
         {
             // Window title
@@ -322,6 +346,9 @@ namespace winC2D
             // Menu items
             menuLog.Text = Localization.T("Menu.Log");
             menuLanguage.Text = Localization.T("Menu.Language");
+            menuTheme.Text = Localization.T("Menu.Theme");
+            menuThemeLight.Text = Localization.T("Menu.Theme.Light");
+            menuThemeDark.Text = Localization.T("Menu.Theme.Dark");
 
             // Tab pages
             tabPageSettings.Text = Localization.T("GroupBox.SystemSettings");
@@ -376,6 +403,7 @@ namespace winC2D
                 appDataContextMenu.Items[2].Text = Localization.T("Menu.OpenInExplorer");
                 appDataContextMenu.Items[3].Text = Localization.T("Menu.Check");
             }
+            UpdateThemeMenuChecks();
         }
 
         private void UpdateLanguageMenuItems()
@@ -403,6 +431,181 @@ namespace winC2D
 
             menuLanguagePortuguese.Enabled = (currentLang != "pt-BR");
             menuLanguagePortuguese.Checked = (currentLang == "pt-BR");
+        }
+
+        private void UpdateThemeMenuChecks()
+        {
+            menuThemeLight.Checked = (ThemeManager.CurrentTheme == AppTheme.Light);
+            menuThemeDark.Checked = (ThemeManager.CurrentTheme == AppTheme.Dark);
+        }
+
+        private void ApplyTheme(AppTheme theme)
+        {
+            currentPalette = ThemeManager.GetPalette(theme);
+            BackColor = currentPalette.FormBackground;
+            ForeColor = currentPalette.Foreground;
+            menuStrip1.BackColor = currentPalette.MenuBackground;
+            menuStrip1.ForeColor = currentPalette.MenuForeground;
+            menuStrip1.Renderer = new ModernToolStripRenderer(currentPalette);
+            foreach (ToolStripItem item in menuStrip1.Items)
+            {
+                item.ForeColor = currentPalette.MenuForeground;
+                item.Font = this.Font;
+            }
+
+            tabControl1.BackColor = currentPalette.TabControlBackground;
+            foreach (TabPage tab in tabControl1.TabPages)
+            {
+                tab.BackColor = currentPalette.TabPageBackground;
+                tab.ForeColor = currentPalette.Foreground;
+            }
+
+            StyleControlsForTheme(this, currentPalette);
+            foreach (var btn in GetAllButtons(this))
+            {
+                StyleButton(btn, currentPalette, IsAccentButton(btn));
+            }
+
+            tabControl1.Invalidate();
+            UpdateThemeMenuChecks();
+        }
+
+        private void StyleControlsForTheme(Control parent, ThemePalette palette)
+        {
+            foreach (Control control in parent.Controls)
+            {
+                if (control is ToolStrip)
+                {
+                    continue;
+                }
+
+                switch (control)
+                {
+                    case Label lbl:
+                        lbl.ForeColor = palette.Foreground;
+                        break;
+                    case TextBox tb:
+                        tb.BackColor = palette.ControlBackground;
+                        tb.ForeColor = palette.Foreground;
+                        tb.BorderStyle = BorderStyle.FixedSingle;
+                        break;
+                    case CheckBox chk:
+                        chk.ForeColor = palette.Foreground;
+                        chk.BackColor = Color.Transparent;
+                        break;
+                    case GroupBox gb:
+                        gb.ForeColor = palette.Foreground;
+                        gb.BackColor = palette.TabPageBackground;
+                        break;
+                    case ListView lv:
+                        lv.BackColor = palette.ListViewBackground;
+                        lv.ForeColor = palette.ListViewForeground;
+                        lv.BorderStyle = BorderStyle.None;
+                        lv.Font = this.Font;
+                        break;
+                    case TabPage page:
+                        page.BackColor = palette.TabPageBackground;
+                        page.ForeColor = palette.Foreground;
+                        break;
+                }
+
+                if (!(control is Button))
+                {
+                    StyleControlsForTheme(control, palette);
+                }
+            }
+        }
+
+        private IEnumerable<Button> GetAllButtons(Control parent)
+        {
+            foreach (Control control in parent.Controls)
+            {
+                if (control is Button btn)
+                {
+                    yield return btn;
+                }
+                else if (control.HasChildren)
+                {
+                    foreach (var child in GetAllButtons(control))
+                    {
+                        yield return child;
+                    }
+                }
+            }
+        }
+
+        private bool IsAccentButton(Button btn)
+        {
+            if (btn == null) return false;
+            return ReferenceEquals(btn, buttonMigrateSoftware) || ReferenceEquals(btn, buttonMigrateAppData);
+        }
+
+        private void StyleButton(Button btn, ThemePalette palette, bool accent)
+        {
+            if (btn == null) return;
+            btn.FlatStyle = FlatStyle.Flat;
+            btn.Font = this.Font;
+            btn.FlatAppearance.BorderSize = accent ? 0 : 1;
+            btn.FlatAppearance.BorderColor = accent ? Color.Transparent : palette.ButtonBorder;
+            btn.BackColor = accent ? palette.Accent : palette.ControlBackground;
+            btn.ForeColor = accent ? Color.White : palette.Foreground;
+            btn.FlatAppearance.MouseOverBackColor = accent ? Blend(palette.Accent, palette.ButtonHover, 0.2f) : palette.ButtonHover;
+            btn.FlatAppearance.MouseDownBackColor = accent ? Blend(palette.Accent, palette.ButtonHover, 0.4f) : Blend(palette.ButtonHover, palette.ControlBackground, 0.25f);
+            btn.FlatAppearance.CheckedBackColor = palette.ButtonHover;
+            btn.UseVisualStyleBackColor = false;
+            btn.Cursor = Cursors.Hand;
+        }
+
+        private static Color Blend(Color first, Color second, float secondWeight)
+        {
+            secondWeight = Math.Clamp(secondWeight, 0f, 1f);
+            float firstWeight = 1f - secondWeight;
+            return Color.FromArgb(
+                (int)(first.A * firstWeight + second.A * secondWeight),
+                (int)(first.R * firstWeight + second.R * secondWeight),
+                (int)(first.G * firstWeight + second.G * secondWeight),
+                (int)(first.B * firstWeight + second.B * secondWeight));
+        }
+
+        private void TabControl1_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            var palette = currentPalette ?? ThemeManager.GetPalette(ThemeManager.CurrentTheme);
+            var text = tabControl1.TabPages[e.Index].Text;
+            bool selected = (tabControl1.SelectedIndex == e.Index);
+            var fill = selected ? palette.Accent : palette.TabPageBackground;
+
+            using (var brush = new SolidBrush(fill))
+            {
+                e.Graphics.FillRectangle(brush, e.Bounds);
+            }
+
+            var textColor = selected ? Color.White : palette.Foreground;
+            TextRenderer.DrawText(e.Graphics, text, this.Font, e.Bounds, textColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+        }
+
+        private class ModernToolStripRenderer : ToolStripProfessionalRenderer
+        {
+            private readonly ThemePalette palette;
+
+            public ModernToolStripRenderer(ThemePalette palette)
+            {
+                this.palette = palette;
+            }
+
+            protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
+            {
+                var bounds = new Rectangle(Point.Empty, e.Item.Size);
+                var backColor = e.Item.Pressed ? palette.MenuItemSelected : (e.Item.Selected ? palette.MenuItemHover : palette.MenuBackground);
+                using (var brush = new SolidBrush(backColor))
+                {
+                    e.Graphics.FillRectangle(brush, bounds);
+                }
+            }
+
+            protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
+            {
+                // Do nothing so the strip stays borderless.
+            }
         }
 
         private void LoadInstalledSoftware()
@@ -692,6 +895,16 @@ namespace winC2D
             {
                 Localization.SetLanguage("pt-BR");
             }
+        }
+
+        private void menuThemeLight_Click(object sender, EventArgs e)
+        {
+            ThemeManager.SetTheme(AppTheme.Light);
+        }
+
+        private void menuThemeDark_Click(object sender, EventArgs e)
+        {
+            ThemeManager.SetTheme(AppTheme.Dark);
         }
 
         private void LoadSystemSettings()
