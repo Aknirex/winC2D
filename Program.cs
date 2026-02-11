@@ -22,6 +22,7 @@ namespace winC2D
             // Load language preference, default to English
             string lang = Localization.LoadLanguagePreference();
             CultureInfo.CurrentUICulture = new CultureInfo(lang);
+            ThemeManager.LoadPreference();
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

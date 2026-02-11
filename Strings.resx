@@ -148,6 +148,15 @@
   <data name="Menu.Language" xml:space="preserve">
     <value>Language</value>
   </data>
+  <data name="Menu.Theme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="Menu.Theme.Light" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="Menu.Theme.Dark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
   <data name="Tab.SoftwareMigration" xml:space="preserve">
     <value>Software Migration</value>
   </data>
