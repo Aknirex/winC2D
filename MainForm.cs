@@ -545,8 +545,15 @@ namespace winC2D
             if (btn == null) return;
             btn.FlatStyle = FlatStyle.Flat;
             btn.Font = this.Font;
-            btn.FlatAppearance.BorderSize = accent ? 0 : 1;
-            btn.FlatAppearance.BorderColor = accent ? Color.Transparent : palette.ButtonBorder;
+            if (accent)
+            {
+                btn.FlatAppearance.BorderSize = 0;
+            }
+            else
+            {
+                btn.FlatAppearance.BorderSize = 1;
+                btn.FlatAppearance.BorderColor = palette.ButtonBorder;
+            }
             btn.BackColor = accent ? palette.Accent : palette.ControlBackground;
             btn.ForeColor = accent ? Color.White : palette.Foreground;
             btn.FlatAppearance.MouseOverBackColor = accent ? Blend(palette.Accent, palette.ButtonHover, 0.2f) : palette.ButtonHover;
@@ -1171,7 +1178,7 @@ namespace winC2D
 
             using (var wait = new WaitForm(Localization.T("Msg.CheckingSuspicious")))
             {
-                Task.Run(() =>
+                var checkTask = Task.Run(() =>
                 {
                     foreach (var item in targetItems)
                     {
@@ -1183,6 +1190,7 @@ namespace winC2D
                     try { this.Invoke(new Action(() => wait.Close())); } catch { }
                 });
                 wait.ShowDialog();
+                await checkTask.ConfigureAwait(false);
             }
 
             listViewSoftware.BeginUpdate();
@@ -1395,7 +1403,7 @@ namespace winC2D
 
             using (var wait = new WaitForm(Localization.T("Msg.CheckingSuspicious")))
             {
-                Task.Run(() =>
+                var checkTask = Task.Run(() =>
                 {
                     foreach (var item in targetItems)
                     {
@@ -1407,6 +1415,7 @@ namespace winC2D
                     try { this.Invoke(new Action(() => wait.Close())); } catch { }
                 });
                 wait.ShowDialog();
+                await checkTask.ConfigureAwait(false);
             }
 
             listViewAppData.BeginUpdate();
