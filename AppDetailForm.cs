@@ -39,7 +39,7 @@ namespace winC2D
 
             var labelAuthor = new Label
             {
-                Text = "Author: SKR7lex",
+                Text = "Author: Aknirex",
                 Location = new Point(100, 55),
                 AutoSize = true
             };
@@ -47,7 +47,7 @@ namespace winC2D
 
             var labelGithub = new LinkLabel
             {
-                Text = "GitHub: https://github.com/SKR7lex/winC2D",
+                Text = "GitHub: https://github.com/Aknirex/winC2D",
                 Location = new Point(100, 85),
                 AutoSize = true
             };
@@ -55,7 +55,7 @@ namespace winC2D
             {
                 Process.Start(new ProcessStartInfo
                 {
-                    FileName = "https://github.com/SKR7lex/winC2D",
+                    FileName = "https://github.com/Aknirex/winC2D",
                     UseShellExecute = true
                 });
             };
@@ -63,7 +63,7 @@ namespace winC2D
 
             var labelCopyright = new Label
             {
-                Text = "Copyright SKR7lex",
+                Text = "Copyright Aknirex",
                 Location = new Point(20, 120),
                 AutoSize = true
             };
