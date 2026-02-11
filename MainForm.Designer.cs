@@ -1,3 +1,4 @@
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace winC2D
@@ -57,6 +58,9 @@ namespace winC2D
         private System.Windows.Forms.Button buttonRefreshSoftware;
         private System.Windows.Forms.Button buttonCheckSuspicious;
         private System.Windows.Forms.Button buttonManageScanPaths;
+        private System.Windows.Forms.ToolStripMenuItem menuTheme;
+        private System.Windows.Forms.ToolStripMenuItem menuThemeLight;
+        private System.Windows.Forms.ToolStripMenuItem menuThemeDark;
 
         /// <summary>
         ///  Clean up any resources being used.
@@ -85,6 +89,9 @@ namespace winC2D
             menuLanguageKorean = new ToolStripMenuItem();
             menuLanguageRussian = new ToolStripMenuItem();
             menuLanguagePortuguese = new ToolStripMenuItem();
+            menuTheme = new ToolStripMenuItem();
+            menuThemeLight = new ToolStripMenuItem();
+            menuThemeDark = new ToolStripMenuItem();
             tabControl1 = new TabControl();
             tabPageSoftware = new TabPage();
             listViewSoftware = new ListView();
@@ -132,11 +139,12 @@ namespace winC2D
             // menuStrip1
             // 
             menuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
-            menuStrip1.Items.AddRange(new ToolStripItem[] { menuLog, menuLanguage });
+            menuStrip1.Items.AddRange(new ToolStripItem[] { menuLog, menuLanguage, menuTheme });
             menuStrip1.Location = new System.Drawing.Point(0, 0);
             menuStrip1.Name = "menuStrip1";
-            menuStrip1.Padding = new Padding(5, 2, 0, 2);
-            menuStrip1.Size = new System.Drawing.Size(1000, 25);
+            menuStrip1.Padding = new Padding(10, 4, 10, 4);
+            menuStrip1.RenderMode = ToolStripRenderMode.Professional;
+            menuStrip1.Size = new System.Drawing.Size(1000, 30);
             menuStrip1.TabIndex = 0;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -203,6 +211,27 @@ namespace winC2D
             menuLanguagePortuguese.Text = "Português (Brasil)";
             menuLanguagePortuguese.Click += menuLanguagePortuguese_Click;
             // 
+            // menuTheme
+            // 
+            menuTheme.DropDownItems.AddRange(new ToolStripItem[] { menuThemeLight, menuThemeDark });
+            menuTheme.Name = "menuTheme";
+            menuTheme.Size = new System.Drawing.Size(48, 21);
+            menuTheme.Text = "Theme";
+            // 
+            // menuThemeLight
+            // 
+            menuThemeLight.Name = "menuThemeLight";
+            menuThemeLight.Size = new System.Drawing.Size(179, 22);
+            menuThemeLight.Text = "Light";
+            menuThemeLight.Click += menuThemeLight_Click;
+            // 
+            // menuThemeDark
+            // 
+            menuThemeDark.Name = "menuThemeDark";
+            menuThemeDark.Size = new System.Drawing.Size(179, 22);
+            menuThemeDark.Text = "Dark";
+            menuThemeDark.Click += menuThemeDark_Click;
+            // 
             // tabControl1
             // 
             tabControl1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
@@ -214,6 +243,10 @@ namespace winC2D
             tabControl1.SelectedIndex = 0;
             tabControl1.Size = new System.Drawing.Size(979, 560);
             tabControl1.TabIndex = 1;
+            tabControl1.DrawMode = TabDrawMode.OwnerDrawFixed;
+            tabControl1.ItemSize = new System.Drawing.Size(150, 36);
+            tabControl1.Padding = new Point(12, 6);
+            tabControl1.SizeMode = TabSizeMode.Fixed;
             // 
             // tabPageSoftware
             // 
@@ -228,7 +261,7 @@ namespace winC2D
             tabPageSoftware.Size = new System.Drawing.Size(971, 530);
             tabPageSoftware.TabIndex = 1;
             tabPageSoftware.Text = "软件迁移";
-            tabPageSoftware.UseVisualStyleBackColor = true;
+            tabPageSoftware.UseVisualStyleBackColor = false;
             // 
             // listViewSoftware
             // 
@@ -242,6 +275,7 @@ namespace winC2D
             listViewSoftware.TabIndex = 0;
             listViewSoftware.UseCompatibleStateImageBehavior = false;
             listViewSoftware.View = View.Details;
+            listViewSoftware.BorderStyle = BorderStyle.None;
             // 
             // columnHeaderName
             // 
@@ -319,7 +353,7 @@ namespace winC2D
             tabPageAppData.Size = new System.Drawing.Size(971, 530);
             tabPageAppData.TabIndex = 3;
             tabPageAppData.Text = "AppData (mklink)";
-            tabPageAppData.UseVisualStyleBackColor = true;
+            tabPageAppData.UseVisualStyleBackColor = false;
             // 
             // listViewAppData
             // 
@@ -333,6 +367,7 @@ namespace winC2D
             listViewAppData.TabIndex = 0;
             listViewAppData.UseCompatibleStateImageBehavior = false;
             listViewAppData.View = View.Details;
+            listViewAppData.BorderStyle = BorderStyle.None;
             // 
             // columnHeaderAppName
             // 
@@ -397,7 +432,7 @@ namespace winC2D
             tabPageSettings.Size = new System.Drawing.Size(971, 530);
             tabPageSettings.TabIndex = 0;
             tabPageSettings.Text = "系统设置";
-            tabPageSettings.UseVisualStyleBackColor = true;
+            tabPageSettings.UseVisualStyleBackColor = false;
             // 
             // groupBoxStoragePolicy
             // 
