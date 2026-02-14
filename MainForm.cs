@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.VisualStyles;
+using System.Runtime.InteropServices;
 
 namespace winC2D
 {
@@ -25,6 +27,7 @@ namespace winC2D
         };
 
         private readonly ToolTip listToolTip = new ToolTip();
+        private readonly Dictionary<ListView, int> listViewHoverIndex = new Dictionary<ListView, int>();
         private ContextMenuStrip softwareContextMenu;
         private ContextMenuStrip appDataContextMenu;
         private ThemePalette currentPalette;
@@ -34,11 +37,11 @@ namespace winC2D
             InitializeComponent();
             this.Font = new Font("Segoe UI Variable", 9F, FontStyle.Regular, GraphicsUnit.Point);
             this.DoubleBuffered = true;
-            tabControl1.DrawItem += TabControl1_DrawItem;
-            tabControl1.DrawMode = TabDrawMode.OwnerDrawFixed;
+            //tabControl1.DrawItem += TabControl1_DrawItem;
+            //tabControl1.DrawMode = TabDrawMode.OwnerDrawFixed;
             tabControl1.SizeMode = TabSizeMode.Fixed;
             tabControl1.ItemSize = new Size(150, 36);
-            tabControl1.Padding = new Point(12, 6);
+            //tabControl1.Padding = new Point(12, 6);
             ApplyTheme(ThemeManager.CurrentTheme);
             ThemeManager.ThemeChanged += ThemeManager_ThemeChanged;
             this.Load += MainForm_Load;
@@ -62,6 +65,9 @@ namespace winC2D
             listViewSoftware.MouseLeave += (s, e) => listToolTip.Hide(listViewSoftware);
             InitializeSoftwareContextMenu();
             InitializeAppDataContextMenu();
+
+            InitializeListViewTheme(listViewSoftware);
+            InitializeListViewTheme(listViewAppData);
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -226,6 +232,8 @@ namespace winC2D
                         listViewSoftware.ListViewItemSorter = new ListViewItemComparerSoftware(softwareSortColumn, softwareSortAsc);
                         listViewSoftware.Sort();
                         UpdateColumnHeaderSortIndicator(listViewSoftware, softwareSortColumn, softwareSortAsc);
+                        AutoSizeListViewColumns(listViewSoftware);
+                        AdjustFormWidthToListViews();
                     }
                     finally
                     {
@@ -286,6 +294,9 @@ namespace winC2D
                         appDataSortAsc = true;
                         listViewAppData.ListViewItemSorter = new ListViewItemComparer(appDataSortColumn, appDataSortAsc);
                         listViewAppData.Sort();
+                        UpdateColumnHeaderSortIndicator(listViewAppData, appDataSortColumn, appDataSortAsc);
+                        AutoSizeListViewColumns(listViewAppData);
+                        AdjustFormWidthToListViews();
                     }
                     finally
                     {
@@ -403,6 +414,9 @@ namespace winC2D
                 appDataContextMenu.Items[2].Text = Localization.T("Menu.OpenInExplorer");
                 appDataContextMenu.Items[3].Text = Localization.T("Menu.Check");
             }
+            AutoSizeListViewColumns(listViewSoftware);
+            AutoSizeListViewColumns(listViewAppData);
+            AdjustFormWidthToListViews();
             UpdateThemeMenuChecks();
         }
 
@@ -439,25 +453,49 @@ namespace winC2D
             menuThemeDark.Checked = (ThemeManager.CurrentTheme == AppTheme.Dark);
         }
 
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+        [DllImport("uxtheme.dll", CharSet = CharSet.Unicode)]
+        private static extern int SetWindowTheme(IntPtr hWnd, string pszSubAppName, string pszSubIdList);
+
+        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+
+        private void SetTitleBarTheme(bool dark)
+        {
+            if (Environment.OSVersion.Version.Major >= 10)
+            {
+                int useImmersiveDarkMode = dark ? 1 : 0;
+                DwmSetWindowAttribute(this.Handle, DWMWA_USE_IMMERSIVE_DARK_MODE, ref useImmersiveDarkMode, sizeof(int));
+            }
+        }
+
         private void ApplyTheme(AppTheme theme)
         {
+            // Set Title Bar Theme
+            SetTitleBarTheme(theme == AppTheme.Dark);
+
             currentPalette = ThemeManager.GetPalette(theme);
             BackColor = currentPalette.FormBackground;
             ForeColor = currentPalette.Foreground;
             menuStrip1.BackColor = currentPalette.MenuBackground;
             menuStrip1.ForeColor = currentPalette.MenuForeground;
             menuStrip1.Renderer = new ModernToolStripRenderer(currentPalette);
+            
+            // Recursively apply theme to all menu items
             foreach (ToolStripItem item in menuStrip1.Items)
             {
-                item.ForeColor = currentPalette.MenuForeground;
-                item.Font = this.Font;
+                ApplyThemeToMenuItem(item, currentPalette);
             }
+
+            // Update X86 controls visuals
+            UpdateCustomX86Visuals(currentPalette);
 
             tabControl1.BackColor = currentPalette.TabControlBackground;
             foreach (TabPage tab in tabControl1.TabPages)
             {
                 tab.BackColor = currentPalette.TabPageBackground;
-                tab.ForeColor = currentPalette.Foreground;
+                tab.ForeColor = currentPalette.Foreground; // TabPage ForeColor is often ignored by controls but good to set
             }
 
             StyleControlsForTheme(this, currentPalette);
@@ -466,8 +504,261 @@ namespace winC2D
                 StyleButton(btn, currentPalette, IsAccentButton(btn));
             }
 
+            ApplyListViewTheme(listViewSoftware, currentPalette);
+            ApplyListViewTheme(listViewAppData, currentPalette);
+
             tabControl1.Invalidate();
             UpdateThemeMenuChecks();
+        }
+
+        private void InitializeListViewTheme(ListView listView)
+        {
+            if (listView == null) return;
+            listView.OwnerDraw = true;
+            listView.DrawColumnHeader += ListView_DrawColumnHeader;
+            listView.DrawItem += ListView_DrawItem;
+            listView.DrawSubItem += ListView_DrawSubItem;
+            listView.MouseMove += (s, e) =>
+            {
+                var hit = listView.HitTest(e.Location);
+                UpdateListViewHover(listView, hit.Item?.Index ?? -1);
+            };
+            listView.MouseLeave += (s, e) => UpdateListViewHover(listView, -1);
+        }
+
+        private void ApplyListViewTheme(ListView listView, ThemePalette palette)
+        {
+            if (listView == null) return;
+            listView.BackColor = palette.ListViewBackground;
+            listView.ForeColor = palette.ListViewForeground;
+            listView.BorderStyle = BorderStyle.None;
+            listView.Font = this.Font;
+
+            var themeName = ThemeManager.CurrentTheme == AppTheme.Dark ? "DarkMode_Explorer" : "Explorer";
+            SetWindowTheme(listView.Handle, themeName, null);
+            listView.Invalidate();
+        }
+
+        private void ListView_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
+        {
+            if (ThemeManager.CurrentTheme != AppTheme.Dark)
+            {
+                e.DrawDefault = true;
+                return;
+            }
+
+            var listView = (ListView)sender;
+            var palette = currentPalette ?? ThemeManager.GetPalette(ThemeManager.CurrentTheme);
+            var headerBackground = palette.ListViewHeaderBackground.A == 0 ? palette.ControlBackground : palette.ListViewHeaderBackground;
+            using (var brush = new SolidBrush(headerBackground))
+            {
+                e.Graphics.FillRectangle(brush, e.Bounds);
+            }
+
+            using (var pen = new Pen(palette.ButtonBorder))
+            {
+                e.Graphics.DrawLine(pen, e.Bounds.Left, e.Bounds.Bottom - 1, e.Bounds.Right, e.Bounds.Bottom - 1);
+            }
+
+            if (e.ColumnIndex == listView.Columns.Count - 1)
+            {
+                var remainingWidth = listView.ClientSize.Width - e.Bounds.Right;
+                if (remainingWidth > 0)
+                {
+                    var extraBounds = new Rectangle(e.Bounds.Right, e.Bounds.Top, remainingWidth, e.Bounds.Height);
+                    using (var brush = new SolidBrush(headerBackground))
+                    {
+                        e.Graphics.FillRectangle(brush, extraBounds);
+                    }
+
+                    using (var pen = new Pen(palette.ButtonBorder))
+                    {
+                        e.Graphics.DrawLine(pen, extraBounds.Left, extraBounds.Bottom - 1, extraBounds.Right, extraBounds.Bottom - 1);
+                    }
+                }
+            }
+
+            TextRenderer.DrawText(e.Graphics, e.Header.Text, this.Font, e.Bounds, palette.ListViewHeaderForeground,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+        }
+
+        private void ListView_DrawItem(object sender, DrawListViewItemEventArgs e)
+        {
+            if (ThemeManager.CurrentTheme != AppTheme.Dark)
+            {
+                e.DrawDefault = true;
+                return;
+            }
+
+            var listView = (ListView)sender;
+            var palette = currentPalette ?? ThemeManager.GetPalette(ThemeManager.CurrentTheme);
+            var bounds = GetListViewRowBounds(listView, e.Bounds);
+            var backColor = GetListViewRowBackColor(listView, e.ItemIndex, e.Item.Selected);
+            using (var brush = new SolidBrush(backColor))
+            {
+                e.Graphics.FillRectangle(brush, bounds);
+            }
+
+            using (var pen = new Pen(palette.ListViewGridColor))
+            {
+                e.Graphics.DrawLine(pen, bounds.Left, bounds.Bottom - 1, bounds.Right, bounds.Bottom - 1);
+            }
+        }
+
+        private void ListView_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
+        {
+            if (ThemeManager.CurrentTheme != AppTheme.Dark)
+            {
+                e.DrawDefault = true;
+                return;
+            }
+
+            var listView = (ListView)sender;
+            var palette = currentPalette ?? ThemeManager.GetPalette(ThemeManager.CurrentTheme);
+            var textBounds = e.Bounds;
+
+            if (e.ColumnIndex == 0 && listView.CheckBoxes)
+            {
+                var checkState = e.Item.Checked ? CheckBoxState.CheckedNormal : CheckBoxState.UncheckedNormal;
+                var checkSize = CheckBoxRenderer.GetGlyphSize(e.Graphics, checkState);
+                var checkLocation = new Point(textBounds.Left + 4, textBounds.Top + (textBounds.Height - checkSize.Height) / 2);
+                CheckBoxRenderer.DrawCheckBox(e.Graphics, checkLocation, checkState);
+                textBounds.X += checkSize.Width + 8;
+                textBounds.Width -= checkSize.Width + 8;
+            }
+
+            TextRenderer.DrawText(e.Graphics, e.SubItem.Text, this.Font, textBounds, palette.ListViewForeground,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+            using (var pen = new Pen(palette.ListViewGridColor))
+            {
+                e.Graphics.DrawLine(pen, e.Bounds.Right - 1, e.Bounds.Top, e.Bounds.Right - 1, e.Bounds.Bottom);
+            }
+        }
+
+        private Rectangle GetListViewRowBounds(ListView listView, Rectangle itemBounds)
+        {
+            return new Rectangle(0, itemBounds.Top, listView.ClientSize.Width, itemBounds.Height);
+        }
+
+        private void UpdateListViewHover(ListView listView, int hoverIndex)
+        {
+            if (listView == null) return;
+            listViewHoverIndex.TryGetValue(listView, out var currentIndex);
+            if (currentIndex == hoverIndex) return;
+            listViewHoverIndex[listView] = hoverIndex;
+
+            if (currentIndex >= 0 && currentIndex < listView.Items.Count)
+            {
+                var bounds = GetListViewRowBounds(listView, listView.Items[currentIndex].Bounds);
+                listView.Invalidate(bounds);
+            }
+
+            if (hoverIndex >= 0 && hoverIndex < listView.Items.Count)
+            {
+                var bounds = GetListViewRowBounds(listView, listView.Items[hoverIndex].Bounds);
+                listView.Invalidate(bounds);
+            }
+        }
+
+        private Color GetListViewRowBackColor(ListView listView, int itemIndex, bool selected)
+        {
+            var palette = currentPalette ?? ThemeManager.GetPalette(ThemeManager.CurrentTheme);
+            if (selected)
+            {
+                return palette.ListViewRowSelectedBackground;
+            }
+
+            listViewHoverIndex.TryGetValue(listView, out var hoverIndex);
+            if (hoverIndex == itemIndex)
+            {
+                return palette.ListViewRowHoverBackground;
+            }
+
+            return (itemIndex % 2 == 0) ? palette.ListViewRowBackground : palette.ListViewRowAlternateBackground;
+        }
+
+        private void AutoSizeListViewColumns(ListView listView)
+        {
+            if (listView == null || listView.Columns.Count == 0)
+                return;
+
+            var font = listView.Font;
+            int checkPadding = listView.CheckBoxes ? SystemInformation.MenuCheckSize.Width + 8 : 0;
+            for (int i = 0; i < listView.Columns.Count; i++)
+            {
+                int maxWidth = TextRenderer.MeasureText(listView.Columns[i].Text ?? string.Empty, font).Width + 20;
+                foreach (ListViewItem item in listView.Items)
+                {
+                    string text = i < item.SubItems.Count ? item.SubItems[i].Text : item.Text;
+                    int width = TextRenderer.MeasureText(text ?? string.Empty, font).Width + 20;
+                    if (width > maxWidth)
+                        maxWidth = width;
+                }
+                if (i == 0)
+                {
+                    maxWidth += checkPadding;
+                }
+                listView.Columns[i].Width = maxWidth;
+            }
+        }
+
+        private void AdjustFormWidthToListViews()
+        {
+            int maxListWidth = Math.Max(GetListViewContentWidth(listViewSoftware), GetListViewContentWidth(listViewAppData));
+            if (maxListWidth <= 0)
+                return;
+
+            int desiredClientWidth = maxListWidth + (ClientSize.Width - listViewSoftware.Width);
+            int borderWidth = Width - ClientSize.Width;
+            int maxWidth = Screen.FromControl(this).WorkingArea.Width - borderWidth;
+            int newClientWidth = Math.Min(desiredClientWidth, maxWidth);
+            if (newClientWidth > ClientSize.Width)
+            {
+                ClientSize = new Size(newClientWidth, ClientSize.Height);
+            }
+        }
+
+        private int GetListViewContentWidth(ListView listView)
+        {
+            if (listView == null || listView.Columns.Count == 0)
+                return 0;
+
+            int columnWidth = listView.Columns.Cast<ColumnHeader>().Sum(column => column.Width);
+            return columnWidth + SystemInformation.VerticalScrollBarWidth + 12;
+        }
+
+        private void ApplyThemeToMenuItem(ToolStripItem item, ThemePalette palette)
+        {
+            item.ForeColor = palette.MenuForeground;
+            item.BackColor = palette.MenuBackground;
+            item.Font = this.Font;
+            
+            if (item is ToolStripMenuItem menuItem)
+            {
+                foreach (ToolStripItem sub in menuItem.DropDownItems)
+                {
+                    ApplyThemeToMenuItem(sub, palette);
+                }
+            }
+        }
+
+        private void UpdateCustomX86Visuals(ThemePalette palette)
+        {
+             // Update enabling state visually
+             bool isCustom = checkBoxCustomX86.Checked;
+             
+             // Label: dim if disabled
+             labelProgramFilesX86.ForeColor = isCustom ? palette.Foreground : Color.Gray;
+             
+             // TextBox: ReadOnly if disabled, set background to distinguish
+             textBoxProgramFilesX86.ReadOnly = !isCustom;
+             textBoxProgramFilesX86.BackColor = isCustom ? palette.ControlBackground : (ThemeManager.CurrentTheme == AppTheme.Dark ? Color.FromArgb(40, 40, 40) : Color.FromArgb(240, 240, 240));
+             textBoxProgramFilesX86.ForeColor = isCustom ? palette.Foreground : Color.Gray;
+             
+             // Button enabling handled by property but we can force update visual? 
+             // ModernButton OnPaint handles Enabled property automatically.
+             buttonBrowseProgramFilesX86.Enabled = isCustom;
         }
 
         private void StyleControlsForTheme(Control parent, ThemePalette palette)
@@ -482,11 +773,23 @@ namespace winC2D
                 switch (control)
                 {
                     case Label lbl:
-                        lbl.ForeColor = palette.Foreground;
+                        // Skip specific labels if handled elsewhere, or update generally
+                        if (lbl == labelProgramFilesX86) 
+                            lbl.ForeColor = checkBoxCustomX86.Checked ? palette.Foreground : Color.Gray;
+                        else
+                            lbl.ForeColor = palette.Foreground;
                         break;
                     case TextBox tb:
-                        tb.BackColor = palette.ControlBackground;
-                        tb.ForeColor = palette.Foreground;
+                        if (tb == textBoxProgramFilesX86 && !checkBoxCustomX86.Checked)
+                        {
+                            tb.BackColor = (ThemeManager.CurrentTheme == AppTheme.Dark) ? Color.FromArgb(40, 40, 40) : Color.FromArgb(240, 240, 240);
+                            tb.ForeColor = Color.Gray;
+                        }
+                        else
+                        {
+                            tb.BackColor = palette.ControlBackground;
+                            tb.ForeColor = palette.Foreground;
+                        }
                         tb.BorderStyle = BorderStyle.FixedSingle;
                         break;
                     case CheckBox chk:
@@ -498,10 +801,7 @@ namespace winC2D
                         gb.BackColor = palette.TabPageBackground;
                         break;
                     case ListView lv:
-                        lv.BackColor = palette.ListViewBackground;
-                        lv.ForeColor = palette.ListViewForeground;
-                        lv.BorderStyle = BorderStyle.None;
-                        lv.Font = this.Font;
+                        ApplyListViewTheme(lv, palette);
                         break;
                     case TabPage page:
                         page.BackColor = palette.TabPageBackground;
@@ -609,9 +909,57 @@ namespace winC2D
                 }
             }
 
+            protected override void OnRenderItemCheck(ToolStripItemImageRenderEventArgs e)
+            {
+                var checkBounds = new Rectangle(e.ImageRectangle.X + 2, e.ImageRectangle.Y + 2, 14, 14);
+                using (var brush = new SolidBrush(palette.MenuItemHover))
+                {
+                    e.Graphics.FillRectangle(brush, checkBounds);
+                }
+                ControlPaint.DrawMenuGlyph(e.Graphics, checkBounds, MenuGlyph.Checkmark, palette.MenuForeground, Color.Transparent);
+            }
+            
+            protected override void OnRenderItemText(ToolStripItemTextRenderEventArgs e)
+            {
+                e.TextColor = palette.MenuForeground;
+                base.OnRenderItemText(e);
+            }
+
+            protected override void OnRenderArrow(ToolStripArrowRenderEventArgs e)
+            {
+                e.ArrowColor = palette.MenuForeground;
+                base.OnRenderArrow(e);
+            }
+
             protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
             {
                 // Do nothing so the strip stays borderless.
+            }
+
+            protected override void OnRenderToolStripBackground(ToolStripRenderEventArgs e)
+            {
+                using (var brush = new SolidBrush(palette.MenuBackground))
+                {
+                    e.Graphics.FillRectangle(brush, e.AffectedBounds);
+                }
+            }
+            
+            protected override void OnRenderImageMargin(ToolStripRenderEventArgs e)
+            {
+                // Custom draw or just fill background to match menu
+                using (var brush = new SolidBrush(palette.MenuBackground))
+                {
+                    e.Graphics.FillRectangle(brush, e.AffectedBounds); 
+                }
+            }
+            
+            protected override void OnRenderSeparator(ToolStripSeparatorRenderEventArgs e)
+            {
+                using (var pen = new Pen(palette.ButtonBorder)) // Use button border color for separators
+                {
+                     int mid = e.Item.Height / 2;
+                     e.Graphics.DrawLine(pen, new Point(e.Item.Padding.Left, mid), new Point(e.Item.Width - e.Item.Padding.Right, mid));
+                }
             }
         }
 
@@ -969,13 +1317,15 @@ namespace winC2D
         private void checkBoxCustomX86_CheckedChanged(object sender, EventArgs e)
         {
             bool customEnabled = checkBoxCustomX86.Checked;
-            labelProgramFilesX86.Enabled = customEnabled;
-            textBoxProgramFilesX86.Enabled = customEnabled;
-            buttonBrowseProgramFilesX86.Enabled = customEnabled;
+            //labelProgramFilesX86.Enabled = customEnabled; // Use visual dimming instead
+            //textBoxProgramFilesX86.Enabled = customEnabled; // Use ReadOnly instead
+            
+            // Visual logic handled by Helper
+            UpdateCustomX86Visuals(currentPalette ?? ThemeManager.GetPalette(ThemeManager.CurrentTheme));
 
             if (!customEnabled && Environment.Is64BitOperatingSystem)
             {
-                // 关闭自定义时，32位路径等于64位路径，且不可编辑
+                // 关闭自定义时，32位路径等于64位路径
                 textBoxProgramFilesX86.Text = textBoxProgramFiles.Text;
             }
             EnsureDefaultScanPaths();
