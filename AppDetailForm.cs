@@ -4,11 +4,16 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace winC2D
 {
     public class AppDetailForm : Form
     {
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+
         public AppDetailForm(Icon appIcon)
         {
             this.Text = "关于 winC2D";
@@ -17,6 +22,14 @@ namespace winC2D
             this.MinimizeBox = false;
             this.StartPosition = FormStartPosition.CenterParent;
             this.ClientSize = new Size(400, 220);
+            
+            // Apply Font
+            this.Font = new Font("Segoe UI Variable", 9F, FontStyle.Regular, GraphicsUnit.Point);
+
+            ApplyTheme(ThemeManager.CurrentTheme);
+            ThemeManager.ThemeChanged += (s, e) => ApplyTheme(ThemeManager.CurrentTheme);
+            this.FormClosing += (s, e) => ThemeManager.ThemeChanged -= (EventHandler)((s2, e2) => ApplyTheme(ThemeManager.CurrentTheme)); 
+            // Note: lambda subscription unsubscribe tricky, simplified here assumption form is short lived modal
 
             var bestBitmap = ExtractBestIconBitmap();
             var pictureBox = new PictureBox
@@ -31,7 +44,7 @@ namespace winC2D
             var labelTitle = new Label
             {
                 Text = "winC2D",
-                Font = new Font(FontFamily.GenericSansSerif, 12, FontStyle.Bold),
+                Font = new Font("Segoe UI Variable", 12, FontStyle.Bold),
                 Location = new Point(100, 20),
                 AutoSize = true
             };
@@ -68,6 +81,26 @@ namespace winC2D
                 AutoSize = true
             };
             this.Controls.Add(labelCopyright);
+            
+            ApplyTheme(ThemeManager.CurrentTheme); // Apply again to ensure controls created are styled
+        }
+
+        private void ApplyTheme(AppTheme theme)
+        {
+            var palette = ThemeManager.GetPalette(theme);
+            if (Environment.OSVersion.Version.Major >= 10)
+            {
+                int useImmersiveDarkMode = (theme == AppTheme.Dark) ? 1 : 0;
+                DwmSetWindowAttribute(this.Handle, DWMWA_USE_IMMERSIVE_DARK_MODE, ref useImmersiveDarkMode, sizeof(int));
+            }
+            this.BackColor = palette.FormBackground;
+            this.ForeColor = palette.Foreground;
+            
+            foreach(Control c in this.Controls)
+            {
+                if (c is Label lbl) lbl.ForeColor = palette.Foreground;
+                if (c is LinkLabel ll) ll.LinkColor = palette.Accent;
+            }
         }
 
         // 优先提取256x256的Bitmap（如有），否则返回null

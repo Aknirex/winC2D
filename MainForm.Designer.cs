@@ -10,15 +10,15 @@ namespace winC2D
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        private System.Windows.Forms.ListView listViewSoftware;
+        private winC2D.ThemedListView listViewSoftware;
         private System.Windows.Forms.ColumnHeader columnHeaderName;
         private System.Windows.Forms.ColumnHeader columnHeaderPath;
         private System.Windows.Forms.ColumnHeader columnHeaderSize;
         private System.Windows.Forms.ColumnHeader columnHeaderStatus; // Êñ∞Â¢ûÁä∂ÊÄÅÂàó
-        private System.Windows.Forms.Button buttonMigrateSoftware;
+        private winC2D.ModernButton buttonMigrateSoftware;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem menuLog;
-        private System.Windows.Forms.TabControl tabControl1;
+        private winC2D.ModernTabControl tabControl1;
         private System.Windows.Forms.TabPage tabPageSettings;
         private System.Windows.Forms.TabPage tabPageSoftware;
         private System.Windows.Forms.TabPage tabPageAppData;
@@ -26,27 +26,27 @@ namespace winC2D
         // Settings tab controls
         private System.Windows.Forms.GroupBox groupBoxProgramFiles;
         private System.Windows.Forms.Label labelProgramFilesNote;
-        private System.Windows.Forms.Button buttonResetProgramFiles;
-        private System.Windows.Forms.Button buttonApplyProgramFiles;
-        private System.Windows.Forms.Button buttonBrowseProgramFilesX86;
+        private winC2D.ModernButton buttonResetProgramFiles;
+        private winC2D.ModernButton buttonApplyProgramFiles;
+        private winC2D.ModernButton buttonBrowseProgramFilesX86;
         private System.Windows.Forms.TextBox textBoxProgramFilesX86;
         private System.Windows.Forms.Label labelProgramFilesX86;
         private System.Windows.Forms.CheckBox checkBoxCustomX86;
-        private System.Windows.Forms.Button buttonBrowseProgramFiles;
+        private winC2D.ModernButton buttonBrowseProgramFiles;
         private System.Windows.Forms.TextBox textBoxProgramFiles;
         private System.Windows.Forms.Label labelProgramFiles;
         private System.Windows.Forms.GroupBox groupBoxStoragePolicy;
         private System.Windows.Forms.Label labelStoragePolicyNote;
-        private System.Windows.Forms.Button buttonOpenWindowsStorage;
+        private winC2D.ModernButton buttonOpenWindowsStorage;
         
-        private System.Windows.Forms.ListView listViewAppData;
+        private winC2D.ThemedListView listViewAppData;
         private System.Windows.Forms.ColumnHeader columnHeaderAppName;
         private System.Windows.Forms.ColumnHeader columnHeaderAppPath;
         private System.Windows.Forms.ColumnHeader columnHeaderAppSize;
         private System.Windows.Forms.ColumnHeader columnHeaderAppStatus; // Â∞ÜÁ±ªÂûãÂàóÊîπ‰∏∫Áä∂ÊÄÅÂàó
-        private System.Windows.Forms.Button buttonMigrateAppData;
-        private System.Windows.Forms.Button buttonRefreshAppData;
-        private System.Windows.Forms.Button buttonCheckSuspiciousAppData;
+        private winC2D.ModernButton buttonMigrateAppData;
+        private winC2D.ModernButton buttonRefreshAppData;
+        private winC2D.ModernButton buttonCheckSuspiciousAppData;
         private System.Windows.Forms.ToolStripMenuItem menuLanguage;
         private System.Windows.Forms.ToolStripMenuItem menuLanguageEnglish;
         private System.Windows.Forms.ToolStripMenuItem menuLanguageChinese;
@@ -55,9 +55,9 @@ namespace winC2D
         private System.Windows.Forms.ToolStripMenuItem menuLanguageRussian;
         private System.Windows.Forms.ToolStripMenuItem menuLanguageChineseTraditional;
         private System.Windows.Forms.ToolStripMenuItem menuLanguagePortuguese;
-        private System.Windows.Forms.Button buttonRefreshSoftware;
-        private System.Windows.Forms.Button buttonCheckSuspicious;
-        private System.Windows.Forms.Button buttonManageScanPaths;
+        private winC2D.ModernButton buttonRefreshSoftware;
+        private winC2D.ModernButton buttonCheckSuspicious;
+        private winC2D.ModernButton buttonManageScanPaths;
         private System.Windows.Forms.ToolStripMenuItem menuTheme;
         private System.Windows.Forms.ToolStripMenuItem menuThemeLight;
         private System.Windows.Forms.ToolStripMenuItem menuThemeDark;
@@ -92,39 +92,39 @@ namespace winC2D
             menuTheme = new ToolStripMenuItem();
             menuThemeLight = new ToolStripMenuItem();
             menuThemeDark = new ToolStripMenuItem();
-            tabControl1 = new TabControl();
+            tabControl1 = new winC2D.ModernTabControl();
             tabPageSoftware = new TabPage();
-            listViewSoftware = new ListView();
+            listViewSoftware = new winC2D.ThemedListView();
             columnHeaderName = new ColumnHeader();
             columnHeaderPath = new ColumnHeader();
             columnHeaderSize = new ColumnHeader();
             columnHeaderStatus = new ColumnHeader();
-            buttonMigrateSoftware = new Button();
-            buttonRefreshSoftware = new Button();
-            buttonCheckSuspicious = new Button();
-            buttonManageScanPaths = new Button();
+            buttonMigrateSoftware = new winC2D.ModernButton();
+            buttonRefreshSoftware = new winC2D.ModernButton();
+            buttonCheckSuspicious = new winC2D.ModernButton();
+            buttonManageScanPaths = new winC2D.ModernButton();
             tabPageAppData = new TabPage();
-            listViewAppData = new ListView();
+            listViewAppData = new winC2D.ThemedListView();
             columnHeaderAppName = new ColumnHeader();
             columnHeaderAppPath = new ColumnHeader();
             columnHeaderAppSize = new ColumnHeader();
             columnHeaderAppStatus = new ColumnHeader();
-            buttonMigrateAppData = new Button();
-            buttonRefreshAppData = new Button();
-            buttonCheckSuspiciousAppData = new Button();
+            buttonMigrateAppData = new winC2D.ModernButton();
+            buttonRefreshAppData = new winC2D.ModernButton();
+            buttonCheckSuspiciousAppData = new winC2D.ModernButton();
             tabPageSettings = new TabPage();
             groupBoxStoragePolicy = new GroupBox();
-            buttonOpenWindowsStorage = new Button();
+            buttonOpenWindowsStorage = new winC2D.ModernButton();
             labelStoragePolicyNote = new Label();
             groupBoxProgramFiles = new GroupBox();
             labelProgramFilesNote = new Label();
-            buttonResetProgramFiles = new Button();
-            buttonApplyProgramFiles = new Button();
-            buttonBrowseProgramFilesX86 = new Button();
+            buttonResetProgramFiles = new winC2D.ModernButton();
+            buttonApplyProgramFiles = new winC2D.ModernButton();
+            buttonBrowseProgramFilesX86 = new winC2D.ModernButton();
             textBoxProgramFilesX86 = new TextBox();
             labelProgramFilesX86 = new Label();
             checkBoxCustomX86 = new CheckBox();
-            buttonBrowseProgramFiles = new Button();
+            buttonBrowseProgramFiles = new winC2D.ModernButton();
             textBoxProgramFiles = new TextBox();
             labelProgramFiles = new Label();
             menuStrip1.SuspendLayout();
@@ -152,7 +152,7 @@ namespace winC2D
             // 
             menuLog.Name = "menuLog";
             menuLog.Size = new System.Drawing.Size(68, 21);
-            menuLog.Text = "ËøÅÁßªÊó•Âøó";
+            menuLog.Text = "«®“∆»’÷æ";
             menuLog.Click += menuLog_Click;
             // 
             // menuLanguage
@@ -160,7 +160,7 @@ namespace winC2D
             menuLanguage.DropDownItems.AddRange(new ToolStripItem[] { menuLanguageEnglish, menuLanguageChinese, menuLanguageChineseTraditional, menuLanguageJapanese, menuLanguageKorean, menuLanguageRussian, menuLanguagePortuguese });
             menuLanguage.Name = "menuLanguage";
             menuLanguage.Size = new System.Drawing.Size(44, 21);
-            menuLanguage.Text = "ËØ≠Ë®Ä";
+            menuLanguage.Text = "”Ô—‘";
             // 
             // menuLanguageEnglish
             // 
@@ -173,42 +173,42 @@ namespace winC2D
             // 
             menuLanguageChinese.Name = "menuLanguageChinese";
             menuLanguageChinese.Size = new System.Drawing.Size(179, 22);
-            menuLanguageChinese.Text = "ÁÆÄ‰Ωì‰∏≠Êñá";
+            menuLanguageChinese.Text = "ºÚÃÂ÷–Œƒ";
             menuLanguageChinese.Click += menuLanguageChinese_Click;
             // 
             // menuLanguageChineseTraditional
             // 
             menuLanguageChineseTraditional.Name = "menuLanguageChineseTraditional";
             menuLanguageChineseTraditional.Size = new System.Drawing.Size(179, 22);
-            menuLanguageChineseTraditional.Text = "ÁπÅÈ´î‰∏≠Êñá";
+            menuLanguageChineseTraditional.Text = "∑±Ûw÷–Œƒ";
             menuLanguageChineseTraditional.Click += menuLanguageChineseTraditional_Click;
             // 
             // menuLanguageJapanese
             // 
             menuLanguageJapanese.Name = "menuLanguageJapanese";
             menuLanguageJapanese.Size = new System.Drawing.Size(179, 22);
-            menuLanguageJapanese.Text = "Êó•Êú¨Ë™û";
+            menuLanguageJapanese.Text = "»’±æ’Z";
             menuLanguageJapanese.Click += menuLanguageJapanese_Click;
             // 
             // menuLanguageKorean
             // 
             menuLanguageKorean.Name = "menuLanguageKorean";
             menuLanguageKorean.Size = new System.Drawing.Size(179, 22);
-            menuLanguageKorean.Text = "ÌïúÍµ≠Ïñ¥";
+            menuLanguageKorean.Text = "???";
             menuLanguageKorean.Click += menuLanguageKorean_Click;
             // 
             // menuLanguageRussian
             // 
             menuLanguageRussian.Name = "menuLanguageRussian";
             menuLanguageRussian.Size = new System.Drawing.Size(179, 22);
-            menuLanguageRussian.Text = "–†—É—Å—Å–∫–∏–π";
+            menuLanguageRussian.Text = "ß≤ßÂß„ß„ß‹ß⁄ß€";
             menuLanguageRussian.Click += menuLanguageRussian_Click;
             // 
             // menuLanguagePortuguese
             // 
             menuLanguagePortuguese.Name = "menuLanguagePortuguese";
             menuLanguagePortuguese.Size = new System.Drawing.Size(179, 22);
-            menuLanguagePortuguese.Text = "Portugu√™s (Brasil)";
+            menuLanguagePortuguese.Text = "Portugu®∫s (Brasil)";
             menuLanguagePortuguese.Click += menuLanguagePortuguese_Click;
             // 
             // menuTheme
@@ -260,7 +260,7 @@ namespace winC2D
             tabPageSoftware.Padding = new Padding(3);
             tabPageSoftware.Size = new System.Drawing.Size(971, 530);
             tabPageSoftware.TabIndex = 1;
-            tabPageSoftware.Text = "ËΩØ‰ª∂ËøÅÁßª";
+            tabPageSoftware.Text = "»Ìº˛«®“∆";
             tabPageSoftware.UseVisualStyleBackColor = false;
             // 
             // listViewSoftware
@@ -279,22 +279,22 @@ namespace winC2D
             // 
             // columnHeaderName
             // 
-            columnHeaderName.Text = "ËΩØ‰ª∂ÂêçÁß∞";
+            columnHeaderName.Text = "»Ìº˛√˚≥∆";
             columnHeaderName.Width = 220;
             // 
             // columnHeaderPath
             // 
-            columnHeaderPath.Text = "ÂÆâË£ÖË∑ØÂæÑ";
+            columnHeaderPath.Text = "∞≤◊∞¬∑æ∂";
             columnHeaderPath.Width = 480;
             // 
             // columnHeaderSize
             // 
-            columnHeaderSize.Text = "Â§ßÂ∞è";
+            columnHeaderSize.Text = "¥Û–°";
             columnHeaderSize.Width = 120;
             // 
             // columnHeaderStatus
             // 
-            columnHeaderStatus.Text = "Áä∂ÊÄÅ";
+            columnHeaderStatus.Text = "◊¥Ã¨";
             columnHeaderStatus.Width = 120;
             // 
             // buttonMigrateSoftware
@@ -304,7 +304,7 @@ namespace winC2D
             buttonMigrateSoftware.Name = "buttonMigrateSoftware";
             buttonMigrateSoftware.Size = new System.Drawing.Size(98, 27);
             buttonMigrateSoftware.TabIndex = 1;
-            buttonMigrateSoftware.Text = "ËøÅÁßªÊâÄÈÄâ";
+            buttonMigrateSoftware.Text = "«®“∆À˘—°";
             buttonMigrateSoftware.UseVisualStyleBackColor = true;
             buttonMigrateSoftware.Click += buttonMigrateSoftware_Click;
             // 
@@ -315,7 +315,7 @@ namespace winC2D
             buttonRefreshSoftware.Name = "buttonRefreshSoftware";
             buttonRefreshSoftware.Size = new System.Drawing.Size(98, 27);
             buttonRefreshSoftware.TabIndex = 2;
-            buttonRefreshSoftware.Text = "Âà∑Êñ∞ÂàóË°®";
+            buttonRefreshSoftware.Text = "À¢–¬¡–±Ì";
             buttonRefreshSoftware.UseVisualStyleBackColor = true;
             buttonRefreshSoftware.Click += buttonRefreshSoftware_Click;
             // 
@@ -326,7 +326,7 @@ namespace winC2D
             buttonCheckSuspicious.Name = "buttonCheckSuspicious";
             buttonCheckSuspicious.Size = new System.Drawing.Size(98, 27);
             buttonCheckSuspicious.TabIndex = 3;
-            buttonCheckSuspicious.Text = "Ê£ÄÊü•ÂèØÁñë";
+            buttonCheckSuspicious.Text = "ºÏ≤Èø…“…";
             buttonCheckSuspicious.UseVisualStyleBackColor = true;
             buttonCheckSuspicious.Click += buttonCheckSuspiciousSoftware_Click;
             // 
@@ -337,7 +337,7 @@ namespace winC2D
             buttonManageScanPaths.Name = "buttonManageScanPaths";
             buttonManageScanPaths.Size = new System.Drawing.Size(150, 27);
             buttonManageScanPaths.TabIndex = 4;
-            buttonManageScanPaths.Text = "Êâ´ÊèèË∑ØÂæÑ";
+            buttonManageScanPaths.Text = "…®√Ë¬∑æ∂";
             buttonManageScanPaths.UseVisualStyleBackColor = true;
             buttonManageScanPaths.Click += buttonManageScanPaths_Click;
             // 
@@ -371,22 +371,22 @@ namespace winC2D
             // 
             // columnHeaderAppName
             // 
-            columnHeaderAppName.Text = "Â∫îÁî®ÂêçÁß∞";
+            columnHeaderAppName.Text = "”¶”√√˚≥∆";
             columnHeaderAppName.Width = 260;
             // 
             // columnHeaderAppPath
             // 
-            columnHeaderAppPath.Text = "Ë∑ØÂæÑ";
+            columnHeaderAppPath.Text = "¬∑æ∂";
             columnHeaderAppPath.Width = 500;
             // 
             // columnHeaderAppSize
             // 
-            columnHeaderAppSize.Text = "Â§ßÂ∞è";
+            columnHeaderAppSize.Text = "¥Û–°";
             columnHeaderAppSize.Width = 120;
             // 
             // columnHeaderAppStatus
             // 
-            columnHeaderAppStatus.Text = "Áä∂ÊÄÅ";
+            columnHeaderAppStatus.Text = "◊¥Ã¨";
             columnHeaderAppStatus.Width = 80;
             // 
             // buttonMigrateAppData
@@ -396,7 +396,7 @@ namespace winC2D
             buttonMigrateAppData.Name = "buttonMigrateAppData";
             buttonMigrateAppData.Size = new System.Drawing.Size(98, 27);
             buttonMigrateAppData.TabIndex = 1;
-            buttonMigrateAppData.Text = "ËøÅÁßªÊâÄÈÄâ";
+            buttonMigrateAppData.Text = "«®“∆À˘—°";
             buttonMigrateAppData.UseVisualStyleBackColor = true;
             buttonMigrateAppData.Click += buttonMigrateAppData_Click;
             // 
@@ -407,7 +407,7 @@ namespace winC2D
             buttonRefreshAppData.Name = "buttonRefreshAppData";
             buttonRefreshAppData.Size = new System.Drawing.Size(98, 27);
             buttonRefreshAppData.TabIndex = 2;
-            buttonRefreshAppData.Text = "Âà∑Êñ∞ÂàóË°®";
+            buttonRefreshAppData.Text = "À¢–¬¡–±Ì";
             buttonRefreshAppData.UseVisualStyleBackColor = true;
             buttonRefreshAppData.Click += buttonRefreshAppData_Click;
             // 
@@ -418,7 +418,7 @@ namespace winC2D
             buttonCheckSuspiciousAppData.Name = "buttonCheckSuspiciousAppData";
             buttonCheckSuspiciousAppData.Size = new System.Drawing.Size(98, 27);
             buttonCheckSuspiciousAppData.TabIndex = 3;
-            buttonCheckSuspiciousAppData.Text = "Ê£ÄÊü•ÂèØÁñë";
+            buttonCheckSuspiciousAppData.Text = "ºÏ≤Èø…“…";
             buttonCheckSuspiciousAppData.UseVisualStyleBackColor = true;
             buttonCheckSuspiciousAppData.Click += buttonCheckSuspiciousAppData_Click;
             // 
@@ -431,7 +431,7 @@ namespace winC2D
             tabPageSettings.Padding = new Padding(3);
             tabPageSettings.Size = new System.Drawing.Size(971, 530);
             tabPageSettings.TabIndex = 0;
-            tabPageSettings.Text = "Á≥ªÁªüËÆæÁΩÆ";
+            tabPageSettings.Text = "œµÕ≥…Ë÷√";
             tabPageSettings.UseVisualStyleBackColor = false;
             // 
             // groupBoxStoragePolicy
@@ -465,7 +465,7 @@ namespace winC2D
             labelStoragePolicyNote.Name = "labelStoragePolicyNote";
             labelStoragePolicyNote.Size = new System.Drawing.Size(751, 51);
             labelStoragePolicyNote.TabIndex = 0;
-            labelStoragePolicyNote.Text = "‚Ñπ Ê≠§ËÆæÁΩÆÂΩ±Âìç Microsoft Store Â∫îÁî®ÂíåÊñ∞Áî®Êà∑ÂÜÖÂÆπÔºàÊñáÊ°£„ÄÅÁÖßÁâáÁ≠âÔºâ„ÄÇÈúÄË¶Å Windows 10 ÊàñÊõ¥È´òÁâàÊú¨„ÄÇ";
+            labelStoragePolicyNote.Text = "?? ¥À…Ë÷√”∞œÏ Microsoft Store ”¶”√∫Õ–¬”√ªßƒ⁄»›°£–Ë“™ Windows 10 ªÚ∏¸∏ﬂ∞Ê±æ°£";
             // 
             // groupBoxProgramFiles
             // 
@@ -495,7 +495,7 @@ namespace winC2D
             labelProgramFilesNote.Name = "labelProgramFilesNote";
             labelProgramFilesNote.Size = new System.Drawing.Size(917, 42);
             labelProgramFilesNote.TabIndex = 9;
-            labelProgramFilesNote.Text = "‚Ñπ Ê≠§ËÆæÁΩÆÂΩ±ÂìçÈÄöËøáÂÆâË£ÖÁ®ãÂ∫èÔºà.exe„ÄÅ.msiÔºâÂÆâË£ÖÁöÑ‰º†ÁªüÊ°åÈù¢Á®ãÂ∫è„ÄÇÂ§ßÂ§öÊï∞Á¨¨‰∏âÊñπËΩØ‰ª∂‰ΩøÁî®Ê≠§‰ΩçÁΩÆ„ÄÇ";
+            labelProgramFilesNote.Text = "?? ¥À…Ë÷√”∞œÏ¥´Õ≥◊¿√Ê≥Ã–Ú°£";
             // 
             // buttonResetProgramFiles
             // 
@@ -548,7 +548,7 @@ namespace winC2D
             labelProgramFilesX86.Name = "labelProgramFilesX86";
             labelProgramFilesX86.Size = new System.Drawing.Size(202, 17);
             labelProgramFilesX86.TabIndex = 4;
-            labelProgramFilesX86.Text = "Program Files ÈªòËÆ§‰ΩçÁΩÆÔºà32‰ΩçÔºâÔºö";
+            labelProgramFilesX86.Text = "Program Files ƒ¨»œŒª÷√(32Œª):";
             // 
             // checkBoxCustomX86
             // 
@@ -557,7 +557,7 @@ namespace winC2D
             checkBoxCustomX86.Name = "checkBoxCustomX86";
             checkBoxCustomX86.Size = new System.Drawing.Size(145, 21);
             checkBoxCustomX86.TabIndex = 3;
-            checkBoxCustomX86.Text = "Ëá™ÂÆö‰πâ 32‰Ωç Á®ãÂ∫èË∑ØÂæÑ";
+            checkBoxCustomX86.Text = "Ëá™ÂÆö‰π?32‰Ω?Á®ãÂ∫èË∑ØÂæÑ";
             checkBoxCustomX86.UseVisualStyleBackColor = true;
             checkBoxCustomX86.CheckedChanged += checkBoxCustomX86_CheckedChanged;
             // 
@@ -588,7 +588,7 @@ namespace winC2D
             labelProgramFiles.Name = "labelProgramFiles";
             labelProgramFiles.Size = new System.Drawing.Size(202, 17);
             labelProgramFiles.TabIndex = 0;
-            labelProgramFiles.Text = "Program Files ÈªòËÆ§‰ΩçÁΩÆÔºà64‰ΩçÔºâÔºö";
+            labelProgramFiles.Text = "Program Files ƒ¨»œŒª÷√(64Œª):";
             // 
             // MainForm
             // 

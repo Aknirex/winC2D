@@ -3,7 +3,7 @@ namespace winC2D
     partial class LogForm
     {
         private System.ComponentModel.IContainer components = null;
-    private System.Windows.Forms.ListView listViewLog;
+    private winC2D.ThemedListView listViewLog;
     private System.Windows.Forms.Button buttonRollback;
         private System.Windows.Forms.ColumnHeader columnTime;
         private System.Windows.Forms.ColumnHeader columnName;
@@ -23,7 +23,7 @@ namespace winC2D
 
         private void InitializeComponent()
         {
-            this.listViewLog = new System.Windows.Forms.ListView();
+            this.listViewLog = new winC2D.ThemedListView();
             this.columnTime = new System.Windows.Forms.ColumnHeader();
             this.columnName = new System.Windows.Forms.ColumnHeader();
             this.columnOldPath = new System.Windows.Forms.ColumnHeader();

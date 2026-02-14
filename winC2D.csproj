@@ -8,6 +8,12 @@
    <ApplicationIcon>winc2d.ico</ApplicationIcon>
  </PropertyGroup>
  <ItemGroup>
+   <Compile Remove="winC2D-WinUI\**" />
+   <EmbeddedResource Remove="winC2D-WinUI\**" />
+   <None Remove="winC2D-WinUI\**" />
+   <Page Remove="winC2D-WinUI\**" />
+ </ItemGroup>
+ <ItemGroup>
    <EmbeddedResource Include="winc2d.ico" />
  </ItemGroup>
  <ItemGroup>
