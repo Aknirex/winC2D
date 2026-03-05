@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 using System.Runtime.InteropServices;
+using winC2D.Core;
 
 namespace winC2D
 {

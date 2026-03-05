@@ -341,9 +341,6 @@
   <data name="Menu.OpenInExplorer" xml:space="preserve">
     <value>在资源管理器中打开</value>
   </data>
-  <data name="Menu.Check" xml:space="preserve">
-    <value>检查</value>
-  </data>
   <data name="Tooltip.StatusSuspicious" xml:space="preserve">
     <value>需手动检查以确认状态。</value>
   </data>

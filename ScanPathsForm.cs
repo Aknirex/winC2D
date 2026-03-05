@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms.VisualStyles;
+using winC2D.Core;
 
 namespace winC2D
 {
@@ -28,6 +29,9 @@ namespace winC2D
         private int hoverIndex = -1;
 
         public List<ScanPathItem> Paths => paths;
+
+        /// <summary>关闭 OK 后返回用户确认的路径列表（供新版 SoftwarePage 使用）</summary>
+        public List<ScanPathItem> ResultPaths => paths;
 
         public ScanPathsForm(List<ScanPathItem> items)
         {

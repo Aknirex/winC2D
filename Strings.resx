@@ -377,4 +377,101 @@
   <data name="Menu.Check" xml:space="preserve">
     <value>Check</value>
   </data>
+  <!-- v2 新增键 -->
+  <data name="Nav.Software" xml:space="preserve">
+    <value>Software Migration</value>
+  </data>
+  <data name="Nav.AppData" xml:space="preserve">
+    <value>AppData Migration</value>
+  </data>
+  <data name="Nav.Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Nav.Log" xml:space="preserve">
+    <value>Migration Log</value>
+  </data>
+  <data name="Desc.Software" xml:space="preserve">
+    <value>Migrate installed software to another drive using symbolic links</value>
+  </data>
+  <data name="Desc.AppData" xml:space="preserve">
+    <value>Migrate AppData folders to another drive using symbolic links</value>
+  </data>
+  <data name="Desc.Settings" xml:space="preserve">
+    <value>Configure theme, language, and scan paths</value>
+  </data>
+  <data name="Label.TargetDrive" xml:space="preserve">
+    <value>Target path:</value>
+  </data>
+  <data name="Column.Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Button.Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Msg.Found" xml:space="preserve">
+    <value>Found</value>
+  </data>
+  <data name="Msg.Items" xml:space="preserve">
+    <value>items</value>
+  </data>
+  <data name="Msg.Migrating" xml:space="preserve">
+    <value>Migrating...</value>
+  </data>
+  <data name="Msg.RollingBack" xml:space="preserve">
+    <value>Rolling back...</value>
+  </data>
+  <data name="Msg.Checking" xml:space="preserve">
+    <value>Checking...</value>
+  </data>
+  <data name="Msg.Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="Msg.NoSuspicious" xml:space="preserve">
+    <value>No suspicious directories to check.</value>
+  </data>
+  <data name="Msg.NothingSelected" xml:space="preserve">
+    <value>Please select items to migrate.</value>
+  </data>
+  <data name="Msg.InvalidTargetPath" xml:space="preserve">
+    <value>Please enter a valid target path.</value>
+  </data>
+  <data name="Msg.SelectTargetDir" xml:space="preserve">
+    <value>Select target directory</value>
+  </data>
+  <data name="Msg.ConfirmMigrateFmt" xml:space="preserve">
+    <value>Migrate {0} item(s) to {1}?</value>
+  </data>
+  <data name="Msg.ConfirmRollback" xml:space="preserve">
+    <value>Roll back all migrated items from the last operation?</value>
+  </data>
+  <data name="Msg.MigrateResultFmt" xml:space="preserve">
+    <value>Done: {0} succeeded, {1} failed.</value>
+  </data>
+  <data name="Msg.NoMigrationToRollback" xml:space="preserve">
+    <value>No migration results available to roll back.</value>
+  </data>
+  <data name="Title.Confirm" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="Settings.Theme" xml:space="preserve">
+    <value>Appearance Theme</value>
+  </data>
+  <data name="Settings.About" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="About.Description" xml:space="preserve">
+    <value>winC2D v2.0  —  Windows Software / AppData Migration Tool</value>
+  </data>
+  <data name="About.Copyright" xml:space="preserve">
+    <value>© 2024 Aknirex  |  MIT License</value>
+  </data>
+  <data name="Settings.Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Button.ClearLog" xml:space="preserve">
+    <value>Clear Log</value>
+  </data>
+  <data name="Button.SaveLog" xml:space="preserve">
+    <value>Save Log</value>
+  </data>
 </root>
