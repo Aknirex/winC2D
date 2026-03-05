@@ -126,66 +126,76 @@ namespace winC2D.Core
 
         private static ThemePalette BuildLight() => new ThemePalette
         {
-            // Win11 亮色
-            Background         = Color.FromArgb(243, 243, 243),
-            SurfaceBackground  = Color.FromArgb(255, 255, 255),
-            SidebarBackground  = Color.FromArgb(238, 238, 238),
+            // ── Win11 Fluent 2 Light ──────────────────────────────────────────
+            // Background layers: Mica-style page bg → card surface → sidebar
+            Background         = Color.FromArgb(243, 243, 243),   // #F3F3F3  WinUI LayerOnMicaBase
+            SurfaceBackground  = Color.FromArgb(255, 255, 255),   // #FFFFFF  CardBackgroundFillColorDefault
+            SidebarBackground  = Color.FromArgb(238, 238, 238),   // #EEEEEE  slightly darker layer
 
-            Foreground         = Color.FromArgb(28,  28,  28),
-            ForegroundMuted    = Color.FromArgb(96,  96,  96),
-            ForegroundDisabled = Color.FromArgb(160, 160, 160),
+            // Text
+            Foreground         = Color.FromArgb(28,  28,  28),    // #1C1C1C  TextFillColorPrimary
+            ForegroundMuted    = Color.FromArgb(95,  95,  95),    // #5F5F5F  TextFillColorSecondary
+            ForegroundDisabled = Color.FromArgb(160, 160, 160),   // #A0A0A0  TextFillColorDisabled
 
+            // System blue accent  (matches Windows default #0067C0)
             Accent             = Color.FromArgb(0,   103, 192),
-            AccentHover        = Color.FromArgb(0,   84,  166),
-            AccentPressed      = Color.FromArgb(0,   66,  133),
+            AccentHover        = Color.FromArgb(0,    88, 168),
+            AccentPressed      = Color.FromArgb(0,    70, 140),
             AccentForeground   = Color.White,
 
-            NavItemHover       = Color.FromArgb(0, 0, 0, 12),
-            NavItemSelected    = Color.FromArgb(0, 103, 192, 30),
-            NavItemSelectedFg  = Color.FromArgb(0, 103, 192),
-            NavItemFg          = Color.FromArgb(28, 28, 28),
+            // Sidebar nav items
+            NavItemHover       = Color.FromArgb(20,  0, 0, 0),    // ~8% black overlay
+            NavItemSelected    = Color.FromArgb(28,  0, 103, 192),// 11% accent overlay
+            NavItemSelectedFg  = Color.FromArgb(0,   103, 192),
+            NavItemFg          = Color.FromArgb(28,  28,  28),
 
-            ButtonBackground   = Color.FromArgb(254, 254, 254),
+            // Buttons — WinUI ControlFillColorDefault = #FDFDFD / stroke #0000000E+#00000029
+            ButtonBackground   = Color.FromArgb(253, 253, 253),
             ButtonForeground   = Color.FromArgb(28,  28,  28),
-            ButtonBorder       = Color.FromArgb(200, 200, 200),
-            ButtonHover        = Color.FromArgb(245, 245, 245),
-            ButtonPressed      = Color.FromArgb(232, 232, 232),
+            ButtonBorder       = Color.FromArgb(41,  0,   0, 0),  // ControlStrokeColorDefault ~16% black
+            ButtonHover        = Color.FromArgb(246, 246, 246),   // ControlFillColorSecondary
+            ButtonPressed      = Color.FromArgb(240, 240, 240),   // ControlFillColorTertiary
 
-            InputBackground    = Color.White,
+            // Text input
+            InputBackground    = Color.FromArgb(255, 255, 255),
             InputForeground    = Color.FromArgb(28,  28,  28),
-            InputBorder        = Color.FromArgb(200, 200, 200),
+            InputBorder        = Color.FromArgb(138, 138, 138),   // TextControlElevationBorderBrush ~54%
             InputBorderFocus   = Color.FromArgb(0,   103, 192),
 
-            Separator          = Color.FromArgb(225, 225, 225),
-            CardBorder         = Color.FromArgb(225, 225, 225),
+            // Dividers / card stroke
+            Separator          = Color.FromArgb(229, 229, 229),   // DividerStrokeColorDefault
+            CardBorder         = Color.FromArgb(20,  0,   0, 0),  // CardStrokeColorDefault  ~8% black
 
-            MenuBackground     = Color.FromArgb(255, 255, 255),
+            // Menus / flyouts
+            MenuBackground     = Color.FromArgb(253, 253, 253),
             MenuForeground     = Color.FromArgb(28,  28,  28),
-            MenuItemHover      = Color.FromArgb(238, 238, 238),
-            MenuItemSelected   = Color.FromArgb(204, 228, 247),
-            MenuBorder         = Color.FromArgb(215, 215, 215),
+            MenuItemHover      = Color.FromArgb(242, 242, 242),
+            MenuItemSelected   = Color.FromArgb(224, 238, 253),
+            MenuBorder         = Color.FromArgb(200, 200, 200),
 
+            // ListView
             ListBackground     = Color.FromArgb(255, 255, 255),
             ListForeground     = Color.FromArgb(28,  28,  28),
-            ListHeaderBg       = Color.FromArgb(248, 248, 248),
+            ListHeaderBg       = Color.FromArgb(246, 246, 246),
             ListHeaderFg       = Color.FromArgb(80,  80,  80),
             ListRowOdd         = Color.FromArgb(255, 255, 255),
-            ListRowEven        = Color.FromArgb(249, 249, 249),
-            ListRowHover       = Color.FromArgb(235, 244, 255),
-            ListRowSelected    = Color.FromArgb(204, 228, 247),
+            ListRowEven        = Color.FromArgb(250, 250, 250),
+            ListRowHover       = Color.FromArgb(235, 243, 255),
+            ListRowSelected    = Color.FromArgb(210, 232, 255),
             ListRowSelectedFg  = Color.FromArgb(0,   70,  140),
-            ListGridLine       = Color.FromArgb(232, 232, 232),
+            ListGridLine       = Color.FromArgb(229, 229, 229),
 
-            StatusNormal       = Color.FromArgb(0,   128, 0),
+            // Status colours (clear, readable on white)
+            StatusNormal       = Color.FromArgb(16,  124, 16),
             StatusSymlink      = Color.FromArgb(0,   103, 192),
-            StatusSuspicious   = Color.FromArgb(200, 130, 0),
-            StatusEmpty        = Color.FromArgb(160, 160, 160),
-            StatusResidual     = Color.FromArgb(200, 60,  60),
-            StatusSuccess      = Color.FromArgb(0,   128, 0),
+            StatusSuspicious   = Color.FromArgb(157, 93,  0),
+            StatusEmpty        = Color.FromArgb(140, 140, 140),
+            StatusResidual     = Color.FromArgb(196, 43,  28),
+            StatusSuccess      = Color.FromArgb(16,  124, 16),
             StatusError        = Color.FromArgb(196, 43,  28),
-            StatusWarning      = Color.FromArgb(200, 130, 0),
+            StatusWarning      = Color.FromArgb(157, 93,  0),
 
-            ProgressBackground = Color.FromArgb(220, 220, 220),
+            ProgressBackground = Color.FromArgb(214, 214, 214),
             ProgressFill       = Color.FromArgb(0,   103, 192),
 
             ScrollbarThemeName = "Explorer"
@@ -193,66 +203,76 @@ namespace winC2D.Core
 
         private static ThemePalette BuildDark() => new ThemePalette
         {
-            // Win11 暗色
-            Background         = Color.FromArgb(32,  32,  32),
-            SurfaceBackground  = Color.FromArgb(40,  40,  40),
-            SidebarBackground  = Color.FromArgb(28,  28,  28),
+            // ── Win11 Fluent 2 Dark ───────────────────────────────────────────
+            // Background layers: #202020 → #2C2C2C → #1C1C1C  (3-level depth)
+            Background         = Color.FromArgb(32,  32,  32),    // #202020  SolidBackgroundFillColorBase
+            SurfaceBackground  = Color.FromArgb(44,  44,  44),    // #2C2C2C  LayerFillColorDefault
+            SidebarBackground  = Color.FromArgb(28,  28,  28),    // #1C1C1C  darker than base
 
-            Foreground         = Color.FromArgb(242, 242, 242),
-            ForegroundMuted    = Color.FromArgb(170, 170, 170),
-            ForegroundDisabled = Color.FromArgb(100, 100, 100),
+            // Text
+            Foreground         = Color.FromArgb(255, 255, 255),   // #FFFFFF  TextFillColorPrimary (dark)
+            ForegroundMuted    = Color.FromArgb(162, 162, 162),   // #A2A2A2  TextFillColorSecondary
+            ForegroundDisabled = Color.FromArgb(90,  90,  90),    // #5A5A5A  TextFillColorDisabled
 
-            Accent             = Color.FromArgb(96,  205, 255),
-            AccentHover        = Color.FromArgb(130, 220, 255),
-            AccentPressed      = Color.FromArgb(60,  180, 240),
-            AccentForeground   = Color.FromArgb(0,   30,  50),
+            // System accent: #60CDFF (Win11 dark-mode accent default)
+            Accent             = Color.FromArgb(96,  205, 255),   // #60CDFF
+            AccentHover        = Color.FromArgb(122, 217, 255),   // slightly brighter
+            AccentPressed      = Color.FromArgb(72,  180, 232),   // slightly darker
+            AccentForeground   = Color.FromArgb(0,   25,  40),    // dark text on light accent
 
-            NavItemHover       = Color.FromArgb(255, 255, 255, 12),
-            NavItemSelected    = Color.FromArgb(96,  205, 255, 35),
+            // Sidebar nav items — white overlays
+            NavItemHover       = Color.FromArgb(18,  255, 255, 255), // ~7% white overlay
+            NavItemSelected    = Color.FromArgb(28,  96,  205, 255), // 11% accent overlay
             NavItemSelectedFg  = Color.FromArgb(96,  205, 255),
-            NavItemFg          = Color.FromArgb(220, 220, 220),
+            NavItemFg          = Color.FromArgb(242, 242, 242),
 
-            ButtonBackground   = Color.FromArgb(50,  50,  50),
-            ButtonForeground   = Color.FromArgb(242, 242, 242),
-            ButtonBorder       = Color.FromArgb(70,  70,  70),
-            ButtonHover        = Color.FromArgb(62,  62,  62),
-            ButtonPressed      = Color.FromArgb(44,  44,  44),
+            // Buttons — WinUI dark ControlFillColorDefault = #FFFFFF0F / stroke = #FFFFFF12+#00000029
+            ButtonBackground   = Color.FromArgb(56,  56,  56),    // SubtleFillColorSecondary approx
+            ButtonForeground   = Color.FromArgb(255, 255, 255),
+            ButtonBorder       = Color.FromArgb(55,  255, 255, 255), // ~22% white top stroke (averaged)
+            ButtonHover        = Color.FromArgb(66,  66,  66),    // ControlFillColorSecondary
+            ButtonPressed      = Color.FromArgb(46,  46,  46),    // ControlFillColorTertiary
 
-            InputBackground    = Color.FromArgb(50,  50,  50),
-            InputForeground    = Color.FromArgb(242, 242, 242),
-            InputBorder        = Color.FromArgb(70,  70,  70),
+            // Text input
+            InputBackground    = Color.FromArgb(48,  48,  48),
+            InputForeground    = Color.FromArgb(255, 255, 255),
+            InputBorder        = Color.FromArgb(100, 100, 100),
             InputBorderFocus   = Color.FromArgb(96,  205, 255),
 
+            // Dividers / card stroke — subtle white overlay
             Separator          = Color.FromArgb(55,  55,  55),
-            CardBorder         = Color.FromArgb(55,  55,  55),
+            CardBorder         = Color.FromArgb(30,  255, 255, 255), // ~12% white overlay
 
+            // Menus / flyouts
             MenuBackground     = Color.FromArgb(44,  44,  44),
-            MenuForeground     = Color.FromArgb(242, 242, 242),
+            MenuForeground     = Color.FromArgb(255, 255, 255),
             MenuItemHover      = Color.FromArgb(60,  60,  60),
-            MenuItemSelected   = Color.FromArgb(70,  70,  70),
-            MenuBorder         = Color.FromArgb(65,  65,  65),
+            MenuItemSelected   = Color.FromArgb(72,  72,  72),
+            MenuBorder         = Color.FromArgb(68,  68,  68),
 
+            // ListView
             ListBackground     = Color.FromArgb(40,  40,  40),
             ListForeground     = Color.FromArgb(242, 242, 242),
-            ListHeaderBg       = Color.FromArgb(35,  35,  35),
-            ListHeaderFg       = Color.FromArgb(170, 170, 170),
+            ListHeaderBg       = Color.FromArgb(34,  34,  34),
+            ListHeaderFg       = Color.FromArgb(162, 162, 162),
             ListRowOdd         = Color.FromArgb(42,  42,  42),
-            ListRowEven        = Color.FromArgb(47,  47,  47),
-            ListRowHover       = Color.FromArgb(58,  72,  88),
-            ListRowSelected    = Color.FromArgb(45,  90, 130),
+            ListRowEven        = Color.FromArgb(46,  46,  46),
+            ListRowHover       = Color.FromArgb(56,  70,  86),
+            ListRowSelected    = Color.FromArgb(40,  82, 120),
             ListRowSelectedFg  = Color.FromArgb(210, 235, 255),
-            ListGridLine       = Color.FromArgb(55,  55,  55),
+            ListGridLine       = Color.FromArgb(52,  52,  52),
 
-            StatusNormal       = Color.FromArgb(100, 220, 100),
-            StatusSymlink      = Color.FromArgb(96,  205, 255),
-            StatusSuspicious   = Color.FromArgb(255, 185, 60),
-            StatusEmpty        = Color.FromArgb(140, 140, 140),
-            StatusResidual     = Color.FromArgb(255, 100, 100),
-            StatusSuccess      = Color.FromArgb(100, 220, 100),
-            StatusError        = Color.FromArgb(255, 100, 100),
-            StatusWarning      = Color.FromArgb(255, 185, 60),
+            // Status colours (vivid enough on dark bg)
+            StatusNormal       = Color.FromArgb(108, 203, 95),    // green
+            StatusSymlink      = Color.FromArgb(96,  205, 255),   // accent blue
+            StatusSuspicious   = Color.FromArgb(252, 183, 36),    // amber — NOT yellow-green
+            StatusEmpty        = Color.FromArgb(130, 130, 130),
+            StatusResidual     = Color.FromArgb(255, 99,  99),
+            StatusSuccess      = Color.FromArgb(108, 203, 95),
+            StatusError        = Color.FromArgb(255, 99,  99),
+            StatusWarning      = Color.FromArgb(252, 183, 36),
 
-            ProgressBackground = Color.FromArgb(60,  60,  60),
+            ProgressBackground = Color.FromArgb(62,  62,  62),
             ProgressFill       = Color.FromArgb(96,  205, 255),
 
             ScrollbarThemeName = "DarkMode_Explorer"
