@@ -6,6 +6,9 @@
    <RootNamespace>winC2D</RootNamespace>
    <ApplicationManifest>App.manifest</ApplicationManifest>
    <ApplicationIcon>winc2d.ico</ApplicationIcon>
+   <!-- 允许不安全代码（P/Invoke 已有 DllImport 支持） -->
+   <Nullable>enable</Nullable>
+   <ImplicitUsings>disable</ImplicitUsings>
  </PropertyGroup>
  <ItemGroup>
    <Compile Remove="winC2D-WinUI\**" />
@@ -13,6 +16,8 @@
    <None Remove="winC2D-WinUI\**" />
    <Page Remove="winC2D-WinUI\**" />
  </ItemGroup>
+  <!-- 使用 SDK 的默认隐式包含规则自动包含项目目录下的 .cs 文件 -->
+  <!-- 不显式列出 <Compile Include="**\*.cs" />，以避免与隐式项重复 -->
  <ItemGroup>
    <EmbeddedResource Include="winc2d.ico" />
  </ItemGroup>
