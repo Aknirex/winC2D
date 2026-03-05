@@ -79,31 +79,33 @@ namespace winC2D.Views
             _scrollHost.SizeChanged += (s, e) => stack.Width = _scrollHost.ClientSize.Width;
 
             // ── Theme card ────────────────────────────────────────────────
-            _themeCard = MakeCard(Localization.T("Settings.Theme"));
+            _themeCard = MakeCard(Localization.T("Settings.Theme"), out var themeContent);
             var themeRow = new FlowLayoutPanel
             {
-                Dock          = DockStyle.Fill,
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents  = true,
                 AutoSize      = true,
-                Padding       = new Padding(0, 6, 0, 0)
+                AutoSizeMode  = AutoSizeMode.GrowAndShrink,
+                Dock          = DockStyle.Top,
+                Padding       = Padding.Empty
             };
             _btnLight = MakeThemeBtn("☀  " + Localization.T("Menu.Theme.Light"), AppTheme.Light);
             _btnDark  = MakeThemeBtn("🌙  " + Localization.T("Menu.Theme.Dark"),  AppTheme.Dark);
             themeRow.Controls.Add(_btnLight);
             themeRow.Controls.Add(_btnDark);
-            _themeCard.Controls.Add(themeRow);
+            themeContent.Controls.Add(themeRow);
             stack.Controls.Add(_themeCard);
 
             // ── Language card ─────────────────────────────────────────────
-            _langCard = MakeCard(Localization.T("Settings.Language"));
+            _langCard = MakeCard(Localization.T("Settings.Language"), out var langContent);
             var langRow = new FlowLayoutPanel
             {
-                Dock          = DockStyle.Fill,
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents  = true,
                 AutoSize      = true,
-                Padding       = new Padding(0, 6, 0, 0)
+                AutoSizeMode  = AutoSizeMode.GrowAndShrink,
+                Dock          = DockStyle.Top,
+                Padding       = Padding.Empty
             };
             foreach (var (code, label) in new[]
             {
@@ -132,33 +134,26 @@ namespace winC2D.Views
                 };
                 langRow.Controls.Add(btn);
             }
-            _langCard.Controls.Add(langRow);
+            langContent.Controls.Add(langRow);
             stack.Controls.Add(_langCard);
 
             // ── About card ────────────────────────────────────────────────
-            _aboutCard = MakeCard(Localization.T("Settings.About"));
-            var aboutFlow = new FlowLayoutPanel
-            {
-                Dock          = DockStyle.Fill,
-                FlowDirection = FlowDirection.TopDown,
-                WrapContents  = false,
-                AutoSize      = true,
-                Padding       = new Padding(0, 6, 0, 0)
-            };
-            aboutFlow.Controls.Add(new Label
+            _aboutCard = MakeCard(Localization.T("Settings.About"), out var aboutContent);
+            aboutContent.Controls.Add(new Label
             {
                 AutoSize  = true,
+                Dock      = DockStyle.Top,
                 Text      = Localization.T("About.Description"),
                 Font      = new Font("Segoe UI Variable", 9.5f),
-                Margin    = new Padding(0, 0, 0, 2)
+                Margin    = new Padding(0, 0, 0, 4)
             });
-            aboutFlow.Controls.Add(new Label
+            aboutContent.Controls.Add(new Label
             {
                 AutoSize  = true,
+                Dock      = DockStyle.Top,
                 Text      = Localization.T("About.Copyright"),
                 Font      = new Font("Segoe UI Variable", 9f)
             });
-            _aboutCard.Controls.Add(aboutFlow);
             stack.Controls.Add(_aboutCard);
         }
 
@@ -182,8 +177,8 @@ namespace winC2D.Views
         }
 
         // Creates a self-sizing card with a bold title label.
-        // Callers add content controls directly to card.Controls.
-        private static winC2D.UI.CardPanel MakeCard(string title)
+        // Returns the card and an inner content panel for callers to add children to.
+        private static winC2D.UI.CardPanel MakeCard(string title, out Panel contentPanel)
         {
             var card = new winC2D.UI.CardPanel
             {
@@ -193,15 +188,44 @@ namespace winC2D.Views
                 Padding      = new Padding(16, 10, 16, 14),
                 Margin       = new Padding(0, 0, 0, 12)
             };
-            card.Controls.Add(new Label
+
+            // TableLayoutPanel: row 0 = title (fixed), row 1 = content (auto)
+            var table = new TableLayoutPanel
+            {
+                Dock        = DockStyle.Top,
+                ColumnCount = 1,
+                RowCount    = 2,
+                AutoSize    = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Padding     = Padding.Empty,
+                Margin      = Padding.Empty
+            };
+            table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            table.RowStyles.Add(new RowStyle(SizeType.Absolute, 28));   // title row
+            table.RowStyles.Add(new RowStyle(SizeType.AutoSize));        // content row
+
+            table.Controls.Add(new Label
             {
                 Text      = title,
-                Dock      = DockStyle.Top,
+                Dock      = DockStyle.Fill,
                 AutoSize  = false,
-                Height    = 26,
                 Font      = new Font("Segoe UI Variable", 10f, FontStyle.Bold),
-                ForeColor = ThemeManager.Current.Foreground
-            });
+                ForeColor = ThemeManager.Current.Foreground,
+                TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+            }, 0, 0);
+
+            var content = new Panel
+            {
+                Dock     = DockStyle.Fill,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Padding  = Padding.Empty,
+                Margin   = Padding.Empty
+            };
+            table.Controls.Add(content, 0, 1);
+
+            card.Controls.Add(table);
+            contentPanel = content;
             return card;
         }
 

@@ -21,9 +21,6 @@ namespace winC2D
         // ── Child controls ────────────────────────────────────────────────────
         private SideNavBar      _nav;
         private Panel           _contentHost;
-        private Panel           _titleBar;
-        private Label           _titleLabel;
-        private Label           _subtitleLabel;
         private MenuStrip       _menuStrip;
         private ModernToolStripRenderer _menuRenderer;
 

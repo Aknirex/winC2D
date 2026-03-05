@@ -61,23 +61,41 @@ namespace winC2D.UI
             g.SmoothingMode     = SmoothingMode.AntiAlias;
             g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-            // Clear with parent background to erase any leftover pixels from base class
+            // Clear with parent background to erase any leftover pixels
             g.Clear(Parent?.BackColor ?? p.Background);
 
             (Color bg, Color fg, Color border) = GetColors(p);
 
-            using var path = RoundRect(rc, _cornerRadius);
+            // Inset by 0.5px so the antialiased stroke sits fully inside the control bounds
+            // (GDI+ draws pen centred on the path; without inset the right/bottom edges get clipped)
+            var rcF = new RectangleF(0.5f, 0.5f, Width - 1f, Height - 1f);
+            using var path = RoundRectF(rcF, _cornerRadius);
+
             using (var brush = new SolidBrush(bg))
                 g.FillPath(brush, path);
-            if (border != Color.Transparent)
+
+            // Border — skip for transparent (Accent style)
+            if (border != Color.Transparent && border.A > 0)
             {
-                using var pen = new Pen(border);
+                using var pen = new Pen(border, 1f);
                 g.DrawPath(pen, path);
+            }
+
+            // Top highlight line — simulates Win11 Fluent light-edge refraction
+            // Light mode: 50% white top stroke.  Dark mode: ~15% white top stroke.
+            bool isDark = ThemeManager.CurrentTheme == Core.AppTheme.Dark;
+            if (_style != ButtonStyle.Accent && _style != ButtonStyle.Danger && Enabled)
+            {
+                int hiA = isDark ? 38 : 128;  // dark=15%, light=50%
+                using var hiPen = new Pen(Color.FromArgb(hiA, 255, 255, 255), 1f);
+                float cx = rcF.Left + _cornerRadius;
+                float ex = rcF.Right - _cornerRadius;
+                if (ex > cx)
+                    g.DrawLine(hiPen, cx, rcF.Top, ex, rcF.Top);
             }
 
             if (!Enabled) fg = p.ForegroundDisabled;
 
-            // Clip text to rounded path to prevent overflow
             g.SetClip(path);
             TextRenderer.DrawText(g, Text, Font, rc, fg,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
@@ -87,6 +105,20 @@ namespace winC2D.UI
 
         // Suppress system background painting — fully owner-drawn
         protected override void OnPaintBackground(PaintEventArgs e) { }
+
+        // RectangleF overload for sub-pixel-precise rounded rect
+        private static GraphicsPath RoundRectF(RectangleF rc, int r)
+        {
+            var path = new GraphicsPath();
+            if (r <= 0) { path.AddRectangle(rc); return path; }
+            float d = r * 2f;
+            path.AddArc(rc.Left,           rc.Top,            d, d, 180, 90);
+            path.AddArc(rc.Right - d,      rc.Top,            d, d, 270, 90);
+            path.AddArc(rc.Right - d,      rc.Bottom - d,     d, d,   0, 90);
+            path.AddArc(rc.Left,           rc.Bottom - d,     d, d,  90, 90);
+            path.CloseFigure();
+            return path;
+        }
 
         private (Color bg, Color fg, Color border) GetColors(ThemePalette p)
         {
@@ -135,7 +167,10 @@ namespace winC2D.UI
         public ModernTextBox()
         {
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.OptimizedDoubleBuffer, true);
+                     ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+            // ResizeRedraw ensures the control fully repaints when the parent resizes,
+            // preventing stale pixels (drag artifacts) from remaining on screen.
+            DoubleBuffered = true;
             Padding = new Padding(8, 0, 8, 0);
 
             _inner = new TextBox
@@ -372,14 +407,57 @@ namespace winC2D.UI
         public CardPanel()
         {
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.OptimizedDoubleBuffer, true);
+                     ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
             DoubleBuffered = true;
             Padding = new Padding(12);
+            // AutoSize is driven by PerformAutoSize() which we call after child layout
+            AutoSize     = true;
+            AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        }
+
+        // Return the height needed to contain all child controls (respecting our padding).
+        // Width is inherited from the parent layout (FlowLayoutPanel sets it explicitly).
+        public override Size GetPreferredSize(Size proposedSize)
+        {
+            int bottom = 0;
+            foreach (Control c in Controls)
+            {
+                int edge = c.Bottom + c.Margin.Bottom;
+                if (edge > bottom) bottom = edge;
+            }
+            return new Size(proposedSize.Width > 0 ? proposedSize.Width : Width,
+                            bottom + Padding.Bottom + 4);
+        }
+
+        protected override void OnControlAdded(ControlEventArgs e)
+        {
+            base.OnControlAdded(e);
+            // Re-measure height when a child is added or its layout changes
+            e.Control.Layout  += (s, _) => PerformLayout();
+            e.Control.Resize  += (s, _) => PerformLayout();
+        }
+
+        protected override void OnLayout(LayoutEventArgs e)
+        {
+            base.OnLayout(e);
+            if (AutoSize) AdjustHeight();
+        }
+
+        private void AdjustHeight()
+        {
+            int bottom = 0;
+            foreach (Control c in Controls)
+            {
+                int edge = c.Bottom + c.Margin.Bottom;
+                if (edge > bottom) bottom = edge;
+            }
+            int needed = bottom + Padding.Bottom + 4;
+            if (Height != needed) Height = needed;
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
-            // Fill entire bounds with parent background first to avoid black corners
+            // Fill entire bounds with parent background to avoid black corners on transparent regions
             e.Graphics.Clear(Parent?.BackColor ?? ThemeManager.Current.Background);
         }
 
@@ -389,16 +467,51 @@ namespace winC2D.UI
             var g  = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
-            // Fill parent background again (for partial invalidation cases)
+            // Fill parent background (handles partial invalidation)
             g.Clear(Parent?.BackColor ?? p.Background);
 
-            var rc = new Rectangle(0, 0, Width - 1, Height - 1);
-            using var path = RoundRect(rc, CornerRadius);
+            // Inset by 0.5px so stroke stays fully inside bounds
+            var rcF  = new RectangleF(0.5f, 0.5f, Width - 1f, Height - 1f);
+            using var path = RoundRectF(rcF, CornerRadius);
+
+            // Card fill
             g.FillPath(new SolidBrush(p.SurfaceBackground), path);
+
             if (ShowBorder)
-                g.DrawPath(new Pen(p.CardBorder), path);
+            {
+                // Win11 card border: semi-transparent overlay (not a flat solid colour)
+                // Light: ~8% black  #0000000E   Dark: ~12% white  #FFFFFF1E
+                bool isDark = ThemeManager.CurrentTheme == Core.AppTheme.Dark;
+                Color borderColor = isDark
+                    ? Color.FromArgb(30,  255, 255, 255)   // 12% white
+                    : Color.FromArgb(20,  0,   0,   0);    // 8% black
+                using var pen = new Pen(borderColor, 1f);
+                g.DrawPath(pen, path);
+
+                // Top highlight — simulates Fluent edge illumination
+                // Light: 60% white top edge  Dark: 18% white top edge
+                int hiA = isDark ? 46 : 153;
+                using var hiPen = new Pen(Color.FromArgb(hiA, 255, 255, 255), 1f);
+                float cx = rcF.Left  + CornerRadius;
+                float ex = rcF.Right - CornerRadius;
+                if (ex > cx)
+                    g.DrawLine(hiPen, cx, rcF.Top, ex, rcF.Top);
+            }
 
             base.OnPaint(e);
+        }
+
+        private static GraphicsPath RoundRectF(RectangleF rc, int r)
+        {
+            var path = new GraphicsPath();
+            if (r <= 0) { path.AddRectangle(rc); return path; }
+            float d = r * 2f;
+            path.AddArc(rc.Left,      rc.Top,       d, d, 180, 90);
+            path.AddArc(rc.Right - d, rc.Top,       d, d, 270, 90);
+            path.AddArc(rc.Right - d, rc.Bottom - d, d, d,   0, 90);
+            path.AddArc(rc.Left,      rc.Bottom - d, d, d,  90, 90);
+            path.CloseFigure();
+            return path;
         }
     }
 
