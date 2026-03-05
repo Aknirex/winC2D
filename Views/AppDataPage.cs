@@ -91,10 +91,10 @@ namespace winC2D.Views
 
             // 工具栏
             _toolbar = new Panel { Dock = DockStyle.Fill, Padding = new Padding(0, 6, 0, 0) };
-            _btnRefresh = new winC2D.UI.ModernButton { Text = Localization.T("Button.Refresh"),         Style = winC2D.UI.ModernButton.ButtonStyle.Default, Width = 110, Height = 34 };
-            _btnMigrate = new winC2D.UI.ModernButton { Text = Localization.T("Button.MigrateSelected"), Style = winC2D.UI.ModernButton.ButtonStyle.Accent,  Width = 130, Height = 34 };
-            _btnRollback= new winC2D.UI.ModernButton { Text = Localization.T("Button.Rollback"),        Style = winC2D.UI.ModernButton.ButtonStyle.Ghost,   Width = 100, Height = 34 };
-            _btnCheck   = new winC2D.UI.ModernButton { Text = Localization.T("Button.CheckSuspicious"), Style = winC2D.UI.ModernButton.ButtonStyle.Ghost,   Width = 130, Height = 34 };
+            _btnRefresh = MakeBtn(Localization.T("Button.Refresh"),         winC2D.UI.ModernButton.ButtonStyle.Default);
+            _btnMigrate = MakeBtn(Localization.T("Button.MigrateSelected"), winC2D.UI.ModernButton.ButtonStyle.Accent);
+            _btnRollback= MakeBtn(Localization.T("Button.Rollback"),        winC2D.UI.ModernButton.ButtonStyle.Ghost);
+            _btnCheck   = MakeBtn(Localization.T("Button.CheckSuspicious"), winC2D.UI.ModernButton.ButtonStyle.Ghost);
             _btnRefresh.Click  += async (s, e) => await RefreshAsync();
             _btnMigrate.Click  += async (s, e) => await MigrateSelectedAsync();
             _btnRollback.Click += async (s, e) => await RollbackSelectedAsync();
@@ -366,6 +366,20 @@ namespace winC2D.Views
             };
         }
 
+        private static winC2D.UI.ModernButton MakeBtn(string text, winC2D.UI.ModernButton.ButtonStyle style)
+        {
+            var font     = new Font("Segoe UI Variable", 9.5f);
+            var sz       = TextRenderer.MeasureText(text, font);
+            int minWidth = sz.Width + 32;
+            return new winC2D.UI.ModernButton
+            {
+                Text   = text,
+                Style  = style,
+                Width  = Math.Max(90, minWidth),
+                Height = 34
+            };
+        }
+
         public void ApplyTheme(ThemePalette p)
         {
             BackColor = p.Background;
@@ -382,10 +396,19 @@ namespace winC2D.Views
         {
             _header.Title    = Localization.T("Nav.AppData");
             _header.Subtitle = Localization.T("Desc.AppData");
-            _btnRefresh.Text  = Localization.T("Button.Refresh");
-            _btnMigrate.Text  = Localization.T("Button.MigrateSelected");
-            _btnRollback.Text = Localization.T("Button.Rollback");
-            _btnCheck.Text    = Localization.T("Button.CheckSuspicious");
+            ResizeBtn(_btnRefresh,  Localization.T("Button.Refresh"));
+            ResizeBtn(_btnMigrate,  Localization.T("Button.MigrateSelected"));
+            ResizeBtn(_btnRollback, Localization.T("Button.Rollback"));
+            ResizeBtn(_btnCheck,    Localization.T("Button.CheckSuspicious"));
+            ArrangeToolbar();  // re-layout after width changes
+        }
+
+        private static void ResizeBtn(winC2D.UI.ModernButton btn, string text)
+        {
+            btn.Text  = text;
+            var font  = new Font("Segoe UI Variable", 9.5f);
+            var sz    = TextRenderer.MeasureText(text, font);
+            btn.Width = Math.Max(90, sz.Width + 32);
         }
     }
 }

@@ -471,11 +471,16 @@ namespace winC2D.Views
 
     private static winC2D.UI.ModernButton MakeBtn(string locKey, winC2D.UI.ModernButton.ButtonStyle style)
         {
+            var text = Localization.T(locKey);
+            // Measure text width and add horizontal padding so the label is never clipped
+            var font    = new Font("Segoe UI Variable", 9.5f);
+            var sz      = TextRenderer.MeasureText(text, font);
+            int minWidth = sz.Width + 32;   // 16 px padding on each side
             return new winC2D.UI.ModernButton
             {
-                Text   = Localization.T(locKey),
-                Style = (winC2D.UI.ModernButton.ButtonStyle)style,
-                Width  = 130,
+                Text   = text,
+                Style  = style,
+                Width  = Math.Max(90, minWidth),
                 Height = 34
             };
         }
@@ -499,16 +504,25 @@ namespace winC2D.Views
         {
             _header.Title    = Localization.T("Nav.Software");
             _header.Subtitle = Localization.T("Desc.Software");
-            _btnRefresh.Text         = Localization.T("Button.Refresh");
-            _btnMigrate.Text         = Localization.T("Button.MigrateSelected");
-            _btnRollback.Text        = Localization.T("Button.Rollback");
-            _btnCheckSuspicious.Text = Localization.T("Button.CheckSuspicious");
-            _btnScanPaths.Text       = Localization.T("Button.ManageScanPaths");
-            _list.Columns[0].Text    = Localization.T("Column.SoftwareName");
-            _list.Columns[1].Text    = Localization.T("Column.InstallPath");
-            _list.Columns[2].Text    = Localization.T("Column.Size");
-            _list.Columns[3].Text    = Localization.T("Column.Status");
+            ResizeBtn(_btnRefresh,         Localization.T("Button.Refresh"));
+            ResizeBtn(_btnMigrate,         Localization.T("Button.MigrateSelected"));
+            ResizeBtn(_btnRollback,        Localization.T("Button.Rollback"));
+            ResizeBtn(_btnCheckSuspicious, Localization.T("Button.CheckSuspicious"));
+            ResizeBtn(_btnScanPaths,       Localization.T("Button.ManageScanPaths"));
+            ArrangeToolbar(_toolbar);
+            _list.Columns[0].Text = Localization.T("Column.SoftwareName");
+            _list.Columns[1].Text = Localization.T("Column.InstallPath");
+            _list.Columns[2].Text = Localization.T("Column.Size");
+            _list.Columns[3].Text = Localization.T("Column.Status");
             Invalidate(true);
+        }
+
+        private static void ResizeBtn(winC2D.UI.ModernButton btn, string text)
+        {
+            btn.Text  = text;
+            var font  = new Font("Segoe UI Variable", 9.5f);
+            var sz    = TextRenderer.MeasureText(text, font);
+            btn.Width = Math.Max(90, sz.Width + 32);
         }
     }
 }
