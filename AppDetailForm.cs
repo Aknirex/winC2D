@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
+using winC2D.Core;
 
 namespace winC2D
 {
