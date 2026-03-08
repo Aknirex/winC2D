@@ -2,7 +2,9 @@ name: Build and Release
 
 on:
   push:
-    branches: [main]
+    branches: [csharp-legacy]
+    tags:
+      - "v*"
 
 permissions:
   contents: write
@@ -42,14 +44,17 @@ jobs:
           Compress-Archive -Path 'out/selfcontained/*' -DestinationPath "$artifacts/winc2d-selfcontained.zip" -Force
       - name: Create GitHub release
         id: create_release
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
         with:
           files: |
             artifacts/winc2d-portable.zip
             artifacts/winc2d-selfcontained.zip
-          tag_name: release-${{ github.sha }}
-          name: Automated release for ${{ github.sha }}
+          name: winC2D ${{ github.ref_name }}
           body: |
-            Portable and self-contained single-file builds for commit ${{ github.sha }}
+            winC2D ${{ github.ref_name }} — C# WinForms release
+
+            **Portable**: requires .NET 8 runtime installed  
+            **Self-contained**: no runtime required, larger file size
           draft: false
           prerelease: false
