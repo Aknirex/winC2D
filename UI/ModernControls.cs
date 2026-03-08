@@ -67,8 +67,7 @@ namespace winC2D.UI
             (Color bg, Color fg, Color border) = GetColors(p);
 
             // Inset by 0.5px so the antialiased stroke sits fully inside the control bounds
-            // (GDI+ draws pen centred on the path; without inset the right/bottom edges get clipped)
-            var rcF = new RectangleF(0.5f, 0.5f, Width - 1f, Height - 1f);
+            var rcF = new RectangleF(0.5f, 0.5f, Width - 1.5f, Height - 1.5f);
             using var path = RoundRectF(rcF, _cornerRadius);
 
             using (var brush = new SolidBrush(bg))
@@ -91,7 +90,7 @@ namespace winC2D.UI
                 float cx = rcF.Left + _cornerRadius;
                 float ex = rcF.Right - _cornerRadius;
                 if (ex > cx)
-                    g.DrawLine(hiPen, cx, rcF.Top, ex, rcF.Top);
+                    g.DrawLine(hiPen, cx, rcF.Top + 1f, ex, rcF.Top + 1f);
             }
 
             if (!Enabled) fg = p.ForegroundDisabled;
@@ -156,18 +155,30 @@ namespace winC2D.UI
     public partial class ModernTextBox : UserControl
     {
         private readonly TextBox _inner;
+        private readonly Label _placeholderLabel;
         private bool _focused;
+        private Color _innerBackColor;
 
-        public new string Text { get => _inner.Text; set => _inner.Text = value; }
+        public new string Text 
+        { 
+            get => _inner.Text; 
+            set { _inner.Text = value; UpdatePlaceholder(); } 
+        }
         public new event EventHandler TextChanged { add => _inner.TextChanged += value; remove => _inner.TextChanged -= value; }
         public new event KeyEventHandler KeyDown  { add => _inner.KeyDown    += value; remove => _inner.KeyDown    -= value; }
         public bool ReadOnly { get => _inner.ReadOnly; set => _inner.ReadOnly = value; }
-        public string PlaceholderText { get => _inner.PlaceholderText; set => _inner.PlaceholderText = value; }
+        
+        public string PlaceholderText 
+        { 
+            get => _placeholderLabel.Text; 
+            set { _placeholderLabel.Text = value; UpdatePlaceholder(); } 
+        }
 
         public ModernTextBox()
         {
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+                     ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw |
+                     ControlStyles.SupportsTransparentBackColor, true);
             // ResizeRedraw ensures the control fully repaints when the parent resizes,
             // preventing stale pixels (drag artifacts) from remaining on screen.
             DoubleBuffered = true;
@@ -179,9 +190,22 @@ namespace winC2D.UI
                 Font        = new Font("Segoe UI Variable", 9.5f),
                 Dock        = DockStyle.None
             };
+            
+            _placeholderLabel = new Label
+            {
+                BackColor = Color.Transparent,
+                Font      = new Font("Segoe UI Variable", 9.5f),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Cursor    = Cursors.IBeam
+            };
+
+            Controls.Add(_placeholderLabel);
             Controls.Add(_inner);
-            _inner.GotFocus  += (s, e) => { _focused = true;  Invalidate(); };
-            _inner.LostFocus += (s, e) => { _focused = false; Invalidate(); };
+
+            _placeholderLabel.Click += (s, e) => _inner.Focus();
+            _inner.GotFocus  += (s, e) => { _focused = true;  UpdatePlaceholder(); Invalidate(); };
+            _inner.LostFocus += (s, e) => { _focused = false; UpdatePlaceholder(); Invalidate(); };
+            _inner.TextChanged += (s, e) => UpdatePlaceholder();
 
             // Set height AFTER _inner is initialized to avoid null ref in OnLayout
             Height = 34;
@@ -189,32 +213,69 @@ namespace winC2D.UI
             ApplyTheme();
         }
 
+        private void UpdatePlaceholder()
+        {
+            _placeholderLabel.Visible = string.IsNullOrEmpty(_inner.Text) && !_inner.Focused;
+        }
+
         protected override void OnLayout(LayoutEventArgs e)
         {
             base.OnLayout(e);
-            if (_inner == null) return;
+            if (_inner == null || _placeholderLabel == null) return;
             int pad = 8;
-            _inner.SetBounds(pad, (Height - _inner.Height) / 2, Width - pad * 2, _inner.Height);
+            var bounds = new Rectangle(pad, (Height - _inner.Height) / 2, Width - pad * 2, _inner.Height);
+            _inner.SetBounds(bounds.X, bounds.Y, bounds.Width, bounds.Height);
+            
+            // Allow placeholder label to take up more space to perfectly cover and match alignment
+            _placeholderLabel.SetBounds(bounds.X - 2, 0, bounds.Width + 2, Height);
         }
 
         public void ApplyTheme()
         {
             var p = ThemeManager.Current;
-            BackColor        = p.InputBackground;
+            BackColor        = Color.Transparent;
             ForeColor        = p.InputForeground;
+            
+            _innerBackColor  = p.InputBackground;
             _inner.BackColor = p.InputBackground;
             _inner.ForeColor = p.InputForeground;
+            
+            _placeholderLabel.BackColor = p.InputBackground;
+            _placeholderLabel.ForeColor = p.ForegroundMuted;
             Invalidate();
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
             var p  = ThemeManager.Current;
+            
+            // Check for theme changes during paint
+            if (_innerBackColor != p.InputBackground)
+            {
+                _innerBackColor = p.InputBackground;
+                _inner.BackColor = p.InputBackground;
+                _inner.ForeColor = p.InputForeground;
+                _placeholderLabel.BackColor = p.InputBackground;
+                _placeholderLabel.ForeColor = p.ForegroundMuted;
+            }
+
             var g  = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.Clear(p.InputBackground);
-            var border = _focused ? p.InputBorderFocus : p.InputBorder;
+            
+            // Clear with parent background to match rounded corners accurately
+            g.Clear(Parent?.BackColor ?? p.SurfaceBackground);
+
+            // Inset path slightly so stroke sits perfectly inside
             using var path = RoundRect(new Rectangle(0, 0, Width - 1, Height - 1), 5);
+            
+            // Draw background fill
+            using (var brush = new SolidBrush(p.InputBackground))
+            {
+                g.FillPath(brush, path);
+            }
+
+            // Draw border
+            var border = _focused ? p.InputBorderFocus : p.InputBorder;
             g.DrawPath(new Pen(border, _focused ? 2f : 1f), path);
         }
     }
@@ -471,7 +532,7 @@ namespace winC2D.UI
             g.Clear(Parent?.BackColor ?? p.Background);
 
             // Inset by 0.5px so stroke stays fully inside bounds
-            var rcF  = new RectangleF(0.5f, 0.5f, Width - 1f, Height - 1f);
+            var rcF  = new RectangleF(0.5f, 0.5f, Width - 1.5f, Height - 1.5f);
             using var path = RoundRectF(rcF, CornerRadius);
 
             // Card fill
@@ -495,7 +556,7 @@ namespace winC2D.UI
                 float cx = rcF.Left  + CornerRadius;
                 float ex = rcF.Right - CornerRadius;
                 if (ex > cx)
-                    g.DrawLine(hiPen, cx, rcF.Top, ex, rcF.Top);
+                    g.DrawLine(hiPen, cx, rcF.Top + 1f, ex, rcF.Top + 1f);
             }
 
             base.OnPaint(e);
