@@ -9,6 +9,9 @@
    <!-- 允许不安全代码（P/Invoke 已有 DllImport 支持） -->
    <Nullable>enable</Nullable>
    <ImplicitUsings>disable</ImplicitUsings>
+   <Version>3.1.0</Version>
+   <AssemblyVersion>3.1.0.0</AssemblyVersion>
+   <FileVersion>3.1.0.0</FileVersion>
  </PropertyGroup>
  <ItemGroup>
    <Compile Remove="winC2D-WinUI\**" />
