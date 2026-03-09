@@ -29,7 +29,7 @@ jobs:
       run: dotnet build winC2D.sln --configuration Release --no-restore
     
     - name: Run Tests
-      run: dotnet test winC2D.sln --no-build --verbosity normal
+      run: dotnet test winC2D.sln --configuration Release --no-build --verbosity normal
     
     - name: Publish Application
       run: |
