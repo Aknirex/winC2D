@@ -1,0 +1,72 @@
+<UserControl x:Class="winC2D.App.Views.LogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             Margin="10">
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="📜" FontSize="24" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBlock Text="Migration History and Rollback" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
+            <ui:Button Command="{Binding LoadLogsCommand}" 
+                       Appearance="Primary"
+                       Margin="20,0,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon Symbol="Refresh" FontSize="14"/>
+                    <TextBlock Text="Refresh" Margin="5,0,0,0"/>
+                </StackPanel>
+            </ui:Button>
+        </StackPanel>
+        
+        <!-- Filters -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+            <CheckBox Content="Show Successful" IsChecked="{Binding ShowSuccessful}" Margin="0,0,15,0"/>
+            <CheckBox Content="Show Failed" IsChecked="{Binding ShowFailed}" Margin="0,0,15,0"/>
+            <CheckBox Content="Show Rolled Back" IsChecked="{Binding ShowRolledBack}"/>
+        </StackPanel>
+        
+        <!-- Log List -->
+        <ui:DataGrid Grid.Row="2"
+                    ItemsSource="{Binding LogEntries}"
+                    SelectedItem="{Binding SelectedEntry, Mode=TwoWay}"
+                    AutoGenerateColumns="False"
+                    IsReadOnly="True"
+                    SelectionMode="Single">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Time" Binding="{Binding Time, StringFormat='yyyy-MM-dd HH:mm:ss'}" Width="150"/>
+                <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="80"/>
+                <DataGridTextColumn Header="Source" Binding="{Binding SourcePath}" Width="*"/>
+                <DataGridTextColumn Header="Target" Binding="{Binding TargetPath}" Width="*"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+            </DataGrid.Columns>
+        </ui:DataGrid>
+        
+        <!-- Actions -->
+        <Grid Grid.Row="3" Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <ui:Button Command="{Binding RollbackCommand}"
+                          Content="Rollback Selected"
+                          IsEnabled="{Binding SelectedEntry, Converter={StaticResource NullToBooleanConverter}}"
+                          Margin="0,0,10,0"/>
+            </StackPanel>
+            
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <ui:Button Command="{Binding ExportLogCommand}" Content="Export Log" Margin="0,0,10,0"/>
+                <ui:Button Command="{Binding ClearLogCommand}" Content="Clear History"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

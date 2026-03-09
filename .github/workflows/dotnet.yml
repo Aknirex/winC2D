@@ -1,60 +1,79 @@
-name: Build and Release
+name: .NET Desktop Build and Release
 
 on:
   push:
-    branches: [csharp-legacy]
+    branches: [ main ]
     tags:
-      - "v*"
+      - 'v*'
+  pull_request:
+    branches: [ main ]
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  build:
     runs-on: windows-latest
-    env:
-      CONFIGURATION: Release
-      RID: win-x64
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Setup .NET 8 SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: "8.0.x"
-      - name: Restore dependencies
-        run: dotnet restore
-      - name: Publish portable single-file build
-        run: |
-          dotnet publish winC2D.csproj -c ${{ env.CONFIGURATION }} -r ${{ env.RID }} `
-            -p:PublishSingleFile=true -p:SelfContained=false -p:PublishTrimmed=false `
-            -p:IncludeAllContentForSelfExtract=true -o out/portable
-      - name: Publish self-contained single-file build
-        run: |
-          dotnet publish winC2D.csproj -c ${{ env.CONFIGURATION }} -r ${{ env.RID }} `
-            -p:PublishSingleFile=true -p:SelfContained=true `
-            -p:IncludeNativeLibrariesForSelfExtract=true -p:TrimUnusedDependencies=true `
-            -o out/selfcontained
-      - name: Package builds for release
-        run: |
-          $artifacts = 'artifacts'
-          if (Test-Path $artifacts) { Remove-Item $artifacts -Recurse -Force }
-          New-Item -ItemType Directory -Path $artifacts | Out-Null
-          Compress-Archive -Path 'out/portable/*' -DestinationPath "$artifacts/winc2d-portable.zip" -Force
-          Compress-Archive -Path 'out/selfcontained/*' -DestinationPath "$artifacts/winc2d-selfcontained.zip" -Force
-      - name: Create GitHub release
-        id: create_release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            artifacts/winc2d-portable.zip
-            artifacts/winc2d-selfcontained.zip
-          name: winC2D ${{ github.ref_name }}
-          body: |
-            winC2D ${{ github.ref_name }} — C# WinForms release
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore winC2D.sln
+    
+    - name: Build
+      run: dotnet build winC2D.sln --configuration Release --no-restore
+    
+    - name: Run Tests
+      run: dotnet test winC2D.sln --no-build --verbosity normal
+    
+    - name: Publish Application
+      run: |
+        dotnet publish src/winC2D.App/winC2D.App.csproj `
+          --configuration Release `
+          --runtime win-x64 `
+          --self-contained true `
+          --output ./publish `
+          /p:PublishSingleFile=true `
+          /p:IncludeNativeLibrariesForSelfExtract=true `
+          /p:EnableCompressionInSingleFile=true
+    
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: winC2D-win-x64
+        path: ./publish/**
+        retention-days: 7
 
-            **Portable**: requires .NET 8 runtime installed  
-            **Self-contained**: no runtime required, larger file size
-          draft: false
-          prerelease: false
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download Build Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: winC2D-win-x64
+        path: ./publish
+    
+    - name: Create ZIP Archive
+      run: |
+        cd publish
+        zip -r ../winC2D-win-x64.zip .
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: winC2D-win-x64.zip
+        generate_release_notes: true
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

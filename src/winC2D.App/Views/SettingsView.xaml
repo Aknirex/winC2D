@@ -1,0 +1,79 @@
+<UserControl x:Class="winC2D.App.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             Margin="10">
+    
+    <ScrollViewer>
+        <StackPanel>
+            <!-- Header -->
+            <TextBlock Text="⚙️ System Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+            
+            <!-- Language Settings -->
+            <ui:CardExpander Header="Language" Icon="{ui:SymbolIcon Globe}" Margin="0,0,0,10">
+                <StackPanel Margin="20">
+                    <TextBlock Text="Select application language:" Margin="0,0,0,10"/>
+                    <ComboBox ItemsSource="{Binding AvailableLanguages}"
+                             SelectedValuePath="Code"
+                             DisplayMemberPath="NativeName"
+                             SelectedValue="{Binding SelectedLanguage}"
+                             Width="200"
+                             HorizontalAlignment="Left"/>
+                </StackPanel>
+            </ui:CardExpander>
+            
+            <!-- Program Files Settings -->
+            <ui:CardExpander Header="Program Files Paths" Icon="{ui:SymbolIcon Folder}" Margin="0,0,0,10">
+                <StackPanel Margin="20">
+                    <Grid Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBlock Grid.Column="0" Text="Program Files:" VerticalAlignment="Center" Width="150"/>
+                        <ui:TextBox Grid.Column="1" Text="{Binding ProgramFilesPath}" Margin="5,0"/>
+                        <ui:Button Grid.Column="2" Command="{Binding BrowseProgramFilesCommand}" Content="Browse" Margin="5,0,0,0"/>
+                    </Grid>
+                    
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBlock Grid.Column="0" Text="Program Files (x86):" VerticalAlignment="Center" Width="150"/>
+                        <ui:TextBox Grid.Column="1" Text="{Binding ProgramFilesX86Path}" Margin="5,0" IsEnabled="{Binding UseCustomX86Path}"/>
+                        <ui:Button Grid.Column="2" Command="{Binding BrowseProgramFilesX86Command}" Content="Browse" Margin="5,0,0,0" IsEnabled="{Binding UseCustomX86Path}"/>
+                    </Grid>
+                    
+                    <CheckBox Content="Use custom x86 path" 
+                             IsChecked="{Binding UseCustomX86Path}" 
+                             Margin="0,15,0,0"/>
+                </StackPanel>
+            </ui:CardExpander>
+            
+            <!-- Windows Storage Settings -->
+            <ui:CardExpander Header="Windows Storage" Icon="{ui:SymbolIcon Storage}" Margin="0,0,0,10">
+                <StackPanel Margin="20">
+                    <TextBlock Text="Open Windows Storage settings to change where new apps are installed:" 
+                              TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <ui:Button Command="{Binding OpenWindowsStorageCommand}" 
+                              Appearance="Primary"
+                              Content="Open Windows Storage Settings"/>
+                </StackPanel>
+            </ui:CardExpander>
+            
+            <!-- Actions -->
+            <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                <ui:Button Command="{Binding SaveSettingsCommand}" 
+                          Appearance="Primary"
+                          Content="Save Settings" Margin="0,0,10,0"/>
+                <ui:Button Command="{Binding ResetSettingsCommand}" 
+                          Content="Reset to Defaults"/>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

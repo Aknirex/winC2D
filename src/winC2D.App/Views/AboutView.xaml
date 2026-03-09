@@ -1,0 +1,92 @@
+<UserControl x:Class="winC2D.App.Views.AboutView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             Margin="10">
+    
+    <ScrollViewer>
+        <StackPanel>
+            <!-- Header -->
+            <TextBlock Text="ℹ️ About winC2D" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+            
+            <!-- Application Info -->
+            <ui:Card Margin="0,0,0,10">
+                <StackPanel Margin="20">
+                    <TextBlock Text="winC2D - Windows Storage Migration Assistant" 
+                              FontSize="18" 
+                              FontWeight="Bold" 
+                              Margin="0,0,0,10"/>
+                    
+                    <TextBlock Text="Version: 2.0.0" Margin="0,0,0,5"/>
+                    <TextBlock Text="License: MIT" Margin="0,0,0,5"/>
+                    <TextBlock Text="Author: SKR7lex" Margin="0,0,0,5"/>
+                    
+                    <TextBlock Text="A tool to help users migrate installed software and common folders from C drive to other disks, with support for modifying system default installation locations and user folder paths."
+                              TextWrapping="Wrap"
+                              Margin="0,10,0,0"/>
+                </StackPanel>
+            </ui:Card>
+            
+            <!-- Features -->
+            <ui:CardExpander Header="Features" Icon="{ui:SymbolIcon Checklist}" Margin="0,0,0,10">
+                <StackPanel Margin="20">
+                    <TextBlock Text="• Scan installed software on C drive" Margin="0,5"/>
+                    <TextBlock Text="• Migrate software to other disks with symbolic links" Margin="0,5"/>
+                    <TextBlock Text="• Scan and migrate AppData folders" Margin="0,5"/>
+                    <TextBlock Text="• Modify system default installation paths" Margin="0,5"/>
+                    <TextBlock Text="• Multi-language support (EN, ZH-CN, ZH-HANT, JA, KO, RU, PT-BR)" Margin="0,5"/>
+                    <TextBlock Text="• Modern Windows 11 Fluent Design UI" Margin="0,5"/>
+                    <TextBlock Text="• Atomic migration with rollback support" Margin="0,5"/>
+                </StackPanel>
+            </ui:CardExpander>
+            
+            <!-- Technology Stack -->
+            <ui:CardExpander Header="Technology Stack" Icon="{ui:SymbolIcon Code}" Margin="0,0,0,10">
+                <StackPanel Margin="20">
+                    <TextBlock Text="• .NET 8.0" Margin="0,5"/>
+                    <TextBlock Text="• WPF with WPF-UI (Fluent Design)" Margin="0,5"/>
+                    <TextBlock Text="• CommunityToolkit.Mvvm" Margin="0,5"/>
+                    <TextBlock Text="• Microsoft.Extensions.DependencyInjection" Margin="0,5"/>
+                    <TextBlock Text="• Serilog for logging" Margin="0,5"/>
+                </StackPanel>
+            </ui:CardExpander>
+            
+            <!-- Links -->
+            <ui:Card Margin="0,0,0,10">
+                <StackPanel Margin="20">
+                    <TextBlock Text="Links" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,5">
+                        <ui:SymbolIcon Symbol="Globe" Margin="0,0,10,0"/>
+                        <TextBlock>
+                            <Hyperlink NavigateUri="https://github.com/SKR7lex/winC2D">GitHub Repository</Hyperlink>
+                        </TextBlock>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,5">
+                        <ui:SymbolIcon Symbol="Book" Margin="0,0,10,0"/>
+                        <TextBlock>
+                            <Hyperlink NavigateUri="https://github.com/SKR7lex/winC2D/wiki">Documentation</Hyperlink>
+                        </TextBlock>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,5">
+                        <ui:SymbolIcon Symbol="Issue" Margin="0,0,10,0"/>
+                        <TextBlock>
+                            <Hyperlink NavigateUri="https://github.com/SKR7lex/winC2D/issues">Report an Issue</Hyperlink>
+                        </TextBlock>
+                    </StackPanel>
+                </StackPanel>
+            </ui:Card>
+            
+            <!-- Disclaimer -->
+            <ui:Card Appearance="Warning" Margin="0,0,0,10">
+                <StackPanel Margin="20">
+                    <TextBlock Text="⚠️ Disclaimer" FontSize="14" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <TextBlock TextWrapping="Wrap">
+                        This tool modifies system files and creates symbolic links. 
+                        Always backup your important data before using this tool. 
+                        The author is not responsible for any data loss or system issues.
+                    </TextBlock>
+                </StackPanel>
+            </ui:Card>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
