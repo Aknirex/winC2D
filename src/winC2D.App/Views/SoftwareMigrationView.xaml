@@ -49,7 +49,6 @@
         <!-- Software List -->
         <ui:DataGrid Grid.Row="2"
                     ItemsSource="{Binding SoftwareItems}"
-                    SelectedItems="{Binding SelectedItems, Mode=TwoWay}"
                     AutoGenerateColumns="False"
                     IsReadOnly="True"
                     SelectionMode="Extended">

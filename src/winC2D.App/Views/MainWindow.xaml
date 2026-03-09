@@ -17,10 +17,6 @@
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </ui:FluentWindow.Resources>
     
-    <ui:FluentWindow.TitleBar>
-        <ui:TitleBar Title="{Binding Title}" ShowMinimize="True" ShowMaximize="True" ShowClose="True"/>
-    </ui:FluentWindow.TitleBar>
-    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

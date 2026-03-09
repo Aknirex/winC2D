@@ -4,6 +4,7 @@ using Moq;
 using winC2D.Core.Services;
 using winC2D.Core.Models;
 using winC2D.Core.FileSystem;
+using winC2D.Infrastructure.Services;
 
 namespace winC2D.Tests.Core;
 
