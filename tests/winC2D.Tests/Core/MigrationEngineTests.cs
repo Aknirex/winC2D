@@ -27,7 +27,7 @@ public class MigrationEngineTests
     }
     
     [Fact]
-    public void CreateTaskAsync_ShouldCreateValidTask()
+    public async Task CreateTaskAsync_ShouldCreateValidTask()
     {
         // Arrange
         var engine = new MigrationEngine(
@@ -50,7 +50,7 @@ public class MigrationEngineTests
         _fileSystemMock.Setup(f => f.GetFiles(request.SourcePath, "*", true)).Returns(new[] { "file1.exe", "file2.dll" });
         
         // Act
-        var task = engine.CreateTaskAsync(request).Result;
+        var task = await engine.CreateTaskAsync(request);
         
         // Assert
         task.Should().NotBeNull();
@@ -61,7 +61,7 @@ public class MigrationEngineTests
     }
     
     [Fact]
-    public void GetTaskAsync_WhenTaskExists_ShouldReturnTask()
+    public async Task GetTaskAsync_WhenTaskExists_ShouldReturnTask()
     {
         // Arrange
         var engine = new MigrationEngine(
@@ -82,10 +82,10 @@ public class MigrationEngineTests
         _fileSystemMock.Setup(f => f.GetDirectorySize(request.SourcePath, default)).Returns(1024);
         _fileSystemMock.Setup(f => f.GetFiles(request.SourcePath, "*", true)).Returns(Array.Empty<string>());
         
-        var createdTask = engine.CreateTaskAsync(request).Result;
+        var createdTask = await engine.CreateTaskAsync(request);
         
         // Act
-        var retrievedTask = engine.GetTaskAsync(createdTask.Id).Result;
+        var retrievedTask = await engine.GetTaskAsync(createdTask.Id);
         
         // Assert
         retrievedTask.Should().NotBeNull();
@@ -93,7 +93,7 @@ public class MigrationEngineTests
     }
     
     [Fact]
-    public void GetTaskAsync_WhenTaskDoesNotExist_ShouldReturnNull()
+    public async Task GetTaskAsync_WhenTaskDoesNotExist_ShouldReturnNull()
     {
         // Arrange
         var engine = new MigrationEngine(
@@ -103,7 +103,7 @@ public class MigrationEngineTests
             _loggerMock.Object);
         
         // Act
-        var task = engine.GetTaskAsync("non-existent-id").Result;
+        var task = await engine.GetTaskAsync("non-existent-id");
         
         // Assert
         task.Should().BeNull();

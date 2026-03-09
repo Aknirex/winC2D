@@ -109,7 +109,7 @@ public class SoftwareScanner : ISoftwareScanner
     public async Task<SoftwareInfo> CheckSuspiciousAsync(SoftwareInfo software, CancellationToken cancellationToken = default)
     {
         if (software == null || string.IsNullOrEmpty(software.InstallLocation))
-            return software;
+            return software ?? new SoftwareInfo();
         
         var path = software.InstallLocation;
         

@@ -208,7 +208,7 @@ public class MigrationEngine : IMigrationEngine
     {
         if (!_tasks.TryGetValue(taskId, out var task))
         {
-            return MigrationResult.Failed(task, "Task not found", null);
+            return MigrationResult.Failed(null!, "Task not found", null);
         }
         
         if (task.State != MigrationState.Paused)
@@ -226,7 +226,7 @@ public class MigrationEngine : IMigrationEngine
     {
         if (!_tasks.TryGetValue(taskId, out var task))
         {
-            return MigrationResult.Failed(task, "Task not found", null);
+            return MigrationResult.Failed(null!, "Task not found", null);
         }
         
         // Cancel the operation

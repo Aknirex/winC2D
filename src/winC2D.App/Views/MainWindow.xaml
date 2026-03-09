@@ -25,8 +25,7 @@
         </Grid.RowDefinitions>
         
         <!-- Navigation -->
-        <ui:NavigationView Grid.Row="1" 
-                          SelectedPageIndex="{Binding SelectedNavigationIndex, Mode=TwoWay}">
+        <ui:NavigationView Grid.Row="1">
             <ui:NavigationView.MenuItems>
                 <ui:NavigationViewItem Icon="{ui:SymbolIcon Software}" Content="Software Migration">
                     <ui:NavigationViewItem.Tag>
