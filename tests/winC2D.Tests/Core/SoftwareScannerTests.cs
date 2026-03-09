@@ -27,13 +27,15 @@ public class SoftwareScannerTests
     {
         // Arrange
         var scanner = new SoftwareScanner(_fileSystemMock.Object, _loggerMock.Object);
+        var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        _fileSystemMock.Setup(f => f.DirectoryExists(programFiles)).Returns(true);
         
         // Act
         var directories = scanner.GetDefaultScanDirectories();
         
         // Assert
         directories.Should().NotBeEmpty();
-        directories.Should().Contain(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
+        directories.Should().Contain(programFiles);
     }
     
     [Fact]
@@ -56,16 +58,23 @@ public class SoftwareScannerTests
         // Arrange
         var scanner = new SoftwareScanner(_fileSystemMock.Object, _loggerMock.Object);
         var testPath = @"C:\Program Files";
+        var subDir = @"C:\Program Files\TestApp";
+        var testFile = @"C:\Program Files\TestApp\app.exe";
         
         _fileSystemMock.Setup(f => f.DirectoryExists(testPath)).Returns(true);
+        // ScanAsync calls GetDirectories on the base directory
         _fileSystemMock.Setup(f => f.GetDirectories(testPath, "*", false))
-            .Returns(new[] { @"C:\Program Files\TestApp" });
-        _fileSystemMock.Setup(f => f.IsSymlink(It.IsAny<string>())).Returns(false);
-        _fileSystemMock.Setup(f => f.GetFiles(It.IsAny<string>(), "*", false))
+            .Returns(new[] { subDir });
+        _fileSystemMock.Setup(f => f.IsSymlink(subDir)).Returns(false);
+        // BuildSoftwareInfoAsync checks for files/dirs (non-recursive) to determine hasEntries
+        _fileSystemMock.Setup(f => f.GetFiles(subDir, "*", false))
+            .Returns(new[] { testFile });
+        _fileSystemMock.Setup(f => f.GetDirectories(subDir, "*", false))
             .Returns(Array.Empty<string>());
-        _fileSystemMock.Setup(f => f.GetDirectories(It.IsAny<string>(), "*", false))
-            .Returns(Array.Empty<string>());
-        _fileSystemMock.Setup(f => f.GetDirectorySize(It.IsAny<string>(), default))
+        // GetDirectorySizeUntilThresholdAsync calls GetFiles (recursive) and GetFileSize
+        _fileSystemMock.Setup(f => f.GetFiles(subDir, "*", true))
+            .Returns(new[] { testFile });
+        _fileSystemMock.Setup(f => f.GetFileSize(testFile))
             .Returns(1024 * 1024); // 1 MB
         
         // Act
