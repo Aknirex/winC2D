@@ -1,6 +1,7 @@
 # winC2D - Windows Storage Migration Assistant
 
 [![Build](https://img.shields.io/github/actions/workflow/status/SKR7lex/winC2D/dotnet.yml?branch=main&label=build)](https://github.com/SKR7lex/winC2D/actions)
+
 [![.NET](https://img.shields.io/badge/.NET-8.0-blue)](https://dotnet.microsoft.com/)
 [![License](https://img.shields.io/github/license/SKR7lex/winC2D)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/SKR7lex/winC2D?include_prereleases)](https://github.com/SKR7lex/winC2D/releases)
