@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using winC2D.Core.Events;
 using winC2D.Core.Models;
 using winC2D.Core.Services;
 using winC2D.Infrastructure.Localization;
