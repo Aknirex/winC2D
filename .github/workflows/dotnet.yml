@@ -31,7 +31,7 @@ jobs:
     - name: Run Tests
       run: dotnet test winC2D.sln --configuration Release --no-build --verbosity normal
 
-    # 便携版：单文件，依赖系统已安装的 .NET 8 运行时，体积小
+    # 便携版：单文件 exe，依赖系统已安装的 .NET 8 运行时
     - name: Publish Portable (framework-dependent)
       run: |
         dotnet publish src/winC2D.App/winC2D.App.csproj `
@@ -40,9 +40,10 @@ jobs:
           --self-contained false `
           --output ./publish-portable `
           /p:PublishSingleFile=true `
+          /p:IncludeNativeLibrariesForSelfExtract=true `
           /p:EnableCompressionInSingleFile=true
 
-    # 自包含版：单文件，内含 .NET 运行时，无需额外安装
+    # 自包含版：单文件 exe，内含 .NET 运行时，无需额外安装
     - name: Publish Self-Contained
       run: |
         dotnet publish src/winC2D.App/winC2D.App.csproj `
@@ -54,23 +55,24 @@ jobs:
           /p:IncludeNativeLibrariesForSelfExtract=true `
           /p:EnableCompressionInSingleFile=true
 
-    - name: Create ZIP Archives
+    # 重命名产物，区分两个版本
+    - name: Rename executables
       run: |
-        Compress-Archive -Path ./publish-portable/* -DestinationPath ./winC2D-portable-win-x64.zip
-        Compress-Archive -Path ./publish-selfcontained/* -DestinationPath ./winC2D-selfcontained-win-x64.zip
-    
+        Copy-Item ./publish-portable/winC2D.App.exe ./winC2D-portable.exe
+        Copy-Item ./publish-selfcontained/winC2D.App.exe ./winC2D.exe
+
     - name: Upload Portable Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: winC2D-portable-win-x64
-        path: ./winC2D-portable-win-x64.zip
+        name: winC2D-portable
+        path: ./winC2D-portable.exe
         retention-days: 7
 
     - name: Upload Self-Contained Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: winC2D-selfcontained-win-x64
-        path: ./winC2D-selfcontained-win-x64.zip
+        name: winC2D-selfcontained
+        path: ./winC2D.exe
         retention-days: 7
 
   release:
@@ -88,13 +90,13 @@ jobs:
     - name: Download Portable Artifact
       uses: actions/download-artifact@v4
       with:
-        name: winC2D-portable-win-x64
+        name: winC2D-portable
         path: ./artifacts
 
     - name: Download Self-Contained Artifact
       uses: actions/download-artifact@v4
       with:
-        name: winC2D-selfcontained-win-x64
+        name: winC2D-selfcontained
         path: ./artifacts
     
     - name: Create Release
@@ -110,16 +112,16 @@ jobs:
 
           | 文件 | 说明 |
           |------|------|
-          | `winC2D-portable-win-x64.zip` | **便携版** — 体积小，需要系统已安装 [.NET 8 运行时](https://dotnet.microsoft.com/download/dotnet/8.0) |
-          | `winC2D-selfcontained-win-x64.zip` | **独立版** — 内含运行时，解压即用，无需额外安装 |
+          | `winC2D-portable.exe` | **便携版** — 单文件程序，需要系统已安装 [.NET 8 运行时](https://dotnet.microsoft.com/download/dotnet/8.0) |
+          | `winC2D.exe` | **独立版** — 单文件程序，内含运行时，下载即用，无需额外安装 |
 
           ### 🚀 快速开始
-          1. 下载适合你的版本并解压
-          2. 以**管理员身份**运行 `winC2D.App.exe`
+          1. 下载适合你的版本
+          2. 以**管理员身份**运行
           3. 扫描 → 选择软件 → 一键迁移
         files: |
-          ./artifacts/winC2D-portable-win-x64.zip
-          ./artifacts/winC2D-selfcontained-win-x64.zip
+          ./artifacts/winC2D-portable.exe
+          ./artifacts/winC2D.exe
         draft: false
         prerelease: false
       env:
