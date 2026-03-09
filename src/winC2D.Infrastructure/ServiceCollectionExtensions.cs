@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddWinC2DServices(this IServiceCollection services)
     {
         // File system
-        services.AddSingleton<IFileSystem, FileSystem>();
+        services.AddSingleton<IFileSystem, Infrastructure.FileSystem.FileSystem>();
         
         // Services
         services.AddSingleton<ISymlinkManager, SymlinkManager>();
