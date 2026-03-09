@@ -1,3 +1,5 @@
+using winC2D.Core.Models;
+
 namespace winC2D.Core.Events;
 
 /// <summary>

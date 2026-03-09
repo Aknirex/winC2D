@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
+using winC2D.Core.Services;
 
 namespace winC2D.Infrastructure.Services;
 

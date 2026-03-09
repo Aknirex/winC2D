@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using winC2D.Core.Models;
 using winC2D.Core.Services;
+using winC2D.Core.FileSystem;
 using winC2D.Infrastructure.Localization;
 
 namespace winC2D.App.ViewModels;

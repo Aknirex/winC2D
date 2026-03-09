@@ -1,5 +1,6 @@
 using System.IO;
 using System.Runtime.InteropServices;
+using winC2D.Core.FileSystem;
 
 namespace winC2D.Infrastructure.FileSystem;
 
