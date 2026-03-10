@@ -53,24 +53,6 @@
                                        Content="{Binding L_NavAbout}"
                                        TargetPageType="{x:Type views:AboutView}"/>
             </ui:NavigationView.FooterMenuItems>
-
-            <!-- 语言切换放在 PaneFooter -->
-            <ui:NavigationView.PaneFooter>
-                <StackPanel Orientation="Horizontal" Margin="8,4">
-                    <TextBlock Text="Lang: "
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               VerticalAlignment="Center"
-                               FontSize="12"/>
-                    <ComboBox x:Name="LanguageComboBox"
-                              ItemsSource="{Binding AvailableLanguages}"
-                              SelectedValuePath="Code"
-                              DisplayMemberPath="NativeName"
-                              SelectedValue="{Binding CurrentLanguage, Mode=OneWay}"
-                              SelectionChanged="LanguageComboBox_SelectionChanged"
-                              Width="120"
-                              FontSize="12"/>
-                </StackPanel>
-            </ui:NavigationView.PaneFooter>
         </ui:NavigationView>
 
         <!-- Status Bar -->

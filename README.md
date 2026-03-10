@@ -1,11 +1,11 @@
 # winC2D — Windows Storage Migration Assistant
 
-[![Build](https://img.shields.io/github/actions/workflow/status/SKR7lex/winC2D/dotnet.yml?branch=main&label=build)](https://github.com/SKR7lex/winC2D/actions)
+[![Build](https://img.shields.io/github/actions/workflow/status/Aknirex/winC2D/dotnet.yml?branch=main&label=build)](https://github.com/Aknirex/winC2D/actions)
 [![.NET](https://img.shields.io/badge/.NET-8.0-blue)](https://dotnet.microsoft.com/)
-[![License](https://img.shields.io/github/license/SKR7lex/winC2D)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/SKR7lex/winC2D)](https://github.com/SKR7lex/winC2D/releases)
-[![Downloads](https://img.shields.io/github/downloads/SKR7lex/winC2D/total?label=downloads)](https://github.com/SKR7lex/winC2D/releases)
-[![GitHub stars](https://img.shields.io/github/stars/SKR7lex/winC2D?style=social)](https://github.com/SKR7lex/winC2D/stargazers)
+[![License](https://img.shields.io/github/license/Aknirex/winC2D)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/Aknirex/winC2D)](https://github.com/Aknirex/winC2D/releases)
+[![Downloads](https://img.shields.io/github/downloads/Aknirex/winC2D/total?label=downloads)](https://github.com/Aknirex/winC2D/releases)
+[![GitHub stars](https://img.shields.io/github/stars/Aknirex/winC2D?style=social)](https://github.com/Aknirex/winC2D/stargazers)
 
 [简体中文](docs/README.zh-CN.md) · [繁體中文](docs/README.zh-Hant.md) · [日本語](docs/README.ja.md) · [한국어](docs/README.ko.md) · [Русский](docs/README.ru.md) · [Português (Brasil)](docs/README.pt-BR.md)
 
@@ -40,7 +40,7 @@ After migrating software, winC2D creates **symbolic links (symlinks)** at the or
 
 ## Download & Run
 
-1. Download the latest release from [Releases](https://github.com/SKR7lex/winC2D/releases)
+1. Download the latest release from [Releases](https://github.com/Aknirex/winC2D/releases)
 2. Run as **Administrator** (the app will prompt for elevation automatically)
 3. Requires Windows 10 / 11
 

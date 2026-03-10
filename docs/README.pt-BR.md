@@ -33,6 +33,6 @@ Após migrar softwares, o winC2D cria **links simbólicos (symlinks)** nos camin
 
 ## Download e Execução
 
-1. Baixe a versão mais recente em [Releases](https://github.com/SKR7lex/winC2D/releases)
+1. Baixe a versão mais recente em [Releases](https://github.com/Aknirex/winC2D/releases)
 2. Execute como **Administrador** (o app solicitará elevação automaticamente)
 3. Requer Windows 10 / 11

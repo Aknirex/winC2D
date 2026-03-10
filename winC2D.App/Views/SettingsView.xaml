@@ -7,34 +7,99 @@
     <ScrollViewer>
         <StackPanel>
             <!-- Header -->
-            <TextBlock Text="⚙️ System Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"
+            <TextBlock Text="{Binding L_Header}" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"
                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-            
-            <!-- Language Settings -->
-            <ui:CardExpander Header="Language" Icon="{ui:SymbolIcon Globe24}" Margin="0,0,0,10">
-                <StackPanel Margin="20">
-                    <TextBlock Text="Select application language:" Margin="0,0,0,10"
-                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                    <ComboBox ItemsSource="{Binding AvailableLanguages}"
-                             SelectedValuePath="Code"
-                             DisplayMemberPath="NativeName"
-                             SelectedValue="{Binding SelectedLanguage}"
-                             Width="200"
-                             HorizontalAlignment="Left"/>
-                </StackPanel>
-            </ui:CardExpander>
 
-            <!-- Theme Settings -->
-            <ui:CardExpander Header="Appearance" Icon="{ui:SymbolIcon DarkTheme24}" Margin="0,0,0,10">
-                <StackPanel Margin="20" Orientation="Horizontal">
-                    <TextBlock Text="Dark Mode" VerticalAlignment="Center" Margin="0,0,16,0"
+            <!-- Language Settings — flat card, no expander -->
+            <ui:Card Margin="0,0,0,10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ui:SymbolIcon Grid.Column="0" Symbol="Globe24" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding L_Language}"
+                               VerticalAlignment="Center"
+                               FontSize="14"
                                Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                    <ui:ToggleSwitch IsChecked="{Binding IsDarkTheme}"/>
-                </StackPanel>
-            </ui:CardExpander>
-            
-            <!-- Program Files Settings -->
-            <ui:CardExpander Header="Program Files Paths" Icon="{ui:SymbolIcon Folder24}" Margin="0,0,0,10">
+                    <ComboBox Grid.Column="2"
+                              ItemsSource="{Binding AvailableLanguages}"
+                              SelectedValuePath="Code"
+                              DisplayMemberPath="NativeName"
+                              SelectedValue="{Binding SelectedLanguage}"
+                              Width="160"/>
+                </Grid>
+            </ui:Card>
+
+            <!-- Appearance Settings — flat card, no expander -->
+            <ui:Card Margin="0,0,0,10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ui:SymbolIcon Grid.Column="0" Symbol="DarkTheme24" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding L_DarkMode}"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <ui:ToggleSwitch Grid.Column="2" IsChecked="{Binding IsDarkTheme}"/>
+                </Grid>
+            </ui:Card>
+
+            <!-- Windows Storage — flat card, no expander -->
+            <ui:Card Margin="0,0,0,10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ui:SymbolIcon Grid.Column="0" Symbol="Storage24" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding L_WindowsStorage}"
+                                   FontSize="14"
+                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    </StackPanel>
+                    <ui:Button Grid.Column="2"
+                               Command="{Binding OpenWindowsStorageCommand}"
+                               Appearance="Primary"
+                               Content="{Binding L_OpenWinStorage}"/>
+                </Grid>
+            </ui:Card>
+
+            <!-- Expert Mode toggle — flat card -->
+            <ui:Card Margin="0,0,0,10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ui:SymbolIcon Grid.Column="0" Symbol="ShieldKeyhole24" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding L_ExpertMode}"
+                                   FontSize="14"
+                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        <TextBlock Text="{Binding L_ExpertModeDesc}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Margin="0,2,0,0"/>
+                    </StackPanel>
+                    <ui:ToggleSwitch Grid.Column="2" IsChecked="{Binding ShowExpertSettings}"/>
+                </Grid>
+            </ui:Card>
+
+            <!-- Program Files Paths — only visible in expert mode -->
+            <ui:CardExpander Header="{Binding L_ProgramFiles}"
+                             Icon="{ui:SymbolIcon Folder24}"
+                             Margin="0,0,0,10"
+                             Visibility="{Binding ShowExpertSettings, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <StackPanel Margin="20">
                     <Grid Margin="0,0,0,15">
                         <Grid.ColumnDefinitions>
@@ -42,48 +107,30 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        
-                        <TextBlock Grid.Column="0" Text="Program Files:" VerticalAlignment="Center" Width="150"/>
+                        <TextBlock Grid.Column="0" Text="{Binding L_ProgramFilesLabel}" VerticalAlignment="Center" Width="150"/>
                         <ui:TextBox Grid.Column="1" Text="{Binding ProgramFilesPath}" Margin="5,0"/>
-                        <ui:Button Grid.Column="2" Command="{Binding BrowseProgramFilesCommand}" Content="Browse" Margin="5,0,0,0"/>
+                        <ui:Button Grid.Column="2" Command="{Binding BrowseProgramFilesCommand}" Content="{Binding L_Browse}" Margin="5,0,0,0"/>
                     </Grid>
-                    
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        
-                        <TextBlock Grid.Column="0" Text="Program Files (x86):" VerticalAlignment="Center" Width="150"/>
+                        <TextBlock Grid.Column="0" Text="{Binding L_ProgramFilesX86Label}" VerticalAlignment="Center" Width="150"/>
                         <ui:TextBox Grid.Column="1" Text="{Binding ProgramFilesX86Path}" Margin="5,0" IsEnabled="{Binding UseCustomX86Path}"/>
-                        <ui:Button Grid.Column="2" Command="{Binding BrowseProgramFilesX86Command}" Content="Browse" Margin="5,0,0,0" IsEnabled="{Binding UseCustomX86Path}"/>
+                        <ui:Button Grid.Column="2" Command="{Binding BrowseProgramFilesX86Command}" Content="{Binding L_Browse}" Margin="5,0,0,0" IsEnabled="{Binding UseCustomX86Path}"/>
                     </Grid>
-                    
-                    <CheckBox Content="Use custom x86 path" 
-                             IsChecked="{Binding UseCustomX86Path}" 
-                             Margin="0,15,0,0"/>
+                    <CheckBox Content="{Binding L_UseCustomX86}"
+                              IsChecked="{Binding UseCustomX86Path}"
+                              Margin="0,15,0,0"/>
                 </StackPanel>
             </ui:CardExpander>
-            
-            <!-- Windows Storage Settings -->
-            <ui:CardExpander Header="Windows Storage" Icon="{ui:SymbolIcon Storage24}" Margin="0,0,0,10">
-                <StackPanel Margin="20">
-                    <TextBlock Text="Open Windows Storage settings to change where new apps are installed:" 
-                              TextWrapping="Wrap" Margin="0,0,0,10"/>
-                    <ui:Button Command="{Binding OpenWindowsStorageCommand}" 
-                              Appearance="Primary"
-                              Content="Open Windows Storage Settings"/>
-                </StackPanel>
-            </ui:CardExpander>
-            
-            <!-- Actions -->
-            <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
-                <ui:Button Command="{Binding SaveSettingsCommand}" 
-                          Appearance="Primary"
-                          Content="Save Settings" Margin="0,0,10,0"/>
-                <ui:Button Command="{Binding ResetSettingsCommand}" 
-                          Content="Reset to Defaults"/>
+
+            <!-- Reset -->
+            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                <ui:Button Command="{Binding ResetSettingsCommand}"
+                           Content="{Binding L_Reset}"/>
             </StackPanel>
         </StackPanel>
     </ScrollViewer>

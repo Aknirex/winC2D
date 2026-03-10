@@ -17,14 +17,14 @@
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
             <ui:SymbolIcon Symbol="FolderOpen24" FontSize="24" VerticalAlignment="Center" Margin="0,0,10,0"
                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-            <TextBlock Text="AppData Migration" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"
+            <TextBlock Text="{Binding L_Header}" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"
                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
             <ui:Button Command="{Binding ScanCommand}" 
                        Appearance="Primary"
                        Margin="20,0,0,0">
                 <StackPanel Orientation="Horizontal">
                     <ui:SymbolIcon Symbol="ArrowClockwise24" FontSize="14"/>
-                    <TextBlock Text="Refresh" Margin="5,0,0,0"/>
+                    <TextBlock Text="{Binding L_Refresh}" Margin="5,0,0,0"/>
                 </StackPanel>
             </ui:Button>
         </StackPanel>
@@ -32,7 +32,7 @@
         <!-- Search -->
         <Grid Grid.Row="1" Margin="0,0,0,10">
             <ui:TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                       PlaceholderText="Search AppData folders..."
+                       PlaceholderText="{Binding L_Search}"
                        Icon="{ui:SymbolIcon Search24}"/>
         </Grid>
         
@@ -44,11 +44,11 @@
                     SelectionMode="Extended">
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Binding="{Binding IsSelected, Mode=TwoWay}" Width="Auto"/>
-                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
-                <DataGridTextColumn Header="Path" Binding="{Binding Path}" Width="300"/>
-                <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="80"/>
-                <DataGridTextColumn Header="Size" Binding="{Binding SizeText}" Width="80"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="80"/>
+                <DataGridTextColumn Header="{Binding DataContext.L_ColName, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Name}" Width="*"/>
+                <DataGridTextColumn Header="{Binding DataContext.L_ColPath, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Path}" Width="300"/>
+                <DataGridTextColumn Header="{Binding DataContext.L_ColType, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Type}" Width="80"/>
+                <DataGridTextColumn Header="{Binding DataContext.L_ColSize, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding SizeText}" Width="80"/>
+                <DataGridTextColumn Header="{Binding DataContext.L_ColStatus, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Status}" Width="80"/>
             </DataGrid.Columns>
         </ui:DataGrid>
         
@@ -61,7 +61,7 @@
             </Grid.ColumnDefinitions>
             
             <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,20,0">
-                <TextBlock Text="Target: " VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding L_Target}" VerticalAlignment="Center"/>
                 <ui:TextBox Width="250" Text="{Binding TargetPath}" VerticalAlignment="Center"/>
             </StackPanel>
             
@@ -71,7 +71,7 @@
                           IsEnabled="{Binding IsMigrating, Converter={StaticResource InverseBooleanConverter}}">
                     <StackPanel Orientation="Horizontal">
                         <ui:SymbolIcon Symbol="ArrowRight24" FontSize="14"/>
-                        <TextBlock Text="Migrate Selected" Margin="5,0,0,0"/>
+                        <TextBlock Text="{Binding L_Migrate}" Margin="5,0,0,0"/>
                     </StackPanel>
                 </ui:Button>
             </StackPanel>

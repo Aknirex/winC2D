@@ -40,7 +40,8 @@ jobs:
           --self-contained false `
           --output ./publish-portable `
           /p:PublishSingleFile=true `
-          /p:IncludeNativeLibrariesForSelfExtract=true `
+          /p:SelfContained=false `
+          /p:IncludeNativeLibrariesForSelfExtract=false `
           /p:EnableCompressionInSingleFile=true
 
     # 自包含版：单文件 exe，内含 .NET 运行时，无需额外安装
@@ -52,14 +53,28 @@ jobs:
           --self-contained true `
           --output ./publish-selfcontained `
           /p:PublishSingleFile=true `
+          /p:SelfContained=true `
           /p:IncludeNativeLibrariesForSelfExtract=true `
           /p:EnableCompressionInSingleFile=true
 
     # 重命名产物，区分两个版本
     - name: Rename executables
       run: |
-        Copy-Item ./publish-portable/winC2D.App.exe ./winC2D-portable.exe
+        Copy-Item ./publish-portable/winC2D.App.exe   ./winC2D-portable.exe
         Copy-Item ./publish-selfcontained/winC2D.App.exe ./winC2D.exe
+
+    - name: Compute SHA-256
+      run: |
+        $portable = Get-FileHash ./winC2D-portable.exe -Algorithm SHA256
+        $selfcontained = Get-FileHash ./winC2D.exe -Algorithm SHA256
+        Write-Output "winC2D-portable.exe  SHA256: $($portable.Hash)"
+        Write-Output "winC2D.exe           SHA256: $($selfcontained.Hash)"
+        Write-Output "winC2D-portable.exe  Size:   $((Get-Item ./winC2D-portable.exe).Length) bytes"
+        Write-Output "winC2D.exe           Size:   $((Get-Item ./winC2D.exe).Length) bytes"
+        if ($portable.Hash -eq $selfcontained.Hash) {
+          Write-Error "ERROR: Both files have identical SHA-256 — build configuration is wrong!"
+          exit 1
+        }
 
     - name: Upload Portable Artifact
       uses: actions/upload-artifact@v4
@@ -121,10 +136,10 @@ jobs:
           3. Scan → Select software → Migrate
 
           ### 🌏 Languages
-          Simplified Chinese · Traditional Chinese · English · 日本語 · 한국어 · Русский · Português (Brasil)
+          简体中文 · 繁體中文 · English · 日本語 · 한국어 · Русский · Português (Brasil)
 
           ---
-          [📖 Documentation](https://github.com/SKR7lex/winC2D#readme) · [🐛 Report Issue](https://github.com/SKR7lex/winC2D/issues)
+          [📖 Documentation](https://github.com/Aknirex/winC2D#readme) · [🐛 Report Issue](https://github.com/Aknirex/winC2D/issues)
         files: |
           ./artifacts/winC2D-portable.exe
           ./artifacts/winC2D.exe

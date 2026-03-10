@@ -54,7 +54,35 @@ public partial class AppDataMigrationViewModel : ObservableObject
         _migrationEngine = migrationEngine;
         _localizationService = localizationService;
         _logger = logger;
+
+        _localizationService.LanguageChanged += (_, _) => NotifyLocalizationChanged();
     }
+
+    private void NotifyLocalizationChanged()
+    {
+        OnPropertyChanged(nameof(L_Header));
+        OnPropertyChanged(nameof(L_Refresh));
+        OnPropertyChanged(nameof(L_Search));
+        OnPropertyChanged(nameof(L_ColName));
+        OnPropertyChanged(nameof(L_ColPath));
+        OnPropertyChanged(nameof(L_ColType));
+        OnPropertyChanged(nameof(L_ColSize));
+        OnPropertyChanged(nameof(L_ColStatus));
+        OnPropertyChanged(nameof(L_Target));
+        OnPropertyChanged(nameof(L_Migrate));
+    }
+
+    // ── Localized labels ──────────────────────────────────────────────
+    public string L_Header    => _localizationService.GetString("AppDataMigration.Header");
+    public string L_Refresh   => _localizationService.GetString("AppDataMigration.Refresh");
+    public string L_Search    => _localizationService.GetString("AppDataMigration.Search");
+    public string L_ColName   => _localizationService.GetString("AppDataMigration.ColName");
+    public string L_ColPath   => _localizationService.GetString("AppDataMigration.ColPath");
+    public string L_ColType   => _localizationService.GetString("AppDataMigration.ColType");
+    public string L_ColSize   => _localizationService.GetString("AppDataMigration.ColSize");
+    public string L_ColStatus => _localizationService.GetString("AppDataMigration.ColStatus");
+    public string L_Target    => _localizationService.GetString("AppDataMigration.Target");
+    public string L_Migrate   => _localizationService.GetString("AppDataMigration.Migrate");
     
     /// <summary>
     /// Scan for AppData folders

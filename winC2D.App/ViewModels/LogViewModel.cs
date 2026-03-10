@@ -42,7 +42,41 @@ public partial class LogViewModel : ObservableObject
         _rollbackManager = rollbackManager;
         _localizationService = localizationService;
         _logger = logger;
+
+        _localizationService.LanguageChanged += (_, _) => NotifyLocalizationChanged();
     }
+
+    private void NotifyLocalizationChanged()
+    {
+        OnPropertyChanged(nameof(L_Header));
+        OnPropertyChanged(nameof(L_Refresh));
+        OnPropertyChanged(nameof(L_ShowSuccessful));
+        OnPropertyChanged(nameof(L_ShowFailed));
+        OnPropertyChanged(nameof(L_ShowRolledBack));
+        OnPropertyChanged(nameof(L_ColTime));
+        OnPropertyChanged(nameof(L_ColType));
+        OnPropertyChanged(nameof(L_ColSource));
+        OnPropertyChanged(nameof(L_ColTarget));
+        OnPropertyChanged(nameof(L_ColStatus));
+        OnPropertyChanged(nameof(L_RollbackSelected));
+        OnPropertyChanged(nameof(L_ExportLog));
+        OnPropertyChanged(nameof(L_ClearHistory));
+    }
+
+    // ── Localized labels ──────────────────────────────────────────────
+    public string L_Header          => _localizationService.GetString("Log.Header");
+    public string L_Refresh         => _localizationService.GetString("Log.Refresh");
+    public string L_ShowSuccessful  => _localizationService.GetString("Log.ShowSuccessful");
+    public string L_ShowFailed      => _localizationService.GetString("Log.ShowFailed");
+    public string L_ShowRolledBack  => _localizationService.GetString("Log.ShowRolledBack");
+    public string L_ColTime         => _localizationService.GetString("Log.ColTime");
+    public string L_ColType         => _localizationService.GetString("Log.ColType");
+    public string L_ColSource       => _localizationService.GetString("Log.ColSource");
+    public string L_ColTarget       => _localizationService.GetString("Log.ColTarget");
+    public string L_ColStatus       => _localizationService.GetString("Log.ColStatus");
+    public string L_RollbackSelected => _localizationService.GetString("Log.RollbackSelected");
+    public string L_ExportLog       => _localizationService.GetString("Log.ExportLog");
+    public string L_ClearHistory    => _localizationService.GetString("Log.ClearHistory");
     
     /// <summary>
     /// Load log entries

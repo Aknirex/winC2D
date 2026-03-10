@@ -20,7 +20,7 @@
                     
                     <TextBlock Text="Version: 2.0.0" Margin="0,0,0,5"/>
                     <TextBlock Text="License: MIT" Margin="0,0,0,5"/>
-                    <TextBlock Text="Author: SKR7lex" Margin="0,0,0,5"/>
+                    <TextBlock Text="Author: Aknirex" Margin="0,0,0,5"/>
                     
                     <TextBlock Text="A tool to help users migrate installed software and common folders from C drive to other disks, with support for modifying system default installation locations and user folder paths."
                               TextWrapping="Wrap"
@@ -59,19 +59,22 @@
                     <StackPanel Orientation="Horizontal" Margin="0,5">
                         <ui:SymbolIcon Symbol="Globe24" Margin="0,0,10,0"/>
                         <TextBlock>
-                            <Hyperlink NavigateUri="https://github.com/SKR7lex/winC2D">GitHub Repository</Hyperlink>
+                            <Hyperlink NavigateUri="https://github.com/SKR7lex/winC2D"
+                                       RequestNavigate="Hyperlink_RequestNavigate">GitHub Repository</Hyperlink>
                         </TextBlock>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,5">
                         <ui:SymbolIcon Symbol="Book24" Margin="0,0,10,0"/>
                         <TextBlock>
-                            <Hyperlink NavigateUri="https://github.com/SKR7lex/winC2D/wiki">Documentation</Hyperlink>
+                            <Hyperlink NavigateUri="https://github.com/SKR7lex/winC2D/wiki"
+                                       RequestNavigate="Hyperlink_RequestNavigate">Documentation</Hyperlink>
                         </TextBlock>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,5">
                         <ui:SymbolIcon Symbol="Bug24" Margin="0,0,10,0"/>
                         <TextBlock>
-                            <Hyperlink NavigateUri="https://github.com/SKR7lex/winC2D/issues">Report an Issue</Hyperlink>
+                            <Hyperlink NavigateUri="https://github.com/SKR7lex/winC2D/issues"
+                                       RequestNavigate="Hyperlink_RequestNavigate">Report an Issue</Hyperlink>
                         </TextBlock>
                     </StackPanel>
                 </StackPanel>

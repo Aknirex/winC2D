@@ -33,6 +33,6 @@ After migrating software, winC2D creates **symbolic links (symlinks)** at the or
 
 ## Download & Run
 
-1. Download the latest release from [Releases](https://github.com/SKR7lex/winC2D/releases)
+1. Download the latest release from [Releases](https://github.com/Aknirex/winC2D/releases)
 2. Run as **Administrator** (the app will prompt for elevation automatically)
 3. Requires Windows 10 / 11

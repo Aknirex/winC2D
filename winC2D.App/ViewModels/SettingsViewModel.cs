@@ -22,6 +22,12 @@ public partial class SettingsViewModel : ObservableObject
     
     [ObservableProperty]
     private bool _useCustomX86Path;
+
+    /// <summary>
+    /// Whether to show expert/dangerous settings (Program File Paths)
+    /// </summary>
+    [ObservableProperty]
+    private bool _showExpertSettings;
     
     [ObservableProperty]
     private string _selectedLanguage = "en";
@@ -50,24 +56,56 @@ public partial class SettingsViewModel : ObservableObject
         _logger = logger;
         
         SelectedLanguage = localizationService.CurrentLanguage;
+
+        // Subscribe to language changes so localized labels update reactively
+        _localizationService.LanguageChanged += OnLanguageChanged;
     }
+
+    private void OnLanguageChanged(object? sender, LanguageChangedEventArgs e)
+    {
+        NotifyLocalizationChanged();
+    }
+
+    private void NotifyLocalizationChanged()
+    {
+        OnPropertyChanged(nameof(L_Header));
+        OnPropertyChanged(nameof(L_Language));
+        OnPropertyChanged(nameof(L_SelectLanguage));
+        OnPropertyChanged(nameof(L_Appearance));
+        OnPropertyChanged(nameof(L_DarkMode));
+        OnPropertyChanged(nameof(L_ProgramFiles));
+        OnPropertyChanged(nameof(L_ProgramFilesLabel));
+        OnPropertyChanged(nameof(L_ProgramFilesX86Label));
+        OnPropertyChanged(nameof(L_Browse));
+        OnPropertyChanged(nameof(L_UseCustomX86));
+        OnPropertyChanged(nameof(L_WindowsStorage));
+        OnPropertyChanged(nameof(L_OpenWinStorage));
+        OnPropertyChanged(nameof(L_Reset));
+        OnPropertyChanged(nameof(L_ExpertMode));
+        OnPropertyChanged(nameof(L_ExpertModeDesc));
+    }
+
+    // ── Localized labels ──────────────────────────────────────────────
+    public string L_Header            => _localizationService.GetString("Settings.Header");
+    public string L_Language          => _localizationService.GetString("Settings.Language");
+    public string L_SelectLanguage    => _localizationService.GetString("Settings.SelectLanguage");
+    public string L_Appearance        => _localizationService.GetString("Settings.Appearance");
+    public string L_DarkMode          => _localizationService.GetString("Settings.DarkMode");
+    public string L_ProgramFiles      => _localizationService.GetString("Settings.ProgramFiles");
+    public string L_ProgramFilesLabel => _localizationService.GetString("Settings.ProgramFilesLabel");
+    public string L_ProgramFilesX86Label => _localizationService.GetString("Settings.ProgramFilesX86Label");
+    public string L_Browse            => _localizationService.GetString("Settings.Browse");
+    public string L_UseCustomX86      => _localizationService.GetString("Settings.UseCustomX86");
+    public string L_WindowsStorage    => _localizationService.GetString("Settings.WindowsStorage");
+    public string L_OpenWinStorage    => _localizationService.GetString("Settings.OpenWinStorage");
+    public string L_Reset             => _localizationService.GetString("Settings.Reset");
+    public string L_ExpertMode        => _localizationService.GetString("Settings.ExpertMode");
+    public string L_ExpertModeDesc    => _localizationService.GetString("Settings.ExpertModeDesc");
     
     /// <summary>
     /// Available languages
     /// </summary>
     public IEnumerable<LanguageInfo> AvailableLanguages => _localizationService.AvailableLanguages;
-    
-    /// <summary>
-    /// Save settings
-    /// </summary>
-    [RelayCommand]
-    private void SaveSettings()
-    {
-        _logger.LogInformation("Saving settings...");
-        // Language is applied immediately via OnSelectedLanguageChanged; nothing extra needed.
-        // TODO: Save other settings (paths etc.) to configuration
-        _logger.LogInformation("Settings saved successfully");
-    }
     
     /// <summary>
     /// Reset settings to defaults
@@ -80,6 +118,7 @@ public partial class SettingsViewModel : ObservableObject
         ProgramFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
         ProgramFilesX86Path = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
         UseCustomX86Path = false;
+        ShowExpertSettings = false;
         SelectedLanguage = "en";
         
         _localizationService.SetLanguage("en");

@@ -16,23 +16,23 @@
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
             <ui:SymbolIcon Symbol="History24" FontSize="24" VerticalAlignment="Center" Margin="0,0,10,0"
                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-            <TextBlock Text="Migration History and Rollback" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"
+            <TextBlock Text="{Binding L_Header}" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"
                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
             <ui:Button Command="{Binding LoadLogsCommand}" 
                        Appearance="Primary"
                        Margin="20,0,0,0">
                 <StackPanel Orientation="Horizontal">
                     <ui:SymbolIcon Symbol="ArrowClockwise24" FontSize="14"/>
-                    <TextBlock Text="Refresh" Margin="5,0,0,0"/>
+                    <TextBlock Text="{Binding L_Refresh}" Margin="5,0,0,0"/>
                 </StackPanel>
             </ui:Button>
         </StackPanel>
         
         <!-- Filters -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
-            <CheckBox Content="Show Successful" IsChecked="{Binding ShowSuccessful}" Margin="0,0,15,0"/>
-            <CheckBox Content="Show Failed" IsChecked="{Binding ShowFailed}" Margin="0,0,15,0"/>
-            <CheckBox Content="Show Rolled Back" IsChecked="{Binding ShowRolledBack}"/>
+            <CheckBox Content="{Binding L_ShowSuccessful}" IsChecked="{Binding ShowSuccessful}" Margin="0,0,15,0"/>
+            <CheckBox Content="{Binding L_ShowFailed}" IsChecked="{Binding ShowFailed}" Margin="0,0,15,0"/>
+            <CheckBox Content="{Binding L_ShowRolledBack}" IsChecked="{Binding ShowRolledBack}"/>
         </StackPanel>
         
         <!-- Log List -->
@@ -43,11 +43,11 @@
                     IsReadOnly="True"
                     SelectionMode="Single">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Time" Binding="{Binding Time, StringFormat='yyyy-MM-dd HH:mm:ss'}" Width="150"/>
-                <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="80"/>
-                <DataGridTextColumn Header="Source" Binding="{Binding SourcePath}" Width="*"/>
-                <DataGridTextColumn Header="Target" Binding="{Binding TargetPath}" Width="*"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+                <DataGridTextColumn Header="{Binding DataContext.L_ColTime, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Time, StringFormat='yyyy-MM-dd HH:mm:ss'}" Width="150"/>
+                <DataGridTextColumn Header="{Binding DataContext.L_ColType, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Type}" Width="80"/>
+                <DataGridTextColumn Header="{Binding DataContext.L_ColSource, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding SourcePath}" Width="*"/>
+                <DataGridTextColumn Header="{Binding DataContext.L_ColTarget, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding TargetPath}" Width="*"/>
+                <DataGridTextColumn Header="{Binding DataContext.L_ColStatus, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Status}" Width="100"/>
             </DataGrid.Columns>
         </ui:DataGrid>
         
@@ -60,14 +60,14 @@
             
             <StackPanel Grid.Column="0" Orientation="Horizontal">
                 <ui:Button Command="{Binding RollbackCommand}"
-                          Content="Rollback Selected"
+                          Content="{Binding L_RollbackSelected}"
                           IsEnabled="{Binding SelectedEntry, Converter={StaticResource NullToBooleanConverter}}"
                           Margin="0,0,10,0"/>
             </StackPanel>
             
             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <ui:Button Command="{Binding ExportLogCommand}" Content="Export Log" Margin="0,0,10,0"/>
-                <ui:Button Command="{Binding ClearLogCommand}" Content="Clear History"/>
+                <ui:Button Command="{Binding ExportLogCommand}" Content="{Binding L_ExportLog}" Margin="0,0,10,0"/>
+                <ui:Button Command="{Binding ClearLogCommand}" Content="{Binding L_ClearHistory}"/>
             </StackPanel>
         </Grid>
     </Grid>

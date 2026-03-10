@@ -1,6 +1,5 @@
 using System;
 using System.Windows;
-using System.Windows.Controls;
 using Wpf.Ui.Controls;
 using winC2D.App.ViewModels;
 
@@ -30,17 +29,5 @@ public partial class MainWindow : FluentWindow
 
         // 导航到默认页
         RootNavigation.Navigate(typeof(SoftwareMigrationView));
-    }
-
-    private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (sender is not ComboBox comboBox)
-            return;
-        if (comboBox.SelectedValue is not string langCode)
-            return;
-        if (DataContext is not MainViewModel vm)
-            return;
-
-        vm.ChangeLanguageCommand.Execute(langCode);
     }
 }
