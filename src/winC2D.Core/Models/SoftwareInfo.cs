@@ -34,8 +34,22 @@ public enum SoftwareStatus
 /// <summary>
 /// Represents installed software information
 /// </summary>
-public class SoftwareInfo
+public class SoftwareInfo : System.ComponentModel.INotifyPropertyChanged
 {
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+
+    protected void OnPropertyChanged(string propertyName)
+        => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
+
+    /// <summary>
+    /// Call this when the UI language changes so bound columns re-read localized text.
+    /// </summary>
+    public void NotifyStatusTextChanged()
+    {
+        OnPropertyChanged(nameof(Status));
+        OnPropertyChanged(nameof(SizeText));
+    }
+
     /// <summary>
     /// Software display name
     /// </summary>

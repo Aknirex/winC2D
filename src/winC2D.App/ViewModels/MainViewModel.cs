@@ -63,6 +63,13 @@ public partial class MainViewModel : ObservableObject
         StatusMessage = _localizationService.GetString("Status.Ready");
     }
     
+    // ── Navigation item localized labels ────────────────────────────────
+    public string L_NavSoftware => _localizationService.GetString("Nav.Software");
+    public string L_NavAppData  => _localizationService.GetString("Nav.AppData");
+    public string L_NavSettings => _localizationService.GetString("Nav.Settings");
+    public string L_NavLogs     => _localizationService.GetString("Nav.Logs");
+    public string L_NavAbout    => _localizationService.GetString("Nav.About");
+
     private void OnLanguageChanged(object? sender, LanguageChangedEventArgs e)
     {
         _logger.LogInformation("Language changed from {Previous} to {New}", 
@@ -71,6 +78,12 @@ public partial class MainViewModel : ObservableObject
         // Notify UI to update localized strings
         OnPropertyChanged(nameof(CurrentLanguage));
         OnPropertyChanged(nameof(AvailableLanguages));
+        OnPropertyChanged(nameof(L_NavSoftware));
+        OnPropertyChanged(nameof(L_NavAppData));
+        OnPropertyChanged(nameof(L_NavSettings));
+        OnPropertyChanged(nameof(L_NavLogs));
+        OnPropertyChanged(nameof(L_NavAbout));
+        Title = _localizationService.GetString("App.Title");
     }
     
     /// <summary>

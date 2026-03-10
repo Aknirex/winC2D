@@ -23,6 +23,7 @@ public static class ServiceCollectionExtensions
         // Services
         services.AddSingleton<ISymlinkManager, SymlinkManager>();
         services.AddSingleton<IRollbackManager, RollbackManager>();
+        services.AddSingleton<ISizeCacheService, SizeCacheService>();
         services.AddSingleton<ISoftwareScanner, SoftwareScanner>();
         services.AddSingleton<IMigrationEngine, MigrationEngine>();
         

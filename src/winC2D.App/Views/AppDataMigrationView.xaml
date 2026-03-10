@@ -15,13 +15,15 @@
         
         <!-- Header -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <TextBlock Text="📁" FontSize="24" VerticalAlignment="Center" Margin="0,0,10,0"/>
-            <TextBlock Text="AppData Migration" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
+            <ui:SymbolIcon Symbol="FolderOpen24" FontSize="24" VerticalAlignment="Center" Margin="0,0,10,0"
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+            <TextBlock Text="AppData Migration" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
             <ui:Button Command="{Binding ScanCommand}" 
                        Appearance="Primary"
                        Margin="20,0,0,0">
                 <StackPanel Orientation="Horizontal">
-                    <ui:SymbolIcon Symbol="Refresh" FontSize="14"/>
+                    <ui:SymbolIcon Symbol="ArrowClockwise24" FontSize="14"/>
                     <TextBlock Text="Refresh" Margin="5,0,0,0"/>
                 </StackPanel>
             </ui:Button>
@@ -31,7 +33,7 @@
         <Grid Grid.Row="1" Margin="0,0,0,10">
             <ui:TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                        PlaceholderText="Search AppData folders..."
-                       Icon="{ui:SymbolIcon Search}"/>
+                       Icon="{ui:SymbolIcon Search24}"/>
         </Grid>
         
         <!-- AppData List -->
@@ -68,7 +70,7 @@
                           Appearance="Primary"
                           IsEnabled="{Binding IsMigrating, Converter={StaticResource InverseBooleanConverter}}">
                     <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="ArrowRight" FontSize="14"/>
+                        <ui:SymbolIcon Symbol="ArrowRight24" FontSize="14"/>
                         <TextBlock Text="Migrate Selected" Margin="5,0,0,0"/>
                     </StackPanel>
                 </ui:Button>

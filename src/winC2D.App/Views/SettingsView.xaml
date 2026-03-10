@@ -7,12 +7,14 @@
     <ScrollViewer>
         <StackPanel>
             <!-- Header -->
-            <TextBlock Text="⚙️ System Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+            <TextBlock Text="⚙️ System Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"
+                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
             
             <!-- Language Settings -->
-            <ui:CardExpander Header="Language" Icon="{ui:SymbolIcon Globe}" Margin="0,0,0,10">
+            <ui:CardExpander Header="Language" Icon="{ui:SymbolIcon Globe24}" Margin="0,0,0,10">
                 <StackPanel Margin="20">
-                    <TextBlock Text="Select application language:" Margin="0,0,0,10"/>
+                    <TextBlock Text="Select application language:" Margin="0,0,0,10"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                     <ComboBox ItemsSource="{Binding AvailableLanguages}"
                              SelectedValuePath="Code"
                              DisplayMemberPath="NativeName"
@@ -21,9 +23,18 @@
                              HorizontalAlignment="Left"/>
                 </StackPanel>
             </ui:CardExpander>
+
+            <!-- Theme Settings -->
+            <ui:CardExpander Header="Appearance" Icon="{ui:SymbolIcon DarkTheme24}" Margin="0,0,0,10">
+                <StackPanel Margin="20" Orientation="Horizontal">
+                    <TextBlock Text="Dark Mode" VerticalAlignment="Center" Margin="0,0,16,0"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <ui:ToggleSwitch IsChecked="{Binding IsDarkTheme}"/>
+                </StackPanel>
+            </ui:CardExpander>
             
             <!-- Program Files Settings -->
-            <ui:CardExpander Header="Program Files Paths" Icon="{ui:SymbolIcon Folder}" Margin="0,0,0,10">
+            <ui:CardExpander Header="Program Files Paths" Icon="{ui:SymbolIcon Folder24}" Margin="0,0,0,10">
                 <StackPanel Margin="20">
                     <Grid Margin="0,0,0,15">
                         <Grid.ColumnDefinitions>
@@ -56,7 +67,7 @@
             </ui:CardExpander>
             
             <!-- Windows Storage Settings -->
-            <ui:CardExpander Header="Windows Storage" Icon="{ui:SymbolIcon Storage}" Margin="0,0,0,10">
+            <ui:CardExpander Header="Windows Storage" Icon="{ui:SymbolIcon Storage24}" Margin="0,0,0,10">
                 <StackPanel Margin="20">
                     <TextBlock Text="Open Windows Storage settings to change where new apps are installed:" 
                               TextWrapping="Wrap" Margin="0,0,0,10"/>

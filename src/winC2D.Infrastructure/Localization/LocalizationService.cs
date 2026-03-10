@@ -1,62 +1,44 @@
 using System.Globalization;
-using System.Resources;
 
 namespace winC2D.Infrastructure.Localization;
 
 /// <summary>
-/// Implementation of localization service using resource files
+/// Implementation of localization service using a built-in translation dictionary.
 /// </summary>
 public class LocalizationService : ILocalizationService
 {
-    private readonly ResourceManager _resourceManager;
-    private CultureInfo _currentCulture;
+    private string _currentLangCode;
     
     /// <summary>
     /// Available languages
     /// </summary>
     public static readonly LanguageInfo[] SupportedLanguages = new[]
     {
-        new LanguageInfo { Code = "en", NativeName = "English", EnglishName = "English" },
-        new LanguageInfo { Code = "zh-CN", NativeName = "简体中文", EnglishName = "Simplified Chinese" },
-        new LanguageInfo { Code = "zh-Hant", NativeName = "繁體中文", EnglishName = "Traditional Chinese" },
-        new LanguageInfo { Code = "ja", NativeName = "日本語", EnglishName = "Japanese" },
-        new LanguageInfo { Code = "ko", NativeName = "한국어", EnglishName = "Korean" },
-        new LanguageInfo { Code = "ru", NativeName = "Русский", EnglishName = "Russian" },
-        new LanguageInfo { Code = "pt-BR", NativeName = "Português (Brasil)", EnglishName = "Portuguese (Brazil)" }
+        new LanguageInfo { Code = "en",    NativeName = "English",             EnglishName = "English" },
+        new LanguageInfo { Code = "zh-CN", NativeName = "简体中文",            EnglishName = "Simplified Chinese" },
+        new LanguageInfo { Code = "zh-Hant",NativeName = "繁體中文",           EnglishName = "Traditional Chinese" },
+        new LanguageInfo { Code = "ja",    NativeName = "日本語",              EnglishName = "Japanese" },
+        new LanguageInfo { Code = "ko",    NativeName = "한국어",              EnglishName = "Korean" },
+        new LanguageInfo { Code = "ru",    NativeName = "Русский",             EnglishName = "Russian" },
+        new LanguageInfo { Code = "pt-BR", NativeName = "Português (Brasil)",  EnglishName = "Portuguese (Brazil)" }
     };
     
     public LocalizationService()
     {
-        _resourceManager = new ResourceManager("winC2D.Infrastructure.Resources.Strings", typeof(LocalizationService).Assembly);
-        _currentCulture = CultureInfo.CurrentUICulture;
-        
-        // Try to load saved language preference
-        var savedLanguage = LoadLanguagePreference();
-        if (!string.IsNullOrEmpty(savedLanguage))
-        {
-            SetLanguage(savedLanguage);
-        }
+        // Try to load saved language preference; fall back to system UI culture
+        var saved = LoadLanguagePreference();
+        _currentLangCode = !string.IsNullOrEmpty(saved) ? saved : "en";
+        ApplyCulture(_currentLangCode);
     }
     
     /// <inheritdoc/>
-    public string CurrentLanguage => _currentCulture.Name;
+    public string CurrentLanguage => _currentLangCode;
     
     /// <inheritdoc/>
     public IEnumerable<LanguageInfo> AvailableLanguages => SupportedLanguages;
     
     /// <inheritdoc/>
-    public string GetString(string key)
-    {
-        try
-        {
-            var value = _resourceManager.GetString(key, _currentCulture);
-            return value ?? key;
-        }
-        catch
-        {
-            return key;
-        }
-    }
+    public string GetString(string key) => Translations.Get(_currentLangCode, key);
     
     /// <inheritdoc/>
     public string GetString(string key, params object[] args)
@@ -64,7 +46,7 @@ public class LocalizationService : ILocalizationService
         try
         {
             var format = GetString(key);
-            return string.Format(_currentCulture, format, args);
+            return string.Format(CultureInfo.CurrentUICulture, format, args);
         }
         catch
         {
@@ -78,72 +60,68 @@ public class LocalizationService : ILocalizationService
         if (string.IsNullOrEmpty(languageCode))
             return;
         
-        var previousLanguage = _currentCulture.Name;
+        var previousLanguage = _currentLangCode;
         
         try
         {
-            var culture = new CultureInfo(languageCode);
-            _currentCulture = culture;
-            CultureInfo.CurrentUICulture = culture;
-            CultureInfo.DefaultThreadCurrentUICulture = culture;
-            
+            _currentLangCode = languageCode;
+            ApplyCulture(languageCode);
             SaveLanguagePreference(languageCode);
             
             LanguageChanged?.Invoke(this, new LanguageChangedEventArgs
             {
                 PreviousLanguage = previousLanguage,
-                NewLanguage = languageCode
+                NewLanguage      = languageCode
             });
         }
         catch
         {
-            // Invalid culture, keep current
+            // Revert on error
+            _currentLangCode = previousLanguage;
         }
     }
     
     /// <inheritdoc/>
     public event EventHandler<LanguageChangedEventArgs>? LanguageChanged;
-    
-    /// <summary>
-    /// Save language preference to settings
-    /// </summary>
-    private void SaveLanguagePreference(string languageCode)
+
+    // ── helpers ──────────────────────────────────────────────────────────
+
+    private static void ApplyCulture(string langCode)
     {
         try
         {
-            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var configPath = Path.Combine(appDataPath, "winC2D");
-            Directory.CreateDirectory(configPath);
-            
-            var configFile = Path.Combine(configPath, "language.txt");
-            File.WriteAllText(configFile, languageCode);
+            var culture = new CultureInfo(langCode);
+            CultureInfo.CurrentUICulture              = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
         }
         catch
         {
-            // Ignore save errors
+            // Ignore invalid culture codes
         }
     }
     
-    /// <summary>
-    /// Load language preference from settings
-    /// </summary>
-    private string? LoadLanguagePreference()
+    private static void SaveLanguagePreference(string languageCode)
     {
         try
         {
-            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var configFile = Path.Combine(appDataPath, "winC2D", "language.txt");
-            
-            if (File.Exists(configFile))
-            {
-                return File.ReadAllText(configFile).Trim();
-            }
+            var configPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "winC2D");
+            Directory.CreateDirectory(configPath);
+            File.WriteAllText(Path.Combine(configPath, "language.txt"), languageCode);
         }
-        catch
+        catch { /* Ignore */ }
+    }
+    
+    private static string? LoadLanguagePreference()
+    {
+        try
         {
-            // Ignore load errors
+            var configFile = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "winC2D", "language.txt");
+            return File.Exists(configFile) ? File.ReadAllText(configFile).Trim() : null;
         }
-        
-        return null;
+        catch { return null; }
     }
 }

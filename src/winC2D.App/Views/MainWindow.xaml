@@ -3,77 +3,81 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:views="clr-namespace:winC2D.App.Views"
-        xmlns:vm="clr-namespace:winC2D.App.ViewModels"
         Title="{Binding Title}"
         Width="1200"
         Height="800"
         MinWidth="900"
         MinHeight="600"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource ApplicationBackgroundBrush}"
         ExtendsContentIntoTitleBar="True">
-    
-    <ui:FluentWindow.Resources>
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-    </ui:FluentWindow.Resources>
-    
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        
-        <!-- Navigation -->
-        <ui:NavigationView Grid.Row="1">
+
+        <!-- Title Bar -->
+        <ui:TitleBar Grid.Row="0"
+                     Title="{Binding Title}"
+                     ShowMinimize="True"
+                     ShowMaximize="True"
+                     ShowClose="True"/>
+
+        <!-- Navigation：NavigationView 内置 Frame，通过 TargetPageType + SetServiceProvider 驱动 -->
+        <ui:NavigationView x:Name="RootNavigation"
+                           Grid.Row="1">
             <ui:NavigationView.MenuItems>
-                <ui:NavigationViewItem Icon="{ui:SymbolIcon Software}" Content="Software Migration">
-                    <ui:NavigationViewItem.Tag>
-                        <views:SoftwareMigrationView/>
-                    </ui:NavigationViewItem.Tag>
-                </ui:NavigationViewItem>
-                <ui:NavigationViewItem Icon="{ui:SymbolIcon Folder}" Content="AppData">
-                    <ui:NavigationViewItem.Tag>
-                        <views:AppDataMigrationView/>
-                    </ui:NavigationViewItem.Tag>
-                </ui:NavigationViewItem>
-                <ui:NavigationViewItem Icon="{ui:SymbolIcon Settings}" Content="Settings">
-                    <ui:NavigationViewItem.Tag>
-                        <views:SettingsView/>
-                    </ui:NavigationViewItem.Tag>
-                </ui:NavigationViewItem>
-                <ui:NavigationViewItem Icon="{ui:SymbolIcon History}" Content="Logs">
-                    <ui:NavigationViewItem.Tag>
-                        <views:LogView/>
-                    </ui:NavigationViewItem.Tag>
-                </ui:NavigationViewItem>
+                <ui:NavigationViewItem x:Name="NavSoftware"
+                                       Icon="{ui:SymbolIcon Apps24}"
+                                       Content="{Binding L_NavSoftware}"
+                                       TargetPageType="{x:Type views:SoftwareMigrationView}"/>
+                <ui:NavigationViewItem x:Name="NavAppData"
+                                       Icon="{ui:SymbolIcon FolderOpen24}"
+                                       Content="{Binding L_NavAppData}"
+                                       TargetPageType="{x:Type views:AppDataMigrationView}"/>
+                <ui:NavigationViewItem x:Name="NavSettings"
+                                       Icon="{ui:SymbolIcon Settings24}"
+                                       Content="{Binding L_NavSettings}"
+                                       TargetPageType="{x:Type views:SettingsView}"/>
+                <ui:NavigationViewItem x:Name="NavLogs"
+                                       Icon="{ui:SymbolIcon History24}"
+                                       Content="{Binding L_NavLogs}"
+                                       TargetPageType="{x:Type views:LogView}"/>
             </ui:NavigationView.MenuItems>
-            
+
             <ui:NavigationView.FooterMenuItems>
-                <ui:NavigationViewItem Icon="{ui:SymbolIcon Question}" Content="About">
-                    <ui:NavigationViewItem.Tag>
-                        <views:AboutView/>
-                    </ui:NavigationViewItem.Tag>
-                </ui:NavigationViewItem>
+                <ui:NavigationViewItem x:Name="NavAbout"
+                                       Icon="{ui:SymbolIcon Info24}"
+                                       Content="{Binding L_NavAbout}"
+                                       TargetPageType="{x:Type views:AboutView}"/>
             </ui:NavigationView.FooterMenuItems>
+
+            <!-- 语言切换放在 PaneFooter -->
+            <ui:NavigationView.PaneFooter>
+                <StackPanel Orientation="Horizontal" Margin="8,4">
+                    <TextBlock Text="Lang: "
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               VerticalAlignment="Center"
+                               FontSize="12"/>
+                    <ComboBox x:Name="LanguageComboBox"
+                              ItemsSource="{Binding AvailableLanguages}"
+                              SelectedValuePath="Code"
+                              DisplayMemberPath="NativeName"
+                              SelectedValue="{Binding CurrentLanguage, Mode=OneWay}"
+                              SelectionChanged="LanguageComboBox_SelectionChanged"
+                              Width="120"
+                              FontSize="12"/>
+                </StackPanel>
+            </ui:NavigationView.PaneFooter>
         </ui:NavigationView>
-        
+
         <!-- Status Bar -->
         <StatusBar Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}">
             <StatusBarItem>
-                <TextBlock Text="{Binding StatusMessage}" 
-                          Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-            </StatusBarItem>
-            <StatusBarItem HorizontalAlignment="Right">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Language: " 
-                              Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                    <ComboBox ItemsSource="{Binding AvailableLanguages}"
-                             SelectedValuePath="Code"
-                             DisplayMemberPath="NativeName"
-                             SelectedValue="{Binding CurrentLanguage}"
-                             Width="120"/>
-                </StackPanel>
+                <TextBlock Text="{Binding StatusMessage}"
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
             </StatusBarItem>
         </StatusBar>
     </Grid>

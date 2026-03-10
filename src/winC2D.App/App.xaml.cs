@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using winC2D.Core.Services;
 using winC2D.Infrastructure;
 using winC2D.Infrastructure.Localization;
+using winC2D.App.Converters;
 using winC2D.App.ViewModels;
 using winC2D.App.Views;
 
@@ -54,6 +55,7 @@ public partial class App : Application
         services.AddSingleton<AppDataMigrationView>();
         services.AddSingleton<SettingsView>();
         services.AddSingleton<LogView>();
+        services.AddSingleton<AboutView>();
         
         _serviceProvider = services.BuildServiceProvider();
     }
@@ -65,16 +67,25 @@ public partial class App : Application
         _logger = _serviceProvider?.GetRequiredService<ILogger<App>>();
         _logger?.LogInformation("Application starting...");
         
-        // Check for administrator privileges
+        // Check for administrator privileges — auto-elevate
         if (!IsRunningAsAdministrator())
         {
-            _logger?.LogWarning("Not running as administrator. Some features may not work.");
-            ShowAdministratorWarning();
+            _logger?.LogWarning("Not running as administrator. Requesting elevation.");
+            RequestElevation();
+            // RequestElevation will shut down or let user cancel; if cancelled we continue without admin
         }
         
         // Load language preference
         var localizationService = _serviceProvider?.GetRequiredService<ILocalizationService>();
         _logger?.LogInformation("Current language: {Language}", localizationService?.CurrentLanguage);
+
+        // Wire up static converters that need localization service
+        if (localizationService is not null)
+        {
+            SoftwareStatusTextConverter.LocalizationService = localizationService;
+            SizeCellTooltipConverter.LocalizationService    = localizationService;
+            StatusCellTooltipConverter.LocalizationService  = localizationService;
+        }
         
         // Show main window
         var mainWindow = _serviceProvider?.GetRequiredService<MainWindow>();
@@ -124,5 +135,39 @@ public partial class App : Application
             "Administrator Privileges Required",
             MessageBoxButton.OK,
             MessageBoxImage.Warning);
+    }
+
+    /// <summary>
+    /// Re-launch the current process with administrator (runas) elevation.
+    /// If the user cancels the UAC prompt we continue running without admin.
+    /// </summary>
+    private void RequestElevation()
+    {
+        try
+        {
+            var exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+            if (string.IsNullOrEmpty(exePath))
+                return;
+
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName        = exePath,
+                UseShellExecute = true,   // required for Verb to work
+                Verb            = "runas" // triggers UAC
+            };
+
+            System.Diagnostics.Process.Start(psi);
+            // Shut down this non-elevated instance
+            Shutdown(0);
+        }
+        catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
+        {
+            // Error 1223 = user clicked "No" on the UAC prompt — keep running without admin
+            _logger?.LogWarning("User declined elevation. Running without administrator privileges.");
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to restart as administrator.");
+        }
     }
 }

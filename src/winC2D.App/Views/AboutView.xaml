@@ -7,7 +7,8 @@
     <ScrollViewer>
         <StackPanel>
             <!-- Header -->
-            <TextBlock Text="ℹ️ About winC2D" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+            <TextBlock Text="ℹ️ About winC2D" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"
+                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
             
             <!-- Application Info -->
             <ui:Card Margin="0,0,0,10">
@@ -28,7 +29,7 @@
             </ui:Card>
             
             <!-- Features -->
-            <ui:CardExpander Header="Features" Icon="{ui:SymbolIcon Checklist}" Margin="0,0,0,10">
+            <ui:CardExpander Header="Features" Icon="{ui:SymbolIcon TaskListLtr24}" Margin="0,0,0,10">
                 <StackPanel Margin="20">
                     <TextBlock Text="• Scan installed software on C drive" Margin="0,5"/>
                     <TextBlock Text="• Migrate software to other disks with symbolic links" Margin="0,5"/>
@@ -41,7 +42,7 @@
             </ui:CardExpander>
             
             <!-- Technology Stack -->
-            <ui:CardExpander Header="Technology Stack" Icon="{ui:SymbolIcon Code}" Margin="0,0,0,10">
+            <ui:CardExpander Header="Technology Stack" Icon="{ui:SymbolIcon Code24}" Margin="0,0,0,10">
                 <StackPanel Margin="20">
                     <TextBlock Text="• .NET 8.0" Margin="0,5"/>
                     <TextBlock Text="• WPF with WPF-UI (Fluent Design)" Margin="0,5"/>
@@ -56,19 +57,19 @@
                 <StackPanel Margin="20">
                     <TextBlock Text="Links" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
                     <StackPanel Orientation="Horizontal" Margin="0,5">
-                        <ui:SymbolIcon Symbol="Globe" Margin="0,0,10,0"/>
+                        <ui:SymbolIcon Symbol="Globe24" Margin="0,0,10,0"/>
                         <TextBlock>
                             <Hyperlink NavigateUri="https://github.com/SKR7lex/winC2D">GitHub Repository</Hyperlink>
                         </TextBlock>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,5">
-                        <ui:SymbolIcon Symbol="Book" Margin="0,0,10,0"/>
+                        <ui:SymbolIcon Symbol="Book24" Margin="0,0,10,0"/>
                         <TextBlock>
                             <Hyperlink NavigateUri="https://github.com/SKR7lex/winC2D/wiki">Documentation</Hyperlink>
                         </TextBlock>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,5">
-                        <ui:SymbolIcon Symbol="Issue" Margin="0,0,10,0"/>
+                        <ui:SymbolIcon Symbol="Bug24" Margin="0,0,10,0"/>
                         <TextBlock>
                             <Hyperlink NavigateUri="https://github.com/SKR7lex/winC2D/issues">Report an Issue</Hyperlink>
                         </TextBlock>

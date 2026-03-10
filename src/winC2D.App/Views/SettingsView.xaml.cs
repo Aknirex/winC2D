@@ -1,4 +1,5 @@
 using System.Windows.Controls;
+using winC2D.App.ViewModels;
 
 namespace winC2D.App.Views;
 
@@ -7,8 +8,9 @@ namespace winC2D.App.Views;
 /// </summary>
 public partial class SettingsView : UserControl
 {
-    public SettingsView()
+    public SettingsView(SettingsViewModel viewModel)
     {
         InitializeComponent();
+        DataContext = viewModel;
     }
 }

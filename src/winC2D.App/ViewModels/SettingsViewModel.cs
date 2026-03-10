@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using Wpf.Ui.Appearance;
 using winC2D.Infrastructure.Localization;
 
 namespace winC2D.App.ViewModels;
@@ -24,6 +25,22 @@ public partial class SettingsViewModel : ObservableObject
     
     [ObservableProperty]
     private string _selectedLanguage = "en";
+
+    partial void OnSelectedLanguageChanged(string value)
+    {
+        // Apply language immediately so the sidebar and all views update in real-time
+        if (!string.IsNullOrEmpty(value))
+            _localizationService.SetLanguage(value);
+    }
+
+    [ObservableProperty]
+    private bool _isDarkTheme = true; // default matches App.xaml Theme="Dark"
+
+    partial void OnIsDarkThemeChanged(bool value)
+    {
+        ApplicationThemeManager.Apply(
+            value ? ApplicationTheme.Dark : ApplicationTheme.Light);
+    }
     
     public SettingsViewModel(
         ILocalizationService localizationService,
@@ -47,15 +64,8 @@ public partial class SettingsViewModel : ObservableObject
     private void SaveSettings()
     {
         _logger.LogInformation("Saving settings...");
-        
-        // Save language preference
-        if (!string.IsNullOrEmpty(SelectedLanguage))
-        {
-            _localizationService.SetLanguage(SelectedLanguage);
-        }
-        
-        // TODO: Save other settings to configuration
-        
+        // Language is applied immediately via OnSelectedLanguageChanged; nothing extra needed.
+        // TODO: Save other settings (paths etc.) to configuration
         _logger.LogInformation("Settings saved successfully");
     }
     
