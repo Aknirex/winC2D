@@ -162,7 +162,7 @@ public partial class AppDataMigrationViewModel : ObservableObject
                 else
                 {
                     _logger.LogError("Failed to migrate AppData {Name}: {Error}", appData.Name, result.ErrorMessage);
-                    StatusMessage = _localizationService.GetString("Status.MigrationFailed", appData.Name, result.ErrorMessage);
+                    StatusMessage = _localizationService.GetString("Status.MigrationFailed", appData.Name, result.ErrorMessage ?? string.Empty);
                 }
             }
             

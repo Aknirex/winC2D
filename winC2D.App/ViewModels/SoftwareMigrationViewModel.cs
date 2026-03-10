@@ -558,7 +558,7 @@ public partial class SoftwareMigrationViewModel : ObservableObject
                 else
                 {
                     _logger.LogError("Failed to migrate {Name}: {Error}", software.Name, result.ErrorMessage);
-                    StatusMessage = _localizationService.GetString("Status.MigrationFailed", software.Name, result.ErrorMessage);
+                    StatusMessage = _localizationService.GetString("Status.MigrationFailed", software.Name, result.ErrorMessage ?? string.Empty);
                 }
             }
             
