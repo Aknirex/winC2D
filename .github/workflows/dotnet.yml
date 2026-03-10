@@ -34,7 +34,7 @@ jobs:
     # 便携版：单文件 exe，依赖系统已安装的 .NET 8 运行时
     - name: Publish Portable (framework-dependent)
       run: |
-        dotnet publish src/winC2D.App/winC2D.App.csproj `
+        dotnet publish winC2D.App/winC2D.App.csproj `
           --configuration Release `
           --runtime win-x64 `
           --self-contained false `
@@ -46,7 +46,7 @@ jobs:
     # 自包含版：单文件 exe，内含 .NET 运行时，无需额外安装
     - name: Publish Self-Contained
       run: |
-        dotnet publish src/winC2D.App/winC2D.App.csproj `
+        dotnet publish winC2D.App/winC2D.App.csproj `
           --configuration Release `
           --runtime win-x64 `
           --self-contained true `
