@@ -106,19 +106,25 @@ jobs:
         body: |
           ## winC2D v${{ steps.version.outputs.VERSION }}
 
-          Windows 软件从 C 盘迁移到 D 盘的实用工具，支持自动创建符号链接。
+          Windows disk migration assistant — move installed software and user folders from C drive to any disk, with symlinks keeping original paths intact.
 
-          ### 📦 下载说明
+          ### 📦 Downloads
 
-          | 文件 | 说明 |
-          |------|------|
-          | `winC2D-portable.exe` | **便携版** — 单文件程序，需要系统已安装 [.NET 8 运行时](https://dotnet.microsoft.com/download/dotnet/8.0) |
-          | `winC2D.exe` | **独立版** — 单文件程序，内含运行时，下载即用，无需额外安装 |
+          | File | Description |
+          |------|-------------|
+          | `winC2D-portable.exe` | **Portable** — requires [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) installed |
+          | `winC2D.exe` | **Self-contained** — includes runtime, no installation needed |
 
-          ### 🚀 快速开始
-          1. 下载适合你的版本
-          2. 以**管理员身份**运行
-          3. 扫描 → 选择软件 → 一键迁移
+          ### 🚀 Quick Start
+          1. Download your preferred version
+          2. Run as **Administrator**
+          3. Scan → Select software → Migrate
+
+          ### 🌏 Languages
+          Simplified Chinese · Traditional Chinese · English · 日本語 · 한국어 · Русский · Português (Brasil)
+
+          ---
+          [📖 Documentation](https://github.com/SKR7lex/winC2D#readme) · [🐛 Report Issue](https://github.com/SKR7lex/winC2D/issues)
         files: |
           ./artifacts/winC2D-portable.exe
           ./artifacts/winC2D.exe
