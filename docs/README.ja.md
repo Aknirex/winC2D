@@ -1,6 +1,6 @@
 # winC2D — Windows ディスク移行ツール
 
-[← ホームへ戻る](../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-Hant.md) · [English](README.en.md) · [한국어](README.ko.md) · [Русский](README.ru.md) · [Português](README.pt-BR.md)
+[English (README)](../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-Hant.md) · [English](README.en.md) · [한국어](README.ko.md) · [Русский](README.ru.md) · [Português](README.pt-BR.md)
 
 ---
 

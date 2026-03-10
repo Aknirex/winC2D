@@ -1,6 +1,6 @@
 # winC2D — Ferramenta de Migração de Disco Windows
 
-[← Voltar ao início](../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-Hant.md) · [English](README.en.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Русский](README.ru.md)
+[English (README)](../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-Hant.md) · [English](README.en.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Русский](README.ru.md)
 
 ---
 

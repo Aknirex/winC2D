@@ -1,6 +1,6 @@
 # winC2D — Windows 디스크 마이그레이션 도구
 
-[← 홈으로 돌아가기](../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-Hant.md) · [English](README.en.md) · [日本語](README.ja.md) · [Русский](README.ru.md) · [Português](README.pt-BR.md)
+[English (README)](../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-Hant.md) · [English](README.en.md) · [日本語](README.ja.md) · [Русский](README.ru.md) · [Português](README.pt-BR.md)
 
 ---
 
