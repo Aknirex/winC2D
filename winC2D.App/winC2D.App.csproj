@@ -8,7 +8,7 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>winC2D.App</RootNamespace>
-    <ApplicationIcon>..\..\winc2d.ico</ApplicationIcon>
+    <ApplicationIcon>..\winc2d.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,7 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\..\winc2d.ico" Link="winc2d.ico">
+    <Content Include="..\winc2d.ico" Link="winc2d.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

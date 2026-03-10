@@ -2,15 +2,13 @@
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34309.116
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "winC2D.Core", "src\winC2D.Core\winC2D.Core.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "winC2D.Core", "winC2D.Core\winC2D.Core.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "winC2D.Infrastructure", "src\winC2D.Infrastructure\winC2D.Infrastructure.csproj", "{B2C3D4E5-F6A7-8901-BCDE-F12345678901}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "winC2D.Infrastructure", "winC2D.Infrastructure\winC2D.Infrastructure.csproj", "{B2C3D4E5-F6A7-8901-BCDE-F12345678901}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "winC2D.App", "src\winC2D.App\winC2D.App.csproj", "{C3D4E5F6-A7B8-9012-CDEF-123456789012}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "winC2D.App", "winC2D.App\winC2D.App.csproj", "{C3D4E5F6-A7B8-9012-CDEF-123456789012}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "winC2D.Tests", "tests\winC2D.Tests\winC2D.Tests.csproj", "{D4E5F6A7-B8C9-0123-DEF0-1234567890123}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E5F6A7B8-C9D0-1234-EF01-234567890123}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F6A7B8C9-D0E1-2345-F012-345678901234}"
 EndProject
@@ -41,9 +39,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890} = {E5F6A7B8-C9D0-1234-EF01-234567890123}
-		{B2C3D4E5-F6A7-8901-BCDE-F12345678901} = {E5F6A7B8-C9D0-1234-EF01-234567890123}
-		{C3D4E5F6-A7B8-9012-CDEF-123456789012} = {E5F6A7B8-C9D0-1234-EF01-234567890123}
 		{D4E5F6A7-B8C9-0123-DEF0-1234567890123} = {F6A7B8C9-D0E1-2345-F012-345678901234}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

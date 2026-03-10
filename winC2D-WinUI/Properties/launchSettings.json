@@ -1,8 +1,0 @@
-{
-	"profiles": {
-		"winC2D-WinUI": {
-			"commandName": "Project",
-			"nativeDebugging": false
-		}
-	}
-}
