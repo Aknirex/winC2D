@@ -34,5 +34,11 @@ Após migrar softwares, o winC2D cria **links simbólicos (symlinks)** nos camin
 ## Download e Execução
 
 1. Baixe a versão mais recente em [Releases](https://github.com/Aknirex/winC2D/releases)
+
+   | Versão | Tamanho | Caso de Uso |
+   | --- | --- | --- |
+   | **Autossuficiente**（`-standalone.exe`） | ~70–80 MB | ⭐ Recomendado — inclui .NET 8 runtime, pronto para usar |
+   | **Dependente de Framework**（`-framework-dependent.exe`） | ~10–15 MB | Para usuários que já têm .NET 8 runtime instalado |
+
 2. Execute como **Administrador** (o app solicitará elevação automaticamente)
 3. Requer Windows 10 / 11

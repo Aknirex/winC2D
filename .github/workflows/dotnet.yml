@@ -58,36 +58,70 @@ jobs:
           /p:EnableCompressionInSingleFile=true
 
     # 重命名产物，区分两个版本
-    - name: Rename executables
+    - name: Extract version and rename executables
+      id: version_rename
       run: |
-        Copy-Item ./publish-portable/winC2D.App.exe   ./winC2D-portable.exe
-        Copy-Item ./publish-selfcontained/winC2D.App.exe ./winC2D.exe
+        # Get version from git tag if exists, otherwise from csproj
+        if ("${{ github.ref }}".StartsWith("refs/tags/v")) {
+          $version = "${{ github.ref }}".Replace("refs/tags/v", "v")
+        } else {
+          $version = "dev"
+        }
+        
+        $standaloneFile = "winC2D-$version-standalone.exe"
+        $frameworkFile = "winC2D-$version-framework-dependent.exe"
+        
+        Copy-Item ./publish-selfcontained/winC2D.App.exe $standaloneFile
+        Copy-Item ./publish-portable/winC2D.App.exe $frameworkFile
+        
+        echo "standalone=$standaloneFile" >> $env:GITHUB_OUTPUT
+        echo "framework=$frameworkFile" >> $env:GITHUB_OUTPUT
+        
+        Write-Output "✓ Standalone:   $standaloneFile"
+        Write-Output "✓ Framework:    $frameworkFile"
 
-    - name: Compute SHA-256
+    - name: Compute SHA-256 and verify
       run: |
-        $portable = Get-FileHash ./winC2D-portable.exe -Algorithm SHA256
-        $selfcontained = Get-FileHash ./winC2D.exe -Algorithm SHA256
-        Write-Output "winC2D-portable.exe  SHA256: $($portable.Hash)"
-        Write-Output "winC2D.exe           SHA256: $($selfcontained.Hash)"
-        Write-Output "winC2D-portable.exe  Size:   $((Get-Item ./winC2D-portable.exe).Length) bytes"
-        Write-Output "winC2D.exe           Size:   $((Get-Item ./winC2D.exe).Length) bytes"
-        if ($portable.Hash -eq $selfcontained.Hash) {
-          Write-Error "ERROR: Both files have identical SHA-256 — build configuration is wrong!"
+        $standalone = Get-FileHash "${{ steps.version_rename.outputs.standalone }}" -Algorithm SHA256
+        $framework = Get-FileHash "${{ steps.version_rename.outputs.framework }}" -Algorithm SHA256
+        
+        Write-Output ""
+        Write-Output "========== Build Artifacts =========="
+        Write-Output "Standalone (with .NET 8 runtime):"
+        Write-Output "  File: ${{ steps.version_rename.outputs.standalone }}"
+        Write-Output "  SHA256: $($standalone.Hash)"
+        Write-Output "  Size: $(([math]::Round($(Get-Item "${{ steps.version_rename.outputs.standalone }}").Length / 1MB, 2))) MB"
+        Write-Output ""
+        Write-Output "Framework-Dependent (requires .NET 8 runtime):"
+        Write-Output "  File: ${{ steps.version_rename.outputs.framework }}"
+        Write-Output "  SHA256: $($framework.Hash)"
+        Write-Output "  Size: $(([math]::Round($(Get-Item "${{ steps.version_rename.outputs.framework }}").Length / 1MB, 2))) MB"
+        Write-Output "======================================"
+        
+        if ($standalone.Hash -eq $framework.Hash) {
+          Write-Error "❌ ERROR: Both files have identical SHA-256 — build configuration is wrong!"
           exit 1
         }
+        
+        if ($(Get-Item "${{ steps.version_rename.outputs.standalone }}").Length -le $(Get-Item "${{ steps.version_rename.outputs.framework }}").Length) {
+          Write-Error "❌ ERROR: Standalone should be larger than framework-dependent!"
+          exit 1
+        }
+        
+        Write-Output "✓ Both files are correctly built with different configurations"
 
-    - name: Upload Portable Artifact
+    - name: Upload Standalone Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: winC2D-portable
-        path: ./winC2D-portable.exe
+        name: winC2D-standalone
+        path: ${{ steps.version_rename.outputs.standalone }}
         retention-days: 7
 
-    - name: Upload Self-Contained Artifact
+    - name: Upload Framework-Dependent Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: winC2D-selfcontained
-        path: ./winC2D.exe
+        name: winC2D-framework-dependent
+        path: ${{ steps.version_rename.outputs.framework }}
         retention-days: 7
 
   release:
@@ -102,16 +136,16 @@ jobs:
       id: version
       run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
     
-    - name: Download Portable Artifact
+    - name: Download Standalone Artifact
       uses: actions/download-artifact@v4
       with:
-        name: winC2D-portable
+        name: winC2D-standalone
         path: ./artifacts
 
-    - name: Download Self-Contained Artifact
+    - name: Download Framework-Dependent Artifact
       uses: actions/download-artifact@v4
       with:
-        name: winC2D-selfcontained
+        name: winC2D-framework-dependent
         path: ./artifacts
     
     - name: Create Release
@@ -125,24 +159,29 @@ jobs:
 
           ### 📦 Downloads
 
-          | File | Description |
-          |------|-------------|
-          | `winC2D-portable.exe` | **Portable** — requires [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) installed |
-          | `winC2D.exe` | **Self-contained** — includes runtime, no installation needed |
+          | File | Size | Description |
+          |------|------|-------------|
+          | `winC2D-v${{ steps.version.outputs.VERSION }}-standalone.exe` | ~70–80 MB | ⭐ **Recommended** — includes .NET 8 runtime, no installation needed |
+          | `winC2D-v${{ steps.version.outputs.VERSION }}-framework-dependent.exe` | ~10–15 MB | Lightweight — requires [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) installed |
 
           ### 🚀 Quick Start
-          1. Download your preferred version
+          1. Download **standalone** version (recommended for most users)
           2. Run as **Administrator**
           3. Scan → Select software → Migrate
 
-          ### 🌏 Languages
+          ### 🌏 Languages Supported
           简体中文 · 繁體中文 · English · 日本語 · 한국어 · Русский · Português (Brasil)
 
+          ### 📝 Changes in v${{ steps.version.outputs.VERSION }}
+          - Fixed GitHub Actions build configuration for two distinct executable versions
+          - Improved release artifact naming for clarity
+          - Enhanced SHA-256 verification in CI pipeline
+
           ---
-          [📖 Documentation](https://github.com/Aknirex/winC2D#readme) · [🐛 Report Issue](https://github.com/Aknirex/winC2D/issues)
+          [📖 Documentation](https://github.com/SKR7lex/winC2D#readme) · [🐛 Report Issue](https://github.com/SKR7lex/winC2D/issues)
         files: |
-          ./artifacts/winC2D-portable.exe
-          ./artifacts/winC2D.exe
+          ./artifacts/winC2D-v${{ steps.version.outputs.VERSION }}-standalone.exe
+          ./artifacts/winC2D-v${{ steps.version.outputs.VERSION }}-framework-dependent.exe
         draft: false
         prerelease: false
       env:
