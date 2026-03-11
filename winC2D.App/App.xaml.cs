@@ -95,6 +95,16 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _logger?.LogInformation("Application exiting...");
+        // Persist the size cache so the next launch benefits from the measurements
+        // collected during this session.
+        try
+        {
+            _serviceProvider?.GetService<ISizeCacheService>()?.Save();
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Failed to save size cache on exit.");
+        }
         base.OnExit(e);
     }
     

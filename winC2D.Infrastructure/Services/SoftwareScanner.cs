@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using winC2D.Core.Services;
 using winC2D.Core.Models;
@@ -6,295 +7,326 @@ using winC2D.Core.FileSystem;
 namespace winC2D.Infrastructure.Services;
 
 /// <summary>
-/// Implementation of software scanner
+/// Streams <see cref="SoftwareInfo"/> items from Program Files directories.
+///
+/// Status assignment rules (applied after every scan, fast or precise):
+///   Migrated   – directory is a reparse point (symlink)
+///   Empty      – no files and no sub-directories at all
+///   Normal     – has at least one .exe (or size > SmallAppThreshold)
+///   SmallApp   – has files but no .exe AND size ≤ SmallAppThreshold
+///                (replaces the old "Suspicious" label for normal small dirs)
+///   Residual   – directory exists but has only files/dirs with no .exe found
+///                AND the precise check confirmed this (SuspiciousChecked=true)
+///
+/// "Suspicious" is intentionally NOT assigned based on size alone.
 /// </summary>
-public class SoftwareScanner : ISoftwareScanner
+public sealed class SoftwareScanner : ISoftwareScanner
 {
     private readonly IFileSystem _fileSystem;
+    private readonly ISizeCacheService _sizeCache;
     private readonly ILogger<SoftwareScanner> _logger;
-    
+
     /// <summary>
-    /// Size threshold for suspicious directories (10 MB)
+    /// Directories smaller than this are considered "small apps" rather than suspicious.
+    /// Value: 50 MB – large enough to exclude most genuine software.
     /// </summary>
-    private const long SuspiciousSizeThreshold = 10L * 1024 * 1024;
-    
-    public event EventHandler<ScanProgressEventArgs>? ProgressChanged;
-    
-    public SoftwareScanner(IFileSystem fileSystem, ILogger<SoftwareScanner> logger)
+    private const long SmallAppThreshold = 50L * 1024 * 1024;
+
+    /// <summary>Max concurrent size calculations during a full scan.</summary>
+    private const int ScanConcurrency = 4;
+
+    public SoftwareScanner(
+        IFileSystem fileSystem,
+        ISizeCacheService sizeCache,
+        ILogger<SoftwareScanner> logger)
     {
         _fileSystem = fileSystem;
-        _logger = logger;
+        _sizeCache  = sizeCache;
+        _logger     = logger;
     }
-    
-    /// <inheritdoc/>
-    public async Task<IEnumerable<SoftwareInfo>> ScanAsync(IEnumerable<string> directories, CancellationToken cancellationToken = default)
-    {
-        var result = new List<SoftwareInfo>();
-        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var directoriesList = directories.ToList();
-        var scannedCount = 0;
-        
-        foreach (var baseDir in directoriesList)
-        {
-            if (cancellationToken.IsCancellationRequested)
-                break;
-            
-            if (!_fileSystem.DirectoryExists(baseDir))
-                continue;
-            
-            OnProgressChanged(baseDir, scannedCount, directoriesList.Count, result.Count);
-            
-            var subDirs = _fileSystem.GetDirectories(baseDir, "*", false);
-            
-            foreach (var subDir in subDirs)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                    break;
-                
-                var normalizedPath = NormalizePath(subDir);
-                
-                if (visited.Contains(normalizedPath))
-                    continue;
-                
-                visited.Add(normalizedPath);
-                
-                try
-                {
-                    var info = await BuildSoftwareInfoAsync(subDir, cancellationToken);
-                    result.Add(info);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to scan directory: {Path}", subDir);
-                }
-            }
-            
-            scannedCount++;
-        }
-        
-        return result;
-    }
-    
-    /// <inheritdoc/>
-    public Task<IEnumerable<SoftwareInfo>> ScanAsync(CancellationToken cancellationToken = default)
-    {
-        var defaultDirs = GetDefaultScanDirectories();
-        return ScanAsync(defaultDirs, cancellationToken);
-    }
-    
+
+    // ── ISoftwareScanner ────────────────────────────────────────────────
+
     /// <inheritdoc/>
     public IEnumerable<string> GetDefaultScanDirectories()
     {
         var dirs = new List<string>();
-        
-        var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-        if (!string.IsNullOrEmpty(programFiles) && _fileSystem.DirectoryExists(programFiles))
-        {
-            dirs.Add(programFiles);
-        }
-        
+
+        var pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        if (!string.IsNullOrEmpty(pf) && _fileSystem.DirectoryExists(pf))
+            dirs.Add(pf);
+
         if (Environment.Is64BitOperatingSystem)
         {
-            var programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-            if (!string.IsNullOrEmpty(programFilesX86) && _fileSystem.DirectoryExists(programFilesX86))
-            {
-                dirs.Add(programFilesX86);
-            }
+            var pfx86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+            if (!string.IsNullOrEmpty(pfx86) &&
+                !string.Equals(pfx86, pf, StringComparison.OrdinalIgnoreCase) &&
+                _fileSystem.DirectoryExists(pfx86))
+                dirs.Add(pfx86);
         }
-        
+
         return dirs;
     }
-    
+
     /// <inheritdoc/>
-    public async Task<SoftwareInfo> CheckSuspiciousAsync(SoftwareInfo software, CancellationToken cancellationToken = default)
+    public IAsyncEnumerable<SoftwareInfo> ScanStreamAsync(
+        IProgress<ScanProgressReport>? progress = null,
+        CancellationToken cancellationToken = default)
+        => ScanStreamAsync(GetDefaultScanDirectories(), progress, cancellationToken);
+
+    /// <inheritdoc/>
+    public async IAsyncEnumerable<SoftwareInfo> ScanStreamAsync(
+        IEnumerable<string> directories,
+        IProgress<ScanProgressReport>? progress = null,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        if (software == null || string.IsNullOrEmpty(software.InstallLocation))
-            return software ?? new SoftwareInfo();
-        
+        // ── Phase 1: enumerate all first-level sub-directories ────────────
+        var allDirs = CollectSubDirectories(directories);
+        int total   = allDirs.Count;
+        int done    = 0;
+
+        // ── Phase 2: process with bounded concurrency ─────────────────────
+        // We use a channel as a producer/consumer bridge so that IAsyncEnumerable
+        // can yield items in order of completion without blocking the caller.
+        var channel = System.Threading.Channels.Channel.CreateUnbounded<SoftwareInfo>(
+            new System.Threading.Channels.UnboundedChannelOptions { SingleReader = true });
+
+        var semaphore = new SemaphoreSlim(ScanConcurrency, ScanConcurrency);
+
+        var producer = Task.Run(async () =>
+        {
+            var tasks = allDirs.Select(async path =>
+            {
+                await semaphore.WaitAsync(cancellationToken);
+                try
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var item = await BuildItemAsync(path, cancellationToken);
+                    await channel.Writer.WriteAsync(item, cancellationToken);
+
+                    int current = Interlocked.Increment(ref done);
+                    progress?.Report(new ScanProgressReport(
+                        CurrentDirectory : Path.GetFileName(path) ?? path,
+                        ItemsFound       : current,
+                        TotalDirectories : total,
+                        ProgressPercent  : total > 0 ? (int)((double)current / total * 100) : 100));
+                }
+                catch (OperationCanceledException) { /* swallow – outer loop will stop */ }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Skipped directory during scan: {Path}", path);
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
+
+            await Task.WhenAll(tasks);
+            channel.Writer.Complete();
+        }, cancellationToken);
+
+        // Yield items as the producer writes them
+        await foreach (var item in channel.Reader.ReadAllAsync(cancellationToken))
+            yield return item;
+
+        await producer; // propagate any unhandled producer exception
+    }
+
+    /// <inheritdoc/>
+    public async Task<SoftwareInfo> RecalculateSizeAsync(
+        SoftwareInfo software,
+        CancellationToken cancellationToken = default)
+    {
+        if (software is null) throw new ArgumentNullException(nameof(software));
+
         var path = software.InstallLocation;
-        
+
+        if (_fileSystem.IsSymlink(path))
+        {
+            software.IsSymlink = true;
+            software.Status    = SoftwareStatus.Migrated;
+            return software;
+        }
+
         if (!_fileSystem.DirectoryExists(path))
         {
-            software.Status = SoftwareStatus.Residual;
-            software.SizeBytes = 0;
+            software.Status          = SoftwareStatus.Residual;
+            software.SizeBytes       = 0;
             software.SuspiciousChecked = true;
             return software;
         }
-        
-        var hasEntries = false;
-        var hasExe = false;
-        var size = 0L;
-        
+
+        long size   = 0;
+        bool hasExe = false;
+
         try
         {
-            var files = _fileSystem.GetFiles(path, "*", true);
-            
-            foreach (var file in files)
+            await Task.Run(() =>
             {
-                if (cancellationToken.IsCancellationRequested)
-                    break;
-                
-                hasEntries = true;
-                
-                if (!hasExe && file.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                foreach (var file in _fileSystem.GetFiles(path, "*", true))
                 {
-                    hasExe = true;
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (!hasExe && file.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                        hasExe = true;
+                    try { size += _fileSystem.GetFileSize(file); } catch { }
                 }
-                
-                try
-                {
-                    size += _fileSystem.GetFileSize(file);
-                }
-                catch
-                {
-                    // Ignore files that can't be accessed
-                }
-            }
-            
-            if (!hasEntries)
-            {
-                var subDirs = _fileSystem.GetDirectories(path, "*", true);
-                hasEntries = subDirs.Any();
-            }
+            }, cancellationToken);
         }
-        catch
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex)
         {
-            // Ignore scan errors
+            _logger.LogWarning(ex, "Error during precise size calculation for {Path}", path);
         }
-        
-        software.SizeBytes = size;
+
+        // Write result into cache so next fast scan can reuse it
+        _sizeCache.Set(path, size);
+
+        software.SizeBytes         = size;
         software.SuspiciousChecked = true;
-        
-        if (!hasEntries)
-        {
-            software.Status = SoftwareStatus.Empty;
-        }
-        else if (!hasExe)
-        {
-            software.Status = SoftwareStatus.Residual;
-        }
-        else
-        {
-            software.Status = SoftwareStatus.Normal;
-        }
-        
+        software.Status            = DetermineStatus(isSymlink: false, size: size, hasExe: hasExe);
         return software;
     }
-    
-    /// <inheritdoc/>
-    public Task<long> CalculateSizeAsync(string path, CancellationToken cancellationToken = default)
+
+    // ── private helpers ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// Enumerate all first-level sub-directories across all base directories,
+    /// deduplicating by normalised path.
+    /// </summary>
+    private List<string> CollectSubDirectories(IEnumerable<string> baseDirs)
     {
-        return Task.Run(() => _fileSystem.GetDirectorySize(path, cancellationToken), cancellationToken);
-    }
-    
-    #region Private Methods
-    
-    private async Task<SoftwareInfo> BuildSoftwareInfoAsync(string path, CancellationToken cancellationToken)
-    {
-        var isSymlink = _fileSystem.IsSymlink(path);
-        
-        var hasEntries = false;
-        try
+        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var result  = new List<string>();
+
+        foreach (var baseDir in baseDirs)
         {
-            hasEntries = _fileSystem.GetFiles(path, "*", false).Any() || 
-                         _fileSystem.GetDirectories(path, "*", false).Any();
-        }
-        catch
-        {
-            // Ignore access errors
-        }
-        
-        // Quick size calculation (stop at threshold for performance)
-        var (size, exceededThreshold) = await GetDirectorySizeUntilThresholdAsync(path, SuspiciousSizeThreshold, cancellationToken);
-        
-        var status = SoftwareStatus.Normal;
-        if (isSymlink)
-        {
-            status = SoftwareStatus.Migrated;
-        }
-        else if (!hasEntries)
-        {
-            status = SoftwareStatus.Empty;
-        }
-        else if (!exceededThreshold && size <= SuspiciousSizeThreshold)
-        {
-            status = SoftwareStatus.Suspicious;
-        }
-        
-        // Use -1 to indicate size exceeded threshold
-        var displaySize = exceededThreshold ? -1 : size;
-        
-        return new SoftwareInfo
-        {
-            Name = GetDirectoryName(path),
-            InstallLocation = path,
-            SizeBytes = displaySize,
-            IsSymlink = isSymlink,
-            Status = status,
-            SuspiciousChecked = false
-        };
-    }
-    
-    private async Task<(long size, bool exceededThreshold)> GetDirectorySizeUntilThresholdAsync(string path, long threshold, CancellationToken cancellationToken)
-    {
-        long size = 0;
-        var exceeded = false;
-        
-        try
-        {
-            var files = _fileSystem.GetFiles(path, "*", true);
-            
-            foreach (var file in files)
+            if (!_fileSystem.DirectoryExists(baseDir)) continue;
+            try
             {
-                if (cancellationToken.IsCancellationRequested)
-                    break;
-                
-                try
+                foreach (var sub in _fileSystem.GetDirectories(baseDir, "*", false))
                 {
-                    size += _fileSystem.GetFileSize(file);
-                    
-                    if (size > threshold)
-                    {
-                        exceeded = true;
-                        break;
-                    }
-                }
-                catch
-                {
-                    // Ignore files that can't be accessed
+                    var norm = Normalise(sub);
+                    if (visited.Add(norm))
+                        result.Add(norm);
                 }
             }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Cannot enumerate {BaseDir}", baseDir);
+            }
         }
-        catch
+
+        return result;
+    }
+
+    /// <summary>
+    /// Build one <see cref="SoftwareInfo"/> for <paramref name="path"/>.
+    /// Uses the size cache when fresh; otherwise calculates precisely.
+    /// </summary>
+    private async Task<SoftwareInfo> BuildItemAsync(string path, CancellationToken ct)
+    {
+        var name      = Path.GetFileName(path) ?? path;
+        var isSymlink = _fileSystem.IsSymlink(path);
+
+        if (isSymlink)
         {
-            // Ignore scan errors
+            return new SoftwareInfo
+            {
+                Name            = name,
+                InstallLocation = path,
+                IsSymlink       = true,
+                SizeBytes       = 0,
+                Status          = SoftwareStatus.Migrated,
+                SuspiciousChecked = true
+            };
         }
-        
-        return (size, exceeded);
-    }
-    
-    private string NormalizePath(string path)
-    {
-        return path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-    }
-    
-    private string GetDirectoryName(string path)
-    {
-        var normalized = NormalizePath(path);
-        return Path.GetFileName(normalized) ?? path;
-    }
-    
-    private void OnProgressChanged(string currentDirectory, int scanned, int total, int found)
-    {
-        ProgressChanged?.Invoke(this, new ScanProgressEventArgs
+
+        // ── Try cache ────────────────────────────────────────────────────
+        if (_sizeCache.TryGet(path, out var cached))
         {
-            CurrentDirectory = currentDirectory,
-            DirectoriesScanned = scanned,
-            TotalDirectories = total,
-            ItemsFound = found,
-            ProgressPercent = total > 0 ? (int)((double)scanned / total * 100) : 0
-        });
+            var (cachedStatus, _) = AnalyseSize(cached.SizeBytes);
+            return new SoftwareInfo
+            {
+                Name              = name,
+                InstallLocation   = path,
+                IsSymlink         = false,
+                SizeBytes         = cached.SizeBytes,
+                Status            = cachedStatus,
+                SuspiciousChecked = true   // cache implies a previous precise measurement
+            };
+        }
+
+        // ── Cache miss: precise full calculation ─────────────────────────
+        long size   = 0;
+        bool hasExe = false;
+        bool hasAny = false;
+
+        try
+        {
+            await Task.Run(() =>
+            {
+                foreach (var file in _fileSystem.GetFiles(path, "*", true))
+                {
+                    ct.ThrowIfCancellationRequested();
+                    hasAny = true;
+                    if (!hasExe && file.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                        hasExe = true;
+                    try { size += _fileSystem.GetFileSize(file); } catch { }
+                }
+
+                if (!hasAny)
+                    hasAny = _fileSystem.GetDirectories(path, "*", false).Any();
+            }, ct);
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error scanning {Path}", path);
+        }
+
+        // Write into cache so subsequent fast launches reuse this measurement
+        _sizeCache.Set(path, size);
+
+        var status = hasAny
+            ? DetermineStatus(isSymlink: false, size: size, hasExe: hasExe)
+            : SoftwareStatus.Empty;
+
+        return new SoftwareInfo
+        {
+            Name              = name,
+            InstallLocation   = path,
+            IsSymlink         = false,
+            SizeBytes         = size,
+            Status            = status,
+            SuspiciousChecked = true
+        };
     }
-    
-    #endregion
+
+    /// <summary>
+    /// Derives the display status from measured size and .exe presence.
+    /// "Suspicious" is no longer assigned here – it is only used by migration
+    /// logic to mean "needs manual review" (e.g. no .exe found after precise check).
+    /// </summary>
+    private static SoftwareStatus DetermineStatus(bool isSymlink, long size, bool hasExe)
+    {
+        if (isSymlink) return SoftwareStatus.Migrated;
+        if (size == 0) return SoftwareStatus.Empty;
+        if (!hasExe)   return SoftwareStatus.Residual;   // has files but no executable
+        return SoftwareStatus.Normal;
+    }
+
+    /// <summary>
+    /// Derives status purely from a cached size value (no .exe info available).
+    /// Returns the status and whether the info came from cache.
+    /// </summary>
+    private static (SoftwareStatus status, bool fromCache) AnalyseSize(long sizeBytes)
+    {
+        if (sizeBytes == 0) return (SoftwareStatus.Empty, true);
+        // Without exe info we fall back to Normal – the precise check can downgrade it later.
+        return (SoftwareStatus.Normal, true);
+    }
+
+    private static string Normalise(string path) =>
+        path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 }

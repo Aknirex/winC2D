@@ -1,38 +1,41 @@
 namespace winC2D.Core.Models;
 
 /// <summary>
-/// Represents the status of a software item
+/// Represents the status of a software item.
 /// </summary>
 public enum SoftwareStatus
 {
     /// <summary>
-    /// Normal directory, ready for migration
+    /// Normal directory with at least one executable; ready for migration.
     /// </summary>
     Normal,
-    
+
     /// <summary>
-    /// Already migrated (symlink)
+    /// Already migrated – the install location is a symbolic link pointing to the
+    /// new drive.
     /// </summary>
     Migrated,
-    
+
     /// <summary>
-    /// Suspicious (small size, may be residual)
+    /// Reserved for future use: needs manual user review before migrating.
+    /// NOT assigned by the scanner based on size.
     /// </summary>
     Suspicious,
-    
+
     /// <summary>
-    /// Empty directory
+    /// Directory exists but contains no files and no sub-directories.
     /// </summary>
     Empty,
-    
+
     /// <summary>
-    /// Residual (uninstalled software leftover)
+    /// Directory has files/sub-directories but no executable was found.
+    /// Likely the remnants of an already-uninstalled application.
     /// </summary>
     Residual
 }
 
 /// <summary>
-/// Represents installed software information
+/// Represents a directory found under Program Files.
 /// </summary>
 public class SoftwareInfo : System.ComponentModel.INotifyPropertyChanged
 {
@@ -50,55 +53,50 @@ public class SoftwareInfo : System.ComponentModel.INotifyPropertyChanged
         OnPropertyChanged(nameof(SizeText));
     }
 
-    /// <summary>
-    /// Software display name
-    /// </summary>
+    /// <summary>Directory name used as a display label.</summary>
     public string Name { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Installation location path
-    /// </summary>
+
+    /// <summary>Full path to the installation directory.</summary>
     public string InstallLocation { get; set; } = string.Empty;
-    
+
     /// <summary>
-    /// Size in bytes
+    /// Measured size in bytes.
+    /// 0  = empty or not yet measured.
+    /// &gt;0 = precise size.
     /// </summary>
     public long SizeBytes { get; set; }
-    
-    /// <summary>
-    /// Whether this is a symlink (already migrated)
-    /// </summary>
+
+    /// <summary>Whether this directory is a reparse point (symlink).</summary>
     public bool IsSymlink { get; set; }
-    
-    /// <summary>
-    /// Current status of the software
-    /// </summary>
+
+    /// <summary>Current status of the directory.</summary>
     public SoftwareStatus Status { get; set; }
-    
+
     /// <summary>
-    /// Whether suspicious status has been checked
+    /// True when the directory has been fully inspected (size + exe presence checked).
+    /// Always true after a scan because SoftwareScanner now does a precise calculation
+    /// for every directory.
     /// </summary>
     public bool SuspiciousChecked { get; set; }
-    
-    /// <summary>
-    /// Human-readable size string
-    /// </summary>
+
+    /// <summary>Human-readable size string.</summary>
     public string SizeText
     {
         get
         {
-            if (SizeBytes == -1)
-                return "> 10 MB";
-            if ((Status == SoftwareStatus.Empty || SuspiciousChecked) && SizeBytes == 0)
-                return "0 KB";
             if (SizeBytes <= 0)
-                return "Unknown";
+                return Status == SoftwareStatus.Empty ? "0 KB" : "—";
+
+            if (SizeBytes < 1024)
+                return $"{SizeBytes} B";
+
             if (SizeBytes < 1024 * 1024)
-            {
-                var kb = Math.Max(1, SizeBytes / 1024);
-                return $"{kb} KB";
-            }
-            return $"{SizeBytes / (1024 * 1024)} MB";
+                return $"{Math.Max(1, SizeBytes / 1024)} KB";
+
+            if (SizeBytes < 1024L * 1024 * 1024)
+                return $"{SizeBytes / (1024 * 1024)} MB";
+
+            return $"{SizeBytes / (1024L * 1024 * 1024):F1} GB";
         }
     }
 }
