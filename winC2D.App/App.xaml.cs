@@ -8,6 +8,7 @@ using winC2D.Infrastructure.Localization;
 using winC2D.App.Converters;
 using winC2D.App.ViewModels;
 using winC2D.App.Views;
+using winC2D.Mcp;
 
 namespace winC2D.App;
 
@@ -62,6 +63,23 @@ public partial class App : Application
     
     protected override void OnStartup(StartupEventArgs e)
     {
+        // ── MCP server mode: AI agent entry point ────────────────────────────────
+        if (e.Args.Contains("--mcp"))
+        {
+            // No windows, no WPF dispatcher — pure stdio JSON-RPC server.
+            McpHostService.RunAsync(e.Args).GetAwaiter().GetResult();
+            Shutdown(0);
+            return;
+        }
+
+        // ── MCP POC mode: kept for debugging / channel verification ───────────
+        if (e.Args.Contains("--mcp-poc"))
+        {
+            McpPoc.RunAsync(e.Args).GetAwaiter().GetResult();
+            Shutdown(0);
+            return;
+        }
+
         base.OnStartup(e);
         
         _logger = _serviceProvider?.GetRequiredService<ILogger<App>>();

@@ -9,15 +9,17 @@
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>winC2D.App</RootNamespace>
     <ApplicationIcon>..\winc2d.ico</ApplicationIcon>
-    <Version>3.3.0</Version>
-    <AssemblyVersion>3.3.0.0</AssemblyVersion>
-    <FileVersion>3.3.0.0</FileVersion>
+    <Version>4.0.0</Version>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\winC2D.Core\winC2D.Core.csproj" />
     <ProjectReference Include="..\winC2D.Infrastructure\winC2D.Infrastructure.csproj" />
+    <ProjectReference Include="..\winC2D.Mcp\winC2D.Mcp.csproj" />
   </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />

@@ -1,3 +1,5 @@
+.design-docs/
+*.binlog
 # Visual Studio
 .vs/
 # Build results
