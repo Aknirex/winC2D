@@ -41,8 +41,7 @@ jobs:
           --output ./publish-portable `
           /p:PublishSingleFile=true `
           /p:SelfContained=false `
-          /p:IncludeNativeLibrariesForSelfExtract=false `
-          /p:EnableCompressionInSingleFile=true
+          /p:IncludeNativeLibrariesForSelfExtract=false
 
     # 自包含版：单文件 exe，内含 .NET 运行时，无需额外安装
     - name: Publish Self-Contained
