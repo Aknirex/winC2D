@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **File Metadata Preservation** — File copy operations now preserve original creation time, last write time, and file attributes during migration
+- **About Page Localization** — Full internationalization support for About/Info page across 7 languages (English, 中文简体, 中文繁體, 日本語, 한국어, Русский, Português Brasileiro)
+- **Language-Aware Documentation Links** — About page automatically routes documentation links to language-specific wiki pages based on application language selection
+
+### Changed
+- About page UI simplified by removing Features and Technology Stack expandable cards, improving clarity and reducing clutter
+- Pause/Resume behavior redesigned to use gate-based implementation instead of cancel-based semantics, preventing unintended rollbacks
+- Enhanced localization service to synchronize both `CurrentCulture` and `CurrentUICulture` for consistent number and date formatting across the application
+
+### Fixed
+- **Critical:** RollbackPoint.BackupPath no longer lost during serialization—now properly recorded and restored on application restart
+- Thread-safety issue: Replaced non-thread-safe `Dictionary` with `ConcurrentDictionary` in migration state tracking (fixes potential race conditions)
+- SizeCellTooltipConverter dead code check (changed from `SizeBytes == -1` to proper empty folder detection)
+- Migration engine: Fixed 8+ indentation errors in SaveTasks() method that could affect file persistence
+- Rollback manager: Fixed indentation errors in SaveState() method
+- AboutView localization service injection: Service now properly injected via constructor rather than deferred setup
+- Build process: Verified all changes compile with 0 warnings and 0 errors
+
+---
+
 ## [4.1.0] - 2026-03-12
 
 ### Changed
