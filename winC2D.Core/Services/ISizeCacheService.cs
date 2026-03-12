@@ -31,6 +31,13 @@ public interface ISizeCacheService
     /// <summary>Store (or overwrite) the measured size for <paramref name="path"/>.</summary>
     void Set(string path, long sizeBytes);
 
+    /// <summary>
+    /// Remove all entries from the in-memory cache, forcing every subsequent
+    /// <see cref="TryGet"/> call to return <see langword="false"/>.
+    /// Use before a full-refresh scan so that every directory is remeasured from disk.
+    /// </summary>
+    void Clear();
+
     /// <summary>Persist the in-memory cache to disk synchronously.</summary>
     void Save();
 

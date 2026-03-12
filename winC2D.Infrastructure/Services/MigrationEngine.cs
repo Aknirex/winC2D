@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
@@ -18,8 +19,11 @@ public class MigrationEngine : IMigrationEngine
     private readonly IRollbackManager _rollbackManager;
     private readonly ILogger<MigrationEngine> _logger;
     
-    private readonly Dictionary<string, MigrationTask> _tasks = new();
-    private readonly Dictionary<string, CancellationTokenSource> _cancellationTokens = new();
+    private readonly ConcurrentDictionary<string, MigrationTask> _tasks = new();
+    private readonly ConcurrentDictionary<string, CancellationTokenSource> _cancellationTokens = new();
+    
+    // Per-task pause gates: Set = running, Reset = paused.
+    private readonly ConcurrentDictionary<string, ManualResetEventSlim> _pauseGates = new();
     
     public event EventHandler<MigrationProgressEventArgs>? ProgressChanged;
     public event EventHandler<MigrationErrorEventArgs>? ErrorOccurred;
@@ -83,6 +87,10 @@ public class MigrationEngine : IMigrationEngine
         var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _cancellationTokens[task.Id] = cts;
         
+        // Create (or reuse) a pause gate for this task — initially signalled (running).
+        var pauseGate = _pauseGates.GetOrAdd(task.Id, _ => new ManualResetEventSlim(true));
+        pauseGate.Set(); // Ensure the gate is open when we start/resume.
+        
         try
         {
             task.StartedAt = DateTime.UtcNow;
@@ -113,6 +121,10 @@ public class MigrationEngine : IMigrationEngine
             
             _fileSystem.MoveDirectory(task.SourcePath, backupPath);
             await _rollbackManager.RecordStepAsync(task.RollbackPoint.Id, CompletedStep.SourceRenamed);
+            
+            // Persist the backup path on the rollback point so that RollbackSourceRenamedAsync
+            // can locate the backup directory if a rollback is needed.
+            await _rollbackManager.SetBackupPathAsync(task.RollbackPoint.Id, backupPath);
             
             // Step 2: Copy files to target
             await CopyDirectoryAsync(task, backupPath, task.TargetPath, cts.Token);
@@ -169,7 +181,18 @@ public class MigrationEngine : IMigrationEngine
         }
         finally
         {
-            _cancellationTokens.Remove(task.Id);
+            _cancellationTokens.TryRemove(task.Id, out _);
+            // Clean up the pause gate only when the task has reached a terminal state,
+            // to avoid leaking the ManualResetEventSlim handle.
+            if (task.State is MigrationState.Completed
+                           or MigrationState.Failed
+                           or MigrationState.RolledBack
+                           or MigrationState.PartialRollback
+                           or MigrationState.Cancelled)
+            {
+                if (_pauseGates.TryRemove(task.Id, out var gate))
+                    gate.Dispose();
+            }
         }
     }
     
@@ -189,36 +212,51 @@ public class MigrationEngine : IMigrationEngine
     /// <inheritdoc/>
     public Task PauseAsync(string taskId)
     {
-        if (_cancellationTokens.TryGetValue(taskId, out var cts))
-        {
-            cts.Cancel();
-        }
+        if (!_tasks.TryGetValue(taskId, out var task))
+            return Task.CompletedTask;
         
-        if (_tasks.TryGetValue(taskId, out var task))
-        {
-            task.State = MigrationState.Paused;
-            OnStateChanged(task);
-        }
+        // Only pause tasks that are actively running.
+        if (task.State is not (MigrationState.Copying or MigrationState.CreatingSymlink or MigrationState.CleaningUp or MigrationState.Preparing))
+            return Task.CompletedTask;
         
+        // Blocking the pause gate will cause the copy loop to wait at the next
+        // checkpoint without triggering cancellation or rollback.
+        if (_pauseGates.TryGetValue(taskId, out var gate))
+            gate.Reset();
+        
+        task.State = MigrationState.Paused;
+        OnStateChanged(task);
+        
+        _logger.LogInformation("Migration task {TaskId} paused", taskId);
         return Task.CompletedTask;
     }
     
     /// <inheritdoc/>
-    public async Task<MigrationResult> ResumeAsync(string taskId, CancellationToken cancellationToken = default)
+    public Task<MigrationResult> ResumeAsync(string taskId, CancellationToken cancellationToken = default)
     {
         if (!_tasks.TryGetValue(taskId, out var task))
-        {
-            return MigrationResult.Failed(null!, "Task not found", null);
-        }
+            return Task.FromResult(MigrationResult.Failed(null!, "Task not found", null));
         
         if (task.State != MigrationState.Paused)
-        {
-            return MigrationResult.Failed(task, "Task is not paused", null);
-        }
+            return Task.FromResult(MigrationResult.Failed(task, "Task is not paused", null));
         
-        // Reset state and re-execute
-        task.State = MigrationState.Pending;
-        return await ExecuteAsync(task, cancellationToken);
+        // Signal the pause gate — the copy loop will resume from where it stopped.
+        if (_pauseGates.TryGetValue(taskId, out var gate))
+            gate.Set();
+        
+        task.State = MigrationState.Copying;
+        OnStateChanged(task);
+        
+        _logger.LogInformation("Migration task {TaskId} resumed", taskId);
+        
+        // The background execution loop is already running and waiting on the gate;
+        // there is nothing more to do here — return a "running" placeholder result.
+        return Task.FromResult(new MigrationResult
+        {
+            Success = true,
+            TaskId = taskId,
+            FinalState = MigrationState.Copying
+        });
     }
     
     /// <inheritdoc/>
@@ -312,6 +350,13 @@ public class MigrationEngine : IMigrationEngine
             if (cancellationToken.IsCancellationRequested)
                 return;
             
+            // Pause checkpoint: block here (without cancelling) if the task is paused.
+            if (_pauseGates.TryGetValue(task.Id, out var gate))
+                gate.Wait(cancellationToken);
+            
+            if (cancellationToken.IsCancellationRequested)
+                return;
+            
             var fileName = _fileSystem.GetFileName(file);
             var targetFile = _fileSystem.CombinePath(targetDir, fileName!);
             
@@ -330,6 +375,13 @@ public class MigrationEngine : IMigrationEngine
         // Copy subdirectories
         foreach (var directory in directories)
         {
+            if (cancellationToken.IsCancellationRequested)
+                return;
+            
+            // Pause checkpoint for subdirectories as well.
+            if (_pauseGates.TryGetValue(task.Id, out var gate))
+                gate.Wait(cancellationToken);
+            
             if (cancellationToken.IsCancellationRequested)
                 return;
             

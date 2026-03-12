@@ -22,6 +22,15 @@ public interface IRollbackManager
     Task RecordStepAsync(string rollbackPointId, CompletedStep step);
     
     /// <summary>
+    /// Set the backup path on an existing rollback point.
+    /// Must be called after the source directory has been renamed to the backup path,
+    /// so that rollback can locate the backup and restore it.
+    /// </summary>
+    /// <param name="rollbackPointId">Rollback point ID</param>
+    /// <param name="backupPath">Absolute path to the renamed backup directory</param>
+    Task SetBackupPathAsync(string rollbackPointId, string backupPath);
+    
+    /// <summary>
     /// Rollback to the state before migration
     /// </summary>
     /// <param name="rollbackPointId">Rollback point ID</param>

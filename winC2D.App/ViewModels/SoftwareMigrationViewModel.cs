@@ -30,6 +30,10 @@ public partial class SoftwareMigrationViewModel : ObservableObject
     // Token source for the currently active scan so it can be cancelled
     private CancellationTokenSource? _scanCts;
 
+    // BUG-005: batch-level progress tracking across multiple migration tasks.
+    private long _batchTotalBytes;
+    private long _batchCopiedBytes;
+
     [ObservableProperty]
     private ObservableCollection<SoftwareInfo> _softwareItems = new();
 
@@ -44,6 +48,15 @@ public partial class SoftwareMigrationViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _isMigrating;
+
+    /// <summary>
+    /// True whenever the view model is performing any background operation.
+    /// Bind command CanExecute / button IsEnabled to this property.
+    /// </summary>
+    public bool IsBusy => IsScanning || IsMigrating;
+
+    partial void OnIsScanningChanged(bool value)  => OnPropertyChanged(nameof(IsBusy));
+    partial void OnIsMigratingChanged(bool value) => OnPropertyChanged(nameof(IsBusy));
 
     [ObservableProperty]
     private int _scanProgress;
@@ -265,9 +278,15 @@ public partial class SoftwareMigrationViewModel : ObservableObject
     /// <summary>Shared implementation for Scan and Refresh commands.</summary>
     private async Task RunScanAsync(bool invalidateCache)
     {
+        // UX-002: do not allow scanning while a migration is in progress.
+        if (IsMigrating) return;
+
         _scanCts?.Cancel();
         _scanCts = new CancellationTokenSource();
         var ct = _scanCts.Token;
+
+        // UX-001: take a snapshot of the current list so we can restore it on cancellation.
+        var previousItems = SoftwareItems.ToList();
 
         IsScanning = true;
         SoftwareItems.Clear();
@@ -277,25 +296,9 @@ public partial class SoftwareMigrationViewModel : ObservableObject
 
         if (invalidateCache)
         {
-            // Signal scanner to recompute all sizes by passing a fresh empty cache.
-            // The SizeCacheService is a singleton – we clear it in-place by not using
-            // TryGet, which is guaranteed because ScanStreamAsync calls Set() on every
-            // directory it processes (overwriting stale entries) before yielding.
-            // A simpler approach: we just let the scanner run; because RefreshAsync
-            // instructs the scanner not to read cache, we achieve this by calling
-            // RecalculateSizeAsync individually would be too slow. Instead we pass
-            // an IProgress that records, and the scanner itself handles cache bypass
-            // through the fact that ScanStreamAsync always does a precise calculation
-            // when the cache entry is stale/missing. To force full recalculation we
-            // simply delete (invalidate) all entries by calling Set with the current
-            // disk values – easiest approach: pass a special flag through calling the
-            // overload that always recalculates (ScanStreamAsync ignores cache when
-            // we clear it here via a reset token).
-            //
-            // Since ISizeCacheService has no public Clear(), we rely on the fact that
-            // ScanStreamAsync writes new entries for every directory it visits,
-            // making old stale entries irrelevant. The old entries are overwritten on
-            // Set(). This is correct behaviour.
+            // BUG-001: actually clear the in-memory cache so that every directory is
+            // remeasured from disk during this scan, instead of reusing stale values.
+            _sizeCache.Clear();
         }
 
         try
@@ -314,18 +317,6 @@ public partial class SoftwareMigrationViewModel : ObservableObject
                 });
             });
 
-            // Choose the correct stream: invalidateCache means we want fresh sizes.
-            // ScanStreamAsync always does precise calculation on cache miss. To
-            // guarantee a miss for every entry we call RecalculateSizeAsync-backed
-            // stream. The simplest correct approach is: for Refresh, call
-            // ScanStreamAsync which will re-measure any directory whose
-            // LastWriteTime changed; since we want to force ALL, we touch no files
-            // but instead use the existing ScanStreamAsync – if the disk hasn't
-            // changed the cache IS valid, which is actually fine for Refresh too.
-            // True "always recalculate" is achieved by clearing cache entries before
-            // the scan. We do so by iterating and removing via the internal dict –
-            // but that's not exposed. The pragmatic solution: accept that Refresh
-            // recalculates only changed directories (correct) and documents this.
             await foreach (var item in _softwareScanner.ScanStreamAsync(progress, ct))
             {
                 await dispatcher.InvokeAsync(() => SoftwareItems.Add(item));
@@ -338,6 +329,11 @@ public partial class SoftwareMigrationViewModel : ObservableObject
         }
         catch (OperationCanceledException)
         {
+            // UX-001: restore the previous list so the user is not left with an empty view.
+            SoftwareItems.Clear();
+            foreach (var item in previousItems)
+                SoftwareItems.Add(item);
+
             StatusMessage = _localizationService.GetString("Status.ScanCancelled");
         }
         catch (Exception ex)
@@ -360,13 +356,49 @@ public partial class SoftwareMigrationViewModel : ObservableObject
     {
         if (IsMigrating || SelectedItems.Count == 0) return;
 
+        // BUG-008: refuse to migrate to the same drive as the source.
+        var targetDriveRoot = System.IO.Path.GetPathRoot(TargetPath)
+            ?.TrimEnd(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar)
+            ?? string.Empty;
+
+        var sameDriveItems = SelectedItems
+            .Where(s => string.Equals(
+                System.IO.Path.GetPathRoot(s.InstallLocation)
+                    ?.TrimEnd(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar),
+                targetDriveRoot,
+                StringComparison.OrdinalIgnoreCase))
+            .Select(s => s.Name)
+            .ToList();
+
+        if (sameDriveItems.Count > 0)
+        {
+            StatusMessage = _localizationService.GetString(
+                "Status.SameDriveError", string.Join(", ", sameDriveItems), targetDriveRoot);
+            _logger.LogWarning(
+                "Migration aborted: target drive {Drive} is the same as the source drive for: {Items}",
+                targetDriveRoot, string.Join(", ", sameDriveItems));
+            return;
+        }
+
         IsMigrating     = true;
         MigrationProgress = 0;
         StatusMessage   = _localizationService.GetString("Status.Migrating");
 
+        // BUG-005: pre-compute total bytes across all selected items so the progress
+        // bar reflects the whole batch, not just the current task.
+        var itemsToMigrate = SelectedItems
+            .Where(s => s.Status != SoftwareStatus.Migrated)
+            .ToList();
+        long batchTotalBytes  = itemsToMigrate.Sum(s => s.SizeBytes > 0 ? s.SizeBytes : 0);
+        long batchCopiedBytes = 0;
+        _batchTotalBytes  = batchTotalBytes;
+        _batchCopiedBytes = 0;
+
         try
         {
-            foreach (var software in SelectedItems.ToList())
+            bool hasError = false;
+
+            foreach (var software in itemsToMigrate)
             {
                 if (software.Status == SoftwareStatus.Migrated)
                 {
@@ -392,16 +424,23 @@ public partial class SoftwareMigrationViewModel : ObservableObject
                     software.Status    = SoftwareStatus.Migrated;
                     software.IsSymlink = true;
                     _logger.LogInformation("Successfully migrated: {Name}", software.Name);
+                    batchCopiedBytes += software.SizeBytes > 0 ? software.SizeBytes : 0;
+                    _batchCopiedBytes = batchCopiedBytes;
                 }
                 else
                 {
+                    hasError = true;
                     _logger.LogError("Failed to migrate {Name}: {Error}", software.Name, result.ErrorMessage);
                     StatusMessage = _localizationService.GetString(
                         "Status.MigrationFailed", software.Name, result.ErrorMessage ?? string.Empty);
+
+                    // BUG-004: stop the batch on first failure to avoid further data risk.
+                    break;
                 }
             }
 
-            StatusMessage = _localizationService.GetString("Status.MigrationComplete");
+            if (!hasError)
+                StatusMessage = _localizationService.GetString("Status.MigrationComplete");
         }
         catch (Exception ex)
         {
@@ -410,8 +449,10 @@ public partial class SoftwareMigrationViewModel : ObservableObject
         }
         finally
         {
-            IsMigrating = false;
-            CurrentTask = null;
+            IsMigrating       = false;
+            CurrentTask       = null;
+            _batchTotalBytes  = 0;
+            _batchCopiedBytes = 0;
             SelectedItems.Clear();
             UpdateSelectedInfo();
         }
@@ -442,7 +483,8 @@ public partial class SoftwareMigrationViewModel : ObservableObject
     private void SelectAll()
     {
         SelectedItems.Clear();
-        foreach (var item in SoftwareItems)
+        // BUG-006: only select items that are actually eligible for migration.
+        foreach (var item in SoftwareItems.Where(i => i.Status == SoftwareStatus.Normal))
             SelectedItems.Add(item);
         UpdateSelectedInfo();
     }
@@ -467,7 +509,19 @@ public partial class SoftwareMigrationViewModel : ObservableObject
 
     private void OnMigrationProgressChanged(object? sender, MigrationProgressEventArgs e)
     {
-        MigrationProgress = e.ProgressPercent;
+        // BUG-005: compute progress relative to the whole batch, not just the current task.
+        int percent;
+        if (_batchTotalBytes > 0)
+        {
+            var doneSoFar = _batchCopiedBytes + e.BytesCopied;
+            percent = (int)Math.Clamp(doneSoFar * 100L / _batchTotalBytes, 0, 100);
+        }
+        else
+        {
+            percent = e.ProgressPercent;
+        }
+
+        MigrationProgress = percent;
         StatusMessage = _localizationService.GetString("Status.MigrationProgress",
             e.FilesCopied, e.TotalFiles,
             e.BytesCopied / (1024 * 1024), e.TotalBytes / (1024 * 1024));

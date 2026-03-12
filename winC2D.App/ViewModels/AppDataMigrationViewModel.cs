@@ -17,6 +17,7 @@ public partial class AppDataMigrationViewModel : ObservableObject
 {
     private readonly IFileSystem _fileSystem;
     private readonly IMigrationEngine _migrationEngine;
+    private readonly ISizeCacheService _sizeCache;
     private readonly ILocalizationService _localizationService;
     private readonly ILogger<AppDataMigrationViewModel> _logger;
     
@@ -47,11 +48,13 @@ public partial class AppDataMigrationViewModel : ObservableObject
     public AppDataMigrationViewModel(
         IFileSystem fileSystem,
         IMigrationEngine migrationEngine,
+        ISizeCacheService sizeCache,
         ILocalizationService localizationService,
         ILogger<AppDataMigrationViewModel> logger)
     {
         _fileSystem = fileSystem;
         _migrationEngine = migrationEngine;
+        _sizeCache = sizeCache;
         _localizationService = localizationService;
         _logger = logger;
 
@@ -99,17 +102,18 @@ public partial class AppDataMigrationViewModel : ObservableObject
         
         try
         {
-            var roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var roaming  = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var local    = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             var localLow = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData\\LocalLow");
             
-            await ScanDirectoryAsync(roaming, "Roaming");
-            await ScanDirectoryAsync(local, "Local");
+            await ScanDirectoryAsync(roaming,  "Roaming");
+            await ScanDirectoryAsync(local,    "Local");
             
             if (_fileSystem.DirectoryExists(localLow))
-            {
                 await ScanDirectoryAsync(localLow, "LocalLow");
-            }
+            
+            // BUG-007: persist the size cache so subsequent scans benefit from cached values.
+            await _sizeCache.SaveAsync();
             
             StatusMessage = _localizationService.GetString("Status.ScanComplete", AppDataItems.Count);
         }
@@ -163,6 +167,30 @@ public partial class AppDataMigrationViewModel : ObservableObject
     {
         if (IsMigrating || SelectedItems.Count == 0)
             return;
+
+        // BUG-008: refuse to migrate to the same drive as the source.
+        var targetDriveRoot = Path.GetPathRoot(TargetPath)
+            ?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            ?? string.Empty;
+
+        var sameDriveItems = SelectedItems
+            .Where(s => string.Equals(
+                Path.GetPathRoot(s.Path)
+                    ?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                targetDriveRoot,
+                StringComparison.OrdinalIgnoreCase))
+            .Select(s => s.Name)
+            .ToList();
+
+        if (sameDriveItems.Count > 0)
+        {
+            StatusMessage = _localizationService.GetString(
+                "Status.SameDriveError", string.Join(", ", sameDriveItems), targetDriveRoot);
+            _logger.LogWarning(
+                "AppData migration aborted: target drive {Drive} is the same as source for: {Items}",
+                targetDriveRoot, string.Join(", ", sameDriveItems));
+            return;
+        }
         
         IsMigrating = true;
         StatusMessage = _localizationService.GetString("Status.Migrating");
@@ -173,13 +201,13 @@ public partial class AppDataMigrationViewModel : ObservableObject
             {
                 var request = new MigrationRequest
                 {
-                    Type = MigrationType.AppData,
-                    Name = appData.Name,
-                    SourcePath = appData.Path,
+                    Type           = MigrationType.AppData,
+                    Name           = appData.Name,
+                    SourcePath     = appData.Path,
                     TargetRootPath = TargetPath
                 };
                 
-                var task = await _migrationEngine.CreateTaskAsync(request);
+                var task   = await _migrationEngine.CreateTaskAsync(request);
                 var result = await _migrationEngine.ExecuteAsync(task);
                 
                 if (result.Success)
@@ -190,7 +218,11 @@ public partial class AppDataMigrationViewModel : ObservableObject
                 else
                 {
                     _logger.LogError("Failed to migrate AppData {Name}: {Error}", appData.Name, result.ErrorMessage);
-                    StatusMessage = _localizationService.GetString("Status.MigrationFailed", appData.Name, result.ErrorMessage ?? string.Empty);
+                    StatusMessage = _localizationService.GetString(
+                        "Status.MigrationFailed", appData.Name, result.ErrorMessage ?? string.Empty);
+
+                    // BUG-004: stop on first failure to avoid cascading half-migrations.
+                    break;
                 }
             }
             
@@ -219,10 +251,21 @@ public partial class AppDataMigrationViewModel : ObservableObject
         
         try
         {
-            var size = await Task.Run(() => _fileSystem.GetDirectorySize(appData.Path));
-            appData.SizeBytes = size;
+            // BUG-007: try the cache first; only measure from disk on a cache miss.
+            long size;
+            if (_sizeCache.TryGet(appData.Path, out var cached))
+            {
+                size = cached.SizeBytes;
+            }
+            else
+            {
+                size = await Task.Run(() => _fileSystem.GetDirectorySize(appData.Path));
+                _sizeCache.Set(appData.Path, size);
+            }
+
+            appData.SizeBytes   = size;
             appData.SizeChecked = true;
-            appData.Status = size > 0 ? SoftwareStatus.Normal : SoftwareStatus.Empty;
+            appData.Status      = size > 0 ? SoftwareStatus.Normal : SoftwareStatus.Empty;
             
             OnPropertyChanged(nameof(appData.SizeText));
         }

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using winC2D.Core.Services;
 using winC2D.Core.Models;
@@ -15,8 +16,8 @@ public class RollbackManager : IRollbackManager
     private readonly ILogger<RollbackManager> _logger;
     
     // In-memory storage for rollback points (could be persisted to disk in production)
-    private readonly Dictionary<string, RollbackPoint> _rollbackPoints = new();
-    private readonly Dictionary<string, RollbackPoint> _taskRollbackPoints = new();
+    private readonly ConcurrentDictionary<string, RollbackPoint> _rollbackPoints = new();
+    private readonly ConcurrentDictionary<string, RollbackPoint> _taskRollbackPoints = new();
     
     public RollbackManager(
         IFileSystem fileSystem,
@@ -61,6 +62,21 @@ public class RollbackManager : IRollbackManager
         
         rollbackPoint.AddStep(step);
         _logger.LogDebug("Recorded step {Step} for rollback point {Id}", step, rollbackPointId);
+        
+        return Task.CompletedTask;
+    }
+    
+    /// <inheritdoc/>
+    public Task SetBackupPathAsync(string rollbackPointId, string backupPath)
+    {
+        if (!_rollbackPoints.TryGetValue(rollbackPointId, out var rollbackPoint))
+        {
+            _logger.LogWarning("Rollback point not found when setting backup path: {Id}", rollbackPointId);
+            return Task.CompletedTask;
+        }
+        
+        rollbackPoint.BackupPath = backupPath;
+        _logger.LogDebug("Set backup path '{BackupPath}' on rollback point {Id}", backupPath, rollbackPointId);
         
         return Task.CompletedTask;
     }
@@ -150,10 +166,9 @@ public class RollbackManager : IRollbackManager
     /// <inheritdoc/>
     public Task DeleteRollbackPointAsync(string rollbackPointId)
     {
-        if (_rollbackPoints.TryGetValue(rollbackPointId, out var point))
+        if (_rollbackPoints.TryRemove(rollbackPointId, out var point))
         {
-            _rollbackPoints.Remove(rollbackPointId);
-            _taskRollbackPoints.Remove(point.TaskId);
+            _taskRollbackPoints.TryRemove(point.TaskId, out _);
             _logger.LogDebug("Deleted rollback point {Id}", rollbackPointId);
         }
         
@@ -169,8 +184,8 @@ public class RollbackManager : IRollbackManager
         
         foreach (var point in toRemove)
         {
-            _rollbackPoints.Remove(point.Id);
-            _taskRollbackPoints.Remove(point.TaskId);
+            _rollbackPoints.TryRemove(point.Id, out _);
+            _taskRollbackPoints.TryRemove(point.TaskId, out _);
         }
         
         if (toRemove.Any())
@@ -197,12 +212,17 @@ public class RollbackManager : IRollbackManager
     
     private Task<bool> RollbackBackupDeletedAsync(RollbackPoint point)
     {
-        // Backup was deleted, nothing to rollback
-        // The files are now in TargetPath, we need to restore them to BackupPath first
-        // But since backup is deleted, we can't restore from there
-        // This is a critical state - files exist in TargetPath but backup is gone
-        _logger.LogWarning("Cannot rollback BackupDeleted step - backup was already deleted");
-        return Task.FromResult(true);
+        // The backup directory was already deleted as the final cleanup step.
+        // Files now live at TargetPath, but there is no backup to restore from.
+        // This is an unrecoverable state — return false so the caller marks the
+        // rollback as partial (IsPartial = true) instead of silently succeeding.
+        _logger.LogError(
+            "Cannot rollback BackupDeleted step for rollback point {Id}: " +
+            "backup directory was already deleted. " +
+            "Source='{SourcePath}', Target='{TargetPath}', Backup='{BackupPath}'. " +
+            "Files remain at the target location. Manual intervention required.",
+            point.Id, point.SourcePath, point.TargetPath, point.BackupPath ?? "<unknown>");
+        return Task.FromResult(false);
     }
     
     private async Task<bool> RollbackSymlinkCreatedAsync(RollbackPoint point)

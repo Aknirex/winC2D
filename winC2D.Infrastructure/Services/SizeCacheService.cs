@@ -102,6 +102,13 @@ public sealed class SizeCacheService : ISizeCacheService
     }
 
     /// <inheritdoc/>
+    public void Clear()
+    {
+        _cache.Clear();
+        _logger.LogDebug("Size cache cleared (all entries removed)");
+    }
+
+    /// <inheritdoc/>
     public void Save()
     {
         try
