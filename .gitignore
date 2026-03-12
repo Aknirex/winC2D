@@ -1,4 +1,5 @@
 .design-docs/
+.localtestzone/
 *.binlog
 # Visual Studio
 .vs/

@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,36 +10,33 @@ namespace winC2D.App.Views;
 /// <summary>
 /// Interaction logic for AboutView.xaml
 /// </summary>
-public partial class AboutView : UserControl
+public partial class AboutView : UserControl, INotifyPropertyChanged
 {
-    private ILocalizationService? _localizationService;
+    private readonly ILocalizationService _localizationService;
 
-    public AboutView()
-    {
-        InitializeComponent();
-        DataContext = this;
-    }
-
-    public void SetLocalizationService(ILocalizationService localizationService)
+    public AboutView(ILocalizationService localizationService)
     {
         _localizationService = localizationService;
-        _localizationService.LanguageChanged += (_, _) => UpdateLocalizedStrings();
-        UpdateLocalizedStrings();
+        InitializeComponent();
+        DataContext = this;
+        
+        // Subscribe to language changes
+        _localizationService.LanguageChanged += (_, _) => NotifyAllPropertiesChanged();
     }
 
     // ── Localized properties ──────────────────────────────────────────────
-    public string L_Header => _localizationService?.GetString("About.Header") ?? "ℹ️ About winC2D";
-    public string L_Title => _localizationService?.GetString("About.Title") ?? "winC2D - Windows Storage Migration Assistant";
-    public string L_Version => _localizationService?.GetString("About.Version") ?? "Version: 2.0.0";
-    public string L_License => _localizationService?.GetString("About.License") ?? "License: MIT";
-    public string L_Author => _localizationService?.GetString("About.Author") ?? "Author: Aknirex";
-    public string L_Description => _localizationService?.GetString("About.Description") ?? "A tool to help users migrate installed software and common folders from C drive to other disks.";
-    public string L_LinksHeader => _localizationService?.GetString("About.LinksHeader") ?? "Links";
-    public string L_Repository => _localizationService?.GetString("About.Repository") ?? "GitHub Repository";
-    public string L_Documentation => _localizationService?.GetString("About.Documentation") ?? "Documentation";
-    public string L_IssueTracker => _localizationService?.GetString("About.IssueTracker") ?? "Report an Issue";
-    public string L_DisclaimerTitle => _localizationService?.GetString("About.DisclaimerTitle") ?? "⚠️ Disclaimer";
-    public string L_DisclaimerText => _localizationService?.GetString("About.DisclaimerText") ?? "This tool modifies system files and creates symbolic links.";
+    public string L_Header => _localizationService.GetString("About.Header");
+    public string L_Title => _localizationService.GetString("About.Title");
+    public string L_Version => _localizationService.GetString("About.Version");
+    public string L_License => _localizationService.GetString("About.License");
+    public string L_Author => _localizationService.GetString("About.Author");
+    public string L_Description => _localizationService.GetString("About.Description");
+    public string L_LinksHeader => _localizationService.GetString("About.LinksHeader");
+    public string L_Repository => _localizationService.GetString("About.Repository");
+    public string L_Documentation => _localizationService.GetString("About.Documentation");
+    public string L_IssueTracker => _localizationService.GetString("About.IssueTracker");
+    public string L_DisclaimerTitle => _localizationService.GetString("About.DisclaimerTitle");
+    public string L_DisclaimerText => _localizationService.GetString("About.DisclaimerText");
 
     /// <summary>
     /// Dynamic documentation URI based on current language.
@@ -48,7 +46,7 @@ public partial class AboutView : UserControl
     {
         get
         {
-            var currentLang = _localizationService?.CurrentLanguage ?? "en";
+            var currentLang = _localizationService.CurrentLanguage;
             
             return currentLang switch
             {
@@ -65,9 +63,9 @@ public partial class AboutView : UserControl
 
     public string RepositoryUri => "https://github.com/Aknirex/winC2D";
 
-    private void UpdateLocalizedStrings()
+    private void NotifyAllPropertiesChanged()
     {
-        // Notify bindings of property changes
+        // Notify all localized properties that their values have changed
         OnPropertyChanged(nameof(L_Header));
         OnPropertyChanged(nameof(L_Title));
         OnPropertyChanged(nameof(L_Version));
@@ -83,11 +81,10 @@ public partial class AboutView : UserControl
         OnPropertyChanged(nameof(DocumentationUri));
     }
 
-    private void OnPropertyChanged(string propertyName)
-    {
-        // Manual property change notification since we're not using MVVM Toolkit here
-        // This ensures WPF updates the binding
-    }
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected void OnPropertyChanged(string propertyName)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
     private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
     {
@@ -99,3 +96,4 @@ public partial class AboutView : UserControl
         e.Handled = true;
     }
 }
+
