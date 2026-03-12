@@ -28,6 +28,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.1.1] - 2026-03-12
+
+### Changed
+- **Status Bar Redesigned** — Bottom status indicator now displays real-time operation status (scanning, migrating, errors) with visual feedback
+  - Idle state: Accent-color filled circle
+  - Busy state: Animated ProgressRing (spinning circle) with status message
+
+### Fixed
+- Status messages were only shown in scan/migration views, not visible in the main window status bar
+- Scan progress text and migration progress were displayed redundantly in both view and bottom bar
+- SoftwareMigrationViewModel now properly propagates status changes to MainViewModel for unified status display
+- Removed duplicate scan/migration status displays from view (now consolidated in status bar for better UX)
+
+---
+
 ## [4.1.0] - 2026-03-12
 
 ### Changed

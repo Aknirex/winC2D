@@ -18,12 +18,16 @@ public partial class MainViewModel : ObservableObject
     
     [ObservableProperty]
     private string _statusMessage = "Ready";
+
+    /// <summary>
+    /// True whenever any child view model is performing a background operation.
+    /// Drives the status indicator in the status bar (ProgressRing vs. dot).
+    /// </summary>
+    [ObservableProperty]
+    private bool _isBusy;
     
     [ObservableProperty]
     private int _selectedNavigationIndex;
-    
-    [ObservableProperty]
-    private bool _isBusy;
     
     public MainViewModel(
         ILocalizationService localizationService,
@@ -34,6 +38,9 @@ public partial class MainViewModel : ObservableObject
         
         // Subscribe to language changes
         _localizationService.LanguageChanged += OnLanguageChanged;
+
+        // Use localized "Ready" from the start
+        StatusMessage = _localizationService.GetString("Status.Ready");
     }
     
     /// <summary>
@@ -84,6 +91,9 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(L_NavLogs));
         OnPropertyChanged(nameof(L_NavAbout));
         Title = _localizationService.GetString("App.Title");
+        // Only reset to "Ready" when no background work is in progress
+        if (!IsBusy)
+            StatusMessage = _localizationService.GetString("Status.Ready");
     }
     
     /// <summary>
@@ -100,5 +110,14 @@ public partial class MainViewModel : ObservableObject
     public string GetString(string key, params object[] args)
     {
         return _localizationService.GetString(key, args);
+    }
+
+    /// <summary>
+    /// Called by child view models to push a status update into the status bar.
+    /// </summary>
+    public void SetStatus(string message, bool isBusy)
+    {
+        StatusMessage = message;
+        IsBusy = isBusy;
     }
 }

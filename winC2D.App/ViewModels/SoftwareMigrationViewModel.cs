@@ -26,6 +26,7 @@ public partial class SoftwareMigrationViewModel : ObservableObject
     private readonly ISizeCacheService _sizeCache;
     private readonly ILocalizationService _localizationService;
     private readonly ILogger<SoftwareMigrationViewModel> _logger;
+    private readonly MainViewModel _mainViewModel;
 
     // Token source for the currently active scan so it can be cancelled
     private CancellationTokenSource? _scanCts;
@@ -95,13 +96,15 @@ public partial class SoftwareMigrationViewModel : ObservableObject
         IMigrationEngine migrationEngine,
         ISizeCacheService sizeCache,
         ILocalizationService localizationService,
-        ILogger<SoftwareMigrationViewModel> logger)
+        ILogger<SoftwareMigrationViewModel> logger,
+        MainViewModel mainViewModel)
     {
         _softwareScanner     = softwareScanner;
         _migrationEngine     = migrationEngine;
         _sizeCache           = sizeCache;
         _localizationService = localizationService;
         _logger              = logger;
+        _mainViewModel       = mainViewModel;
 
         _migrationEngine.ProgressChanged += OnMigrationProgressChanged;
         _migrationEngine.ErrorOccurred   += OnMigrationError;
@@ -173,6 +176,16 @@ public partial class SoftwareMigrationViewModel : ObservableObject
         OnPropertyChanged(nameof(StatusMessage));
         foreach (var item in SoftwareItems)
             item.NotifyStatusTextChanged();
+    }
+
+    /// <summary>
+    /// Updates the local StatusMessage and forwards the status to the main window's
+    /// status bar via MainViewModel.SetStatus().
+    /// </summary>
+    private void PushStatus(string message, bool isBusy)
+    {
+        StatusMessage = message;
+        _mainViewModel.SetStatus(message, isBusy);
     }
 
     // ── Drives ───────────────────────────────────────────────────────────
@@ -292,7 +305,7 @@ public partial class SoftwareMigrationViewModel : ObservableObject
         SoftwareItems.Clear();
         ScanProgress = 0;
         CurrentScanDirectory = string.Empty;
-        StatusMessage = _localizationService.GetString("Status.Scanning");
+        PushStatus(_localizationService.GetString("Status.Scanning"), isBusy: true);
 
         if (invalidateCache)
         {
@@ -312,8 +325,8 @@ public partial class SoftwareMigrationViewModel : ObservableObject
                 {
                     CurrentScanDirectory = report.CurrentDirectory;
                     ScanProgress         = report.ProgressPercent;
-                    StatusMessage        = _localizationService.GetString(
-                        "Status.ScanningProgress", report.ItemsFound);
+                    PushStatus(_localizationService.GetString(
+                        "Status.ScanningProgress", report.ItemsFound), isBusy: true);
                 });
             });
 
@@ -325,7 +338,7 @@ public partial class SoftwareMigrationViewModel : ObservableObject
             // Persist the updated cache to disk
             await _sizeCache.SaveAsync(ct);
 
-            StatusMessage = _localizationService.GetString("Status.ScanComplete", SoftwareItems.Count);
+            PushStatus(_localizationService.GetString("Status.ScanComplete", SoftwareItems.Count), isBusy: false);
         }
         catch (OperationCanceledException)
         {
@@ -334,12 +347,12 @@ public partial class SoftwareMigrationViewModel : ObservableObject
             foreach (var item in previousItems)
                 SoftwareItems.Add(item);
 
-            StatusMessage = _localizationService.GetString("Status.ScanCancelled");
+            PushStatus(_localizationService.GetString("Status.ScanCancelled"), isBusy: false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Scan failed");
-            StatusMessage = _localizationService.GetString("Status.ScanFailed", ex.Message);
+            PushStatus(_localizationService.GetString("Status.ScanFailed", ex.Message), isBusy: false);
         }
         finally
         {
@@ -372,17 +385,17 @@ public partial class SoftwareMigrationViewModel : ObservableObject
 
         if (sameDriveItems.Count > 0)
         {
-            StatusMessage = _localizationService.GetString(
-                "Status.SameDriveError", string.Join(", ", sameDriveItems), targetDriveRoot);
+            PushStatus(_localizationService.GetString(
+                "Status.SameDriveError", string.Join(", ", sameDriveItems), targetDriveRoot), isBusy: false);
             _logger.LogWarning(
                 "Migration aborted: target drive {Drive} is the same as the source drive for: {Items}",
                 targetDriveRoot, string.Join(", ", sameDriveItems));
             return;
         }
 
-        IsMigrating     = true;
+        IsMigrating       = true;
         MigrationProgress = 0;
-        StatusMessage   = _localizationService.GetString("Status.Migrating");
+        PushStatus(_localizationService.GetString("Status.Migrating"), isBusy: true);
 
         // BUG-005: pre-compute total bytes across all selected items so the progress
         // bar reflects the whole batch, not just the current task.
@@ -431,8 +444,8 @@ public partial class SoftwareMigrationViewModel : ObservableObject
                 {
                     hasError = true;
                     _logger.LogError("Failed to migrate {Name}: {Error}", software.Name, result.ErrorMessage);
-                    StatusMessage = _localizationService.GetString(
-                        "Status.MigrationFailed", software.Name, result.ErrorMessage ?? string.Empty);
+                    PushStatus(_localizationService.GetString(
+                        "Status.MigrationFailed", software.Name, result.ErrorMessage ?? string.Empty), isBusy: false);
 
                     // BUG-004: stop the batch on first failure to avoid further data risk.
                     break;
@@ -440,12 +453,12 @@ public partial class SoftwareMigrationViewModel : ObservableObject
             }
 
             if (!hasError)
-                StatusMessage = _localizationService.GetString("Status.MigrationComplete");
+                PushStatus(_localizationService.GetString("Status.MigrationComplete"), isBusy: false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Migration failed");
-            StatusMessage = _localizationService.GetString("Status.MigrationError", ex.Message);
+            PushStatus(_localizationService.GetString("Status.MigrationError", ex.Message), isBusy: false);
         }
         finally
         {
@@ -522,15 +535,15 @@ public partial class SoftwareMigrationViewModel : ObservableObject
         }
 
         MigrationProgress = percent;
-        StatusMessage = _localizationService.GetString("Status.MigrationProgress",
+        PushStatus(_localizationService.GetString("Status.MigrationProgress",
             e.FilesCopied, e.TotalFiles,
-            e.BytesCopied / (1024 * 1024), e.TotalBytes / (1024 * 1024));
+            e.BytesCopied / (1024 * 1024), e.TotalBytes / (1024 * 1024)), isBusy: true);
     }
 
     private void OnMigrationError(object? sender, MigrationErrorEventArgs e)
     {
         _logger.LogError("Migration error: {Message}", e.Message);
-        StatusMessage = _localizationService.GetString("Status.MigrationError", e.Message);
+        PushStatus(_localizationService.GetString("Status.MigrationError", e.Message), isBusy: false);
     }
 
     private void OnMigrationStateChanged(object? sender, MigrationTask task)

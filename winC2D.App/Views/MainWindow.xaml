@@ -58,8 +58,42 @@
         <!-- Status Bar -->
         <StatusBar Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}">
             <StatusBarItem>
-                <TextBlock Text="{Binding StatusMessage}"
-                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Idle: filled circle in accent color -->
+                    <Ellipse Width="10" Height="10"
+                             Fill="{DynamicResource SystemAccentColorBrush}"
+                             VerticalAlignment="Center"
+                             Margin="0,0,8,0">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <!-- Busy: spinning ProgressRing -->
+                    <ui:ProgressRing Width="16" Height="16"
+                                     IsIndeterminate="True"
+                                     VerticalAlignment="Center"
+                                     Margin="0,0,8,0">
+                        <ui:ProgressRing.Style>
+                            <Style TargetType="ui:ProgressRing">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsBusy}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:ProgressRing.Style>
+                    </ui:ProgressRing>
+                    <!-- Status text -->
+                    <TextBlock Text="{Binding StatusMessage}"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                </StackPanel>
             </StatusBarItem>
         </StatusBar>
     </Grid>
