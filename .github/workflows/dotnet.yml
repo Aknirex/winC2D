@@ -138,6 +138,28 @@ jobs:
     - name: Extract version from tag
       id: version
       run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+    - name: Extract changelog for this version
+      id: changelog
+      run: |
+        # Read CHANGELOG.md and extract the section for this version
+        $version = "${{ steps.version.outputs.VERSION }}"
+        $changelogPath = "CHANGELOG.md"
+        
+        $content = Get-Content $changelogPath -Raw
+        $pattern = "\[.*?\].*?\n\n([\s\S]*?)(?=\n## \[|$)"
+        
+        if ($content -match "## \[$version\].*?\n\n([\s\S]*?)(?=\n---|\n## \[|$)") {
+          $changelog = $matches[1].Trim()
+        } else {
+          Write-Warning "Could not extract changelog for version $version, using default"
+          $changelog = "See CHANGELOG.md for details"
+        }
+        
+        # Escape for GitHub Actions (handle newlines)
+        $changelog = $changelog -replace "`r`n", "%0A" -replace "`n", "%0A"
+        echo "content=$changelog" >> $env:GITHUB_OUTPUT
+      shell: pwsh
     
     - name: Download Standalone Artifact
       uses: actions/download-artifact@v4
@@ -176,9 +198,8 @@ jobs:
           简体中文 · 繁體中文 · English · 日本語 · 한국어 · Русский · Português (Brasil)
 
           ### 📝 Changes in v${{ steps.version.outputs.VERSION }}
-          - Fixed GitHub Actions build configuration for two distinct executable versions
-          - Improved release artifact naming for clarity
-          - Enhanced SHA-256 verification in CI pipeline
+
+          ${{ steps.changelog.outputs.content }}
 
           ---
           [📖 Documentation](https://github.com/SKR7lex/winC2D#readme) · [🐛 Report Issue](https://github.com/SKR7lex/winC2D/issues)
