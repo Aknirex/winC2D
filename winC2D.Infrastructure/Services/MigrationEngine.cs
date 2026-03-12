@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using winC2D.Core.Services;
 using winC2D.Core.Models;
@@ -18,6 +19,12 @@ public class MigrationEngine : IMigrationEngine
     private readonly ISymlinkManager _symlinkManager;
     private readonly IRollbackManager _rollbackManager;
     private readonly ILogger<MigrationEngine> _logger;
+    private readonly string _storageDirectory;
+    private readonly string _storageFilePath;
+    private readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        WriteIndented = false
+    };
     
     private readonly ConcurrentDictionary<string, MigrationTask> _tasks = new();
     private readonly ConcurrentDictionary<string, CancellationTokenSource> _cancellationTokens = new();
@@ -39,6 +46,13 @@ public class MigrationEngine : IMigrationEngine
         _symlinkManager = symlinkManager;
         _rollbackManager = rollbackManager;
         _logger = logger;
+
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        _storageDirectory = Path.Combine(localAppData, "winC2D", "tasks");
+        Directory.CreateDirectory(_storageDirectory);
+        _storageFilePath = Path.Combine(_storageDirectory, "migration_tasks.json");
+
+        LoadPersistedTasks();
     }
     
     /// <inheritdoc/>
@@ -60,6 +74,7 @@ public class MigrationEngine : IMigrationEngine
         task.TotalFiles = await Task.Run(() => _fileSystem.GetFiles(request.SourcePath, "*", true).Count(), cancellationToken);
         
         _tasks[task.Id] = task;
+        SaveTasks();
         
         _logger.LogInformation("Created migration task {TaskId} for {Name}: {SourcePath} -> {TargetPath}", 
             task.Id, task.Name, task.SourcePath, task.TargetPath);
@@ -95,6 +110,7 @@ public class MigrationEngine : IMigrationEngine
         {
             task.StartedAt = DateTime.UtcNow;
             task.State = MigrationState.Preparing;
+            SaveTasks();
             OnStateChanged(task);
             
             // Validate source
@@ -111,13 +127,16 @@ public class MigrationEngine : IMigrationEngine
             
             // Create rollback point
             task.RollbackPoint = await _rollbackManager.CreateRollbackPointAsync(task);
+            SaveTasks();
             
             // Step 1: Rename source directory (atomic operation to detect locked files)
             task.State = MigrationState.Copying;
+            SaveTasks();
             OnStateChanged(task);
             
             var backupPath = task.SourcePath + "_migrating_" + Guid.NewGuid().ToString("N");
             task.BackupPath = backupPath;
+            SaveTasks();
             
             _fileSystem.MoveDirectory(task.SourcePath, backupPath);
             await _rollbackManager.RecordStepAsync(task.RollbackPoint.Id, CompletedStep.SourceRenamed);
@@ -125,6 +144,7 @@ public class MigrationEngine : IMigrationEngine
             // Persist the backup path on the rollback point so that RollbackSourceRenamedAsync
             // can locate the backup directory if a rollback is needed.
             await _rollbackManager.SetBackupPathAsync(task.RollbackPoint.Id, backupPath);
+            SaveTasks();
             
             // Step 2: Copy files to target
             await CopyDirectoryAsync(task, backupPath, task.TargetPath, cts.Token);
@@ -138,6 +158,7 @@ public class MigrationEngine : IMigrationEngine
             
             // Step 3: Create symbolic link
             task.State = MigrationState.CreatingSymlink;
+            SaveTasks();
             OnStateChanged(task);
             
             var symlinkCreated = await _symlinkManager.CreateDirectorySymlinkAsync(task.SourcePath, task.TargetPath);
@@ -150,6 +171,7 @@ public class MigrationEngine : IMigrationEngine
             
             // Step 4: Delete backup directory
             task.State = MigrationState.CleaningUp;
+            SaveTasks();
             OnStateChanged(task);
             
             _fileSystem.DeleteDirectory(backupPath, true);
@@ -158,6 +180,7 @@ public class MigrationEngine : IMigrationEngine
             // Success!
             task.State = MigrationState.Completed;
             task.CompletedAt = DateTime.UtcNow;
+            SaveTasks();
             OnStateChanged(task);
             
             // Clean up rollback point
@@ -225,6 +248,7 @@ public class MigrationEngine : IMigrationEngine
             gate.Reset();
         
         task.State = MigrationState.Paused;
+        SaveTasks();
         OnStateChanged(task);
         
         _logger.LogInformation("Migration task {TaskId} paused", taskId);
@@ -245,6 +269,7 @@ public class MigrationEngine : IMigrationEngine
             gate.Set();
         
         task.State = MigrationState.Copying;
+        SaveTasks();
         OnStateChanged(task);
         
         _logger.LogInformation("Migration task {TaskId} resumed", taskId);
@@ -275,6 +300,7 @@ public class MigrationEngine : IMigrationEngine
         
         task.State = MigrationState.Cancelled;
         task.CompletedAt = DateTime.UtcNow;
+        SaveTasks();
         OnStateChanged(task);
         
         if (rollback && task.RollbackPoint != null)
@@ -320,6 +346,60 @@ public class MigrationEngine : IMigrationEngine
     }
     
     #region Private Methods
+
+    private sealed class MigrationTaskStateDocument
+    {
+        public List<MigrationTask> Tasks { get; set; } = new();
+    }
+
+    private void LoadPersistedTasks()
+    {
+        try
+        {
+            if (!File.Exists(_storageFilePath))
+                return;
+
+            var json = File.ReadAllText(_storageFilePath);
+            var document = JsonSerializer.Deserialize<MigrationTaskStateDocument>(json, _jsonOptions);
+            if (document?.Tasks is null)
+                return;
+
+            foreach (var task in document.Tasks)
+            {
+                _tasks[task.Id] = task;
+            }
+
+            if (document.Tasks.Count > 0)
+            {
+                _logger.LogInformation(
+                    "Loaded {Count} persisted migration task(s) from {Path}",
+                    document.Tasks.Count,
+                    _storageFilePath);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to load migration tasks from {Path}", _storageFilePath);
+        }
+    }
+
+    private void SaveTasks()
+    {
+        try
+        {
+            Directory.CreateDirectory(_storageDirectory);
+            var document = new MigrationTaskStateDocument
+            {
+                Tasks = _tasks.Values.OrderBy(t => t.CreatedAt).ToList()
+            };
+            var json = JsonSerializer.Serialize(document, _jsonOptions);
+            File.WriteAllText(_storageFilePath, json);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to persist migration tasks to {Path}", _storageFilePath);
+        }
+    }
     
     private string DetermineTargetPath(MigrationRequest request)
     {
@@ -363,11 +443,13 @@ public class MigrationEngine : IMigrationEngine
             task.CurrentFile = fileName;
             OnProgressChanged(task);
             
-            _fileSystem.CopyFile(file, targetFile, false);
+            // Use metadata-preserving copy to retain timestamps and attributes.
+            _fileSystem.CopyFilePreserveMetadata(file, targetFile, false);
             
             var fileSize = _fileSystem.GetFileSize(file);
             task.CopiedBytes += fileSize;
             task.CopiedFiles++;
+            SaveTasks();
             
             OnProgressChanged(task);
         }
@@ -390,6 +472,20 @@ public class MigrationEngine : IMigrationEngine
             
             await CopyDirectoryAsync(task, directory, targetSubDir, cancellationToken);
         }
+
+        // Preserve source directory timestamps on the newly created target directory.
+        try
+        {
+            var srcInfo = new DirectoryInfo(sourceDir);
+            var dstInfo = new DirectoryInfo(targetDir);
+            dstInfo.CreationTimeUtc   = srcInfo.CreationTimeUtc;
+            dstInfo.LastWriteTimeUtc  = srcInfo.LastWriteTimeUtc;
+            dstInfo.LastAccessTimeUtc = srcInfo.LastAccessTimeUtc;
+        }
+        catch
+        {
+            // Best-effort; not fatal.
+        }
     }
     
     private async Task<MigrationResult> FailTaskAsync(MigrationTask task, string message, Exception? ex, TimeSpan elapsed)
@@ -398,6 +494,7 @@ public class MigrationEngine : IMigrationEngine
         task.ErrorMessage = message;
         task.Exception = ex;
         task.CompletedAt = DateTime.UtcNow;
+        SaveTasks();
         OnStateChanged(task);
         
         OnError(task, message, ex, MigrationErrorSeverity.Error);
@@ -408,6 +505,7 @@ public class MigrationEngine : IMigrationEngine
     private async Task<MigrationResult> FailAndRollbackAsync(MigrationTask task, string message, Exception? ex, TimeSpan elapsed)
     {
         task.State = MigrationState.RollingBack;
+        SaveTasks();
         OnStateChanged(task);
         
         if (task.RollbackPoint != null)
@@ -416,6 +514,7 @@ public class MigrationEngine : IMigrationEngine
             
             task.State = rollbackResult.Success ? MigrationState.RolledBack : MigrationState.PartialRollback;
             task.CompletedAt = DateTime.UtcNow;
+            SaveTasks();
             OnStateChanged(task);
             
             return new MigrationResult
@@ -437,6 +536,7 @@ public class MigrationEngine : IMigrationEngine
     {
         task.State = MigrationState.Cancelled;
         task.CompletedAt = DateTime.UtcNow;
+        SaveTasks();
         OnStateChanged(task);
         
         if (task.RollbackPoint != null)

@@ -46,7 +46,7 @@ public class LocalizationService : ILocalizationService
         try
         {
             var format = GetString(key);
-            return string.Format(CultureInfo.CurrentUICulture, format, args);
+            return string.Format(CultureInfo.CurrentCulture, format, args);
         }
         catch
         {
@@ -91,7 +91,10 @@ public class LocalizationService : ILocalizationService
         try
         {
             var culture = new CultureInfo(langCode);
+            // Set both UI culture (resource lookup) and format culture (number/date formatting).
+            CultureInfo.CurrentCulture                = culture;
             CultureInfo.CurrentUICulture              = culture;
+            CultureInfo.DefaultThreadCurrentCulture   = culture;
             CultureInfo.DefaultThreadCurrentUICulture = culture;
         }
         catch

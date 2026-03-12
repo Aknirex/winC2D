@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using winC2D.Core.Services;
 using winC2D.Core.Models;
@@ -14,6 +15,12 @@ public class RollbackManager : IRollbackManager
     private readonly IFileSystem _fileSystem;
     private readonly ISymlinkManager _symlinkManager;
     private readonly ILogger<RollbackManager> _logger;
+    private readonly string _storageDirectory;
+    private readonly string _storageFilePath;
+    private readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        WriteIndented = false
+    };
     
     // In-memory storage for rollback points (could be persisted to disk in production)
     private readonly ConcurrentDictionary<string, RollbackPoint> _rollbackPoints = new();
@@ -27,6 +34,13 @@ public class RollbackManager : IRollbackManager
         _fileSystem = fileSystem;
         _symlinkManager = symlinkManager;
         _logger = logger;
+
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        _storageDirectory = Path.Combine(localAppData, "winC2D", "rollback");
+        Directory.CreateDirectory(_storageDirectory);
+        _storageFilePath = Path.Combine(_storageDirectory, "rollback_points.json");
+
+        LoadPersistedState();
     }
     
     /// <inheritdoc/>
@@ -44,6 +58,8 @@ public class RollbackManager : IRollbackManager
         
         _rollbackPoints[rollbackPoint.Id] = rollbackPoint;
         _taskRollbackPoints[task.Id] = rollbackPoint;
+
+        SaveState();
         
         _logger.LogInformation("Created rollback point {Id} for task {TaskId}", 
             rollbackPoint.Id, task.Id);
@@ -61,6 +77,7 @@ public class RollbackManager : IRollbackManager
         }
         
         rollbackPoint.AddStep(step);
+        SaveState();
         _logger.LogDebug("Recorded step {Step} for rollback point {Id}", step, rollbackPointId);
         
         return Task.CompletedTask;
@@ -76,6 +93,7 @@ public class RollbackManager : IRollbackManager
         }
         
         rollbackPoint.BackupPath = backupPath;
+        SaveState();
         _logger.LogDebug("Set backup path '{BackupPath}' on rollback point {Id}", backupPath, rollbackPointId);
         
         return Task.CompletedTask;
@@ -169,6 +187,7 @@ public class RollbackManager : IRollbackManager
         if (_rollbackPoints.TryRemove(rollbackPointId, out var point))
         {
             _taskRollbackPoints.TryRemove(point.TaskId, out _);
+            SaveState();
             _logger.LogDebug("Deleted rollback point {Id}", rollbackPointId);
         }
         
@@ -187,6 +206,9 @@ public class RollbackManager : IRollbackManager
             _rollbackPoints.TryRemove(point.Id, out _);
             _taskRollbackPoints.TryRemove(point.TaskId, out _);
         }
+
+        if (toRemove.Any())
+            SaveState();
         
         if (toRemove.Any())
         {
@@ -197,6 +219,62 @@ public class RollbackManager : IRollbackManager
     }
     
     #region Private Methods
+
+    private sealed class RollbackStateDocument
+    {
+        public List<RollbackPoint> RollbackPoints { get; set; } = new();
+    }
+
+    private void LoadPersistedState()
+    {
+        try
+        {
+            if (!File.Exists(_storageFilePath))
+                return;
+
+            var json = File.ReadAllText(_storageFilePath);
+            var document = JsonSerializer.Deserialize<RollbackStateDocument>(json, _jsonOptions);
+            if (document?.RollbackPoints is null)
+                return;
+
+            foreach (var point in document.RollbackPoints)
+            {
+                _rollbackPoints[point.Id] = point;
+                if (!string.IsNullOrWhiteSpace(point.TaskId))
+                    _taskRollbackPoints[point.TaskId] = point;
+            }
+
+            if (document.RollbackPoints.Count > 0)
+            {
+                _logger.LogInformation(
+                    "Loaded {Count} persisted rollback point(s) from {Path}",
+                    document.RollbackPoints.Count,
+                    _storageFilePath);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to load rollback points from {Path}", _storageFilePath);
+        }
+    }
+
+    private void SaveState()
+    {
+        try
+        {
+            Directory.CreateDirectory(_storageDirectory);
+            var document = new RollbackStateDocument
+            {
+                RollbackPoints = _rollbackPoints.Values.OrderBy(p => p.CreatedAt).ToList()
+            };
+            var json = JsonSerializer.Serialize(document, _jsonOptions);
+            File.WriteAllText(_storageFilePath, json);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to persist rollback points to {Path}", _storageFilePath);
+        }
+    }
     
     private async Task<bool> RollbackStepAsync(RollbackPoint point, CompletedStep step)
     {

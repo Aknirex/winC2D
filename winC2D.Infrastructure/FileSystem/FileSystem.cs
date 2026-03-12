@@ -139,7 +139,39 @@ public class FileSystem : IFileSystem
     {
         File.Copy(sourcePath, destinationPath, overwrite);
     }
-    
+
+    public void CopyFilePreserveMetadata(string sourcePath, string destinationPath, bool overwrite = false)
+    {
+        File.Copy(sourcePath, destinationPath, overwrite);
+
+        try
+        {
+            var src = new FileInfo(sourcePath);
+
+            // Preserve timestamps
+            File.SetCreationTimeUtc(destinationPath, src.CreationTimeUtc);
+            File.SetLastWriteTimeUtc(destinationPath, src.LastWriteTimeUtc);
+            File.SetLastAccessTimeUtc(destinationPath, src.LastAccessTimeUtc);
+
+            // Preserve file attributes (read-only, hidden, archive, etc.)
+            // Strip ReparsePoint / Compressed / Encrypted as those cannot be simply copied.
+            const FileAttributes nonCopyable =
+                FileAttributes.ReparsePoint |
+                FileAttributes.Compressed   |
+                FileAttributes.Encrypted    |
+                FileAttributes.Offline      |
+                FileAttributes.SparseFile;
+
+            var attrs = src.Attributes & ~nonCopyable;
+            if (attrs != FileAttributes.Normal && attrs != 0)
+                File.SetAttributes(destinationPath, attrs);
+        }
+        catch
+        {
+            // Metadata copy is best-effort; the file content is already copied.
+        }
+    }
+
     public void MoveFile(string sourcePath, string destinationPath, bool overwrite = false)
     {
         if (overwrite && File.Exists(destinationPath))

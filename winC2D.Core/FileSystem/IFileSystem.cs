@@ -70,7 +70,13 @@ public interface IFileSystem
     /// Copy a file
     /// </summary>
     void CopyFile(string sourcePath, string destinationPath, bool overwrite = false);
-    
+
+    /// <summary>
+    /// Copy a file while preserving timestamps (creation, last-write, last-access)
+    /// and file attributes (read-only, hidden, etc.).
+    /// </summary>
+    void CopyFilePreserveMetadata(string sourcePath, string destinationPath, bool overwrite = false);
+
     /// <summary>
     /// Move a file
     /// </summary>

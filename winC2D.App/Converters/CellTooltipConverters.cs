@@ -19,8 +19,10 @@ public class SizeCellTooltipConverter : IValueConverter
         if (value is not SoftwareInfo item || LocalizationService is null)
             return string.Empty;
 
-        if (item.SizeBytes == -1)
-            return LocalizationService.GetString("SoftwareMigration.TooltipSizeExceeds");
+        // SizeBytes == 0 with a non-Empty status means the size has not yet been
+        // measured (displayed as "—" in the size column). Show a tooltip to explain.
+        if (item.SizeBytes == 0 && item.Status != SoftwareStatus.Empty)
+            return LocalizationService.GetString("SoftwareMigration.TooltipSizeNotMeasured");
 
         return string.Empty;
     }
