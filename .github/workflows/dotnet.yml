@@ -141,25 +141,57 @@ jobs:
 
     - name: Extract changelog for this version
       id: changelog
+      shell: pwsh
       run: |
-        # Read CHANGELOG.md and extract the section for this version
         $version = "${{ steps.version.outputs.VERSION }}"
         $changelogPath = "CHANGELOG.md"
         
-        $content = Get-Content $changelogPath -Raw
-        $pattern = "\[.*?\].*?\n\n([\s\S]*?)(?=\n## \[|$)"
-        
-        if ($content -match "## \[$version\].*?\n\n([\s\S]*?)(?=\n---|\n## \[|$)") {
-          $changelog = $matches[1].Trim()
-        } else {
-          Write-Warning "Could not extract changelog for version $version, using default"
-          $changelog = "See CHANGELOG.md for details"
+        if (-not (Test-Path $changelogPath)) {
+          Write-Warning "CHANGELOG.md not found"
+          "content=See CHANGELOG.md for details" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          exit 0
         }
         
-        # Escape for GitHub Actions (handle newlines)
-        $changelog = $changelog -replace "`r`n", "%0A" -replace "`n", "%0A"
-        echo "content=$changelog" >> $env:GITHUB_OUTPUT
-      shell: pwsh
+        $content = Get-Content $changelogPath -Raw
+        $lines = $content -split "`n"
+        $startIdx = -1
+        $endIdx = -1
+        
+        # Find the version section
+        for ($i = 0; $i -lt $lines.Count; $i++) {
+          if ($lines[$i] -match "## \[$version\]") {
+            $startIdx = $i + 2  # Skip header and empty line
+            break
+          }
+        }
+        
+        if ($startIdx -eq -1) {
+          Write-Warning "Could not find version $version in CHANGELOG.md"
+          "content=See CHANGELOG.md for details" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          exit 0
+        }
+        
+        # Find the end of this section (next ## [ or EOF)
+        for ($i = $startIdx; $i -lt $lines.Count; $i++) {
+          if ($lines[$i] -match "^## \[" -or $lines[$i] -match "^---") {
+            $endIdx = $i - 1
+            break
+          }
+        }
+        
+        if ($endIdx -eq -1) {
+          $endIdx = $lines.Count - 1
+        }
+        
+        # Extract and clean up
+        $changelog = ($lines[$startIdx..$endIdx] -join "`n").Trim()
+        
+        # Use GitHub's EOF method for multiline output
+        "changelog<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+        $changelog | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+        "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+        
+        Write-Output "✓ Successfully extracted changelog for version $version"
     
     - name: Download Standalone Artifact
       uses: actions/download-artifact@v4
@@ -199,7 +231,7 @@ jobs:
 
           ### 📝 Changes in v${{ steps.version.outputs.VERSION }}
 
-          ${{ steps.changelog.outputs.content }}
+          ${{ steps.changelog.outputs.changelog }}
 
           ---
           [📖 Documentation](https://github.com/SKR7lex/winC2D#readme) · [🐛 Report Issue](https://github.com/SKR7lex/winC2D/issues)
