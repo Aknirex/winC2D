@@ -59,9 +59,9 @@
         <StatusBar Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}">
             <StatusBarItem>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- Idle: filled circle in accent color -->
+                    <!-- Idle: filled circle using the same accent fill as Primary buttons -->
                     <Ellipse Width="10" Height="10"
-                             Fill="{DynamicResource SystemAccentColorBrush}"
+                             Fill="{DynamicResource AccentFillColorDefaultBrush}"
                              VerticalAlignment="Center"
                              Margin="0,0,8,0">
                         <Ellipse.Style>

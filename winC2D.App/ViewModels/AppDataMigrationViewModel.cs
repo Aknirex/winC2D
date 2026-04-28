@@ -278,9 +278,12 @@ public partial class AppDataMigrationViewModel : ObservableObject
     /// Check AppData folder size
     /// </summary>
     [RelayCommand]
-    private async Task CheckSizeAsync(AppDataInfo? appData)
+    private async Task CheckSizeAsync(object? parameter)
     {
-        if (appData == null || appData.SizeChecked)
+        // WPF can briefly pass internal placeholder objects while refreshing or
+        // virtualizing DataGrid cells. Ignore those instead of letting the
+        // generated command fail a type check before the user clicks anything.
+        if (parameter is not AppDataInfo appData || appData.SizeChecked)
             return;
         
         try
