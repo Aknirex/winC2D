@@ -1,3 +1,5 @@
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -34,6 +36,7 @@ public partial class SoftwareMigrationViewModel : ObservableObject
     // BUG-005: batch-level progress tracking across multiple migration tasks.
     private long _batchTotalBytes;
     private long _batchCopiedBytes;
+    private bool _isSynchronizingSelection;
 
     [ObservableProperty]
     private ObservableCollection<SoftwareInfo> _softwareItems = new();
@@ -78,6 +81,11 @@ public partial class SoftwareMigrationViewModel : ObservableObject
     [ObservableProperty]
     private long _totalSelectedSize;
 
+    public string TotalSelectedSizeText => FormatSize(TotalSelectedSize);
+
+    partial void OnTotalSelectedSizeChanged(long value)
+        => OnPropertyChanged(nameof(TotalSelectedSizeText));
+
     [ObservableProperty]
     private int _totalSelectedCount;
 
@@ -111,6 +119,7 @@ public partial class SoftwareMigrationViewModel : ObservableObject
         _migrationEngine.StateChanged    += OnMigrationStateChanged;
 
         _localizationService.LanguageChanged += (_, _) => NotifyLocalizedStrings();
+        SoftwareItems.CollectionChanged += SoftwareItems_CollectionChanged;
 
         InitializeDrives();
     }
@@ -302,7 +311,7 @@ public partial class SoftwareMigrationViewModel : ObservableObject
         var previousItems = SoftwareItems.ToList();
 
         IsScanning = true;
-        SoftwareItems.Clear();
+        ClearSoftwareItems();
         ScanProgress = 0;
         CurrentScanDirectory = string.Empty;
         PushStatus(_localizationService.GetString("Status.Scanning"), isBusy: true);
@@ -343,7 +352,7 @@ public partial class SoftwareMigrationViewModel : ObservableObject
         catch (OperationCanceledException)
         {
             // UX-001: restore the previous list so the user is not left with an empty view.
-            SoftwareItems.Clear();
+            ClearSoftwareItems();
             foreach (var item in previousItems)
                 SoftwareItems.Add(item);
 
@@ -466,8 +475,7 @@ public partial class SoftwareMigrationViewModel : ObservableObject
             CurrentTask       = null;
             _batchTotalBytes  = 0;
             _batchCopiedBytes = 0;
-            SelectedItems.Clear();
-            UpdateSelectedInfo();
+            ClearSelection();
         }
     }
 
@@ -495,27 +503,195 @@ public partial class SoftwareMigrationViewModel : ObservableObject
     [RelayCommand]
     private void SelectAll()
     {
-        SelectedItems.Clear();
-        // BUG-006: only select items that are actually eligible for migration.
-        foreach (var item in SoftwareItems.Where(i => i.Status == SoftwareStatus.Normal))
-            SelectedItems.Add(item);
+        _isSynchronizingSelection = true;
+        try
+        {
+            SelectedItems.Clear();
+
+            // BUG-006: only select items that are actually eligible for migration.
+            foreach (var item in SoftwareItems)
+            {
+                var shouldSelect = item.Status == SoftwareStatus.Normal;
+                item.IsSelected = shouldSelect;
+                if (shouldSelect)
+                    SelectedItems.Add(item);
+            }
+        }
+        finally
+        {
+            _isSynchronizingSelection = false;
+        }
+
         UpdateSelectedInfo();
     }
 
     [RelayCommand]
     private void DeselectAll()
     {
-        SelectedItems.Clear();
-        UpdateSelectedInfo();
+        ClearSelection();
     }
 
     partial void OnSelectedItemsChanged(ObservableCollection<SoftwareInfo> value)
         => UpdateSelectedInfo();
 
+    partial void OnSoftwareItemsChanging(ObservableCollection<SoftwareInfo> value)
+    {
+        value.CollectionChanged -= SoftwareItems_CollectionChanged;
+        foreach (var item in value)
+            item.PropertyChanged -= SoftwareItem_PropertyChanged;
+    }
+
+    partial void OnSoftwareItemsChanged(ObservableCollection<SoftwareInfo> value)
+    {
+        value.CollectionChanged += SoftwareItems_CollectionChanged;
+        foreach (var item in value)
+            AttachSoftwareItem(item);
+
+        RebuildSelectionFromItems();
+    }
+
+    private void SoftwareItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (_isSynchronizingSelection)
+            return;
+
+        if (e.OldItems is not null)
+        {
+            foreach (SoftwareInfo item in e.OldItems)
+            {
+                item.PropertyChanged -= SoftwareItem_PropertyChanged;
+                SelectedItems.Remove(item);
+            }
+        }
+
+        if (e.NewItems is not null)
+        {
+            foreach (SoftwareInfo item in e.NewItems)
+            {
+                AttachSoftwareItem(item);
+                if (item.IsSelected && !SelectedItems.Contains(item))
+                    SelectedItems.Add(item);
+            }
+        }
+
+        if (e.Action == NotifyCollectionChangedAction.Reset)
+            RebuildSelectionFromItems();
+
+        UpdateSelectedInfo();
+    }
+
+    private void SoftwareItem_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (sender is not SoftwareInfo item)
+            return;
+
+        if (e.PropertyName == nameof(SoftwareInfo.IsSelected))
+        {
+            if (_isSynchronizingSelection)
+                return;
+
+            if (item.IsSelected)
+            {
+                if (!SelectedItems.Contains(item))
+                    SelectedItems.Add(item);
+            }
+            else
+            {
+                SelectedItems.Remove(item);
+            }
+
+            UpdateSelectedInfo();
+            return;
+        }
+
+        if (e.PropertyName == nameof(SoftwareInfo.SizeBytes) && SelectedItems.Contains(item))
+            UpdateSelectedInfo();
+    }
+
+    private void AttachSoftwareItem(SoftwareInfo item)
+    {
+        item.PropertyChanged -= SoftwareItem_PropertyChanged;
+        item.PropertyChanged += SoftwareItem_PropertyChanged;
+    }
+
+    private void ClearSoftwareItems()
+    {
+        _isSynchronizingSelection = true;
+        try
+        {
+            foreach (var item in SoftwareItems)
+            {
+                item.PropertyChanged -= SoftwareItem_PropertyChanged;
+                item.IsSelected = false;
+            }
+
+            SoftwareItems.Clear();
+            SelectedItems.Clear();
+        }
+        finally
+        {
+            _isSynchronizingSelection = false;
+        }
+
+        UpdateSelectedInfo();
+    }
+
+    private void ClearSelection()
+    {
+        _isSynchronizingSelection = true;
+        try
+        {
+            foreach (var item in SelectedItems.ToList())
+                item.IsSelected = false;
+
+            SelectedItems.Clear();
+        }
+        finally
+        {
+            _isSynchronizingSelection = false;
+        }
+
+        UpdateSelectedInfo();
+    }
+
+    private void RebuildSelectionFromItems()
+    {
+        _isSynchronizingSelection = true;
+        try
+        {
+            SelectedItems.Clear();
+            foreach (var item in SoftwareItems.Where(i => i.IsSelected))
+                SelectedItems.Add(item);
+        }
+        finally
+        {
+            _isSynchronizingSelection = false;
+        }
+
+        UpdateSelectedInfo();
+    }
+
     private void UpdateSelectedInfo()
     {
         TotalSelectedCount = SelectedItems.Count;
         TotalSelectedSize  = SelectedItems.Sum(s => s.SizeBytes > 0 ? s.SizeBytes : 0);
+    }
+
+    private static string FormatSize(long sizeBytes)
+    {
+        if (sizeBytes <= 0)
+            return "0 KB";
+
+        if (sizeBytes < 1024)
+            return $"{sizeBytes} B";
+
+        if (sizeBytes < 1024 * 1024)
+            return $"{Math.Max(1, sizeBytes / 1024)} KB";
+
+        if (sizeBytes < 1024L * 1024 * 1024)
+            return $"{sizeBytes / (1024 * 1024)} MB";
+
+        return $"{sizeBytes / (1024L * 1024 * 1024):F1} GB";
     }
 
     // ── Migration engine event handlers ──────────────────────────────────

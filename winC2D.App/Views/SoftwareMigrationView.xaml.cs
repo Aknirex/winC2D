@@ -1,5 +1,7 @@
+using System.ComponentModel;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Data;
 using winC2D.App.ViewModels;
 using winC2D.Core.Models;
 
@@ -32,5 +34,27 @@ public partial class SoftwareMigrationView : UserControl
         vm.RightClickedItem = dep is DataGridRow row
             ? row.Item as SoftwareInfo
             : null;
+    }
+
+    private void SoftwareDataGrid_Sorting(object sender, DataGridSortingEventArgs e)
+    {
+        if (e.Column.SortMemberPath != nameof(SoftwareInfo.SizeBytes))
+            return;
+
+        e.Handled = true;
+
+        var nextDirection = e.Column.SortDirection == ListSortDirection.Descending
+            ? ListSortDirection.Ascending
+            : ListSortDirection.Descending;
+
+        foreach (var column in SoftwareDataGrid.Columns)
+            column.SortDirection = null;
+
+        e.Column.SortDirection = nextDirection;
+
+        var view = CollectionViewSource.GetDefaultView(SoftwareDataGrid.ItemsSource);
+        view.SortDescriptions.Clear();
+        view.SortDescriptions.Add(new SortDescription(nameof(SoftwareInfo.SizeBytes), nextDirection));
+        view.Refresh();
     }
 }

@@ -38,17 +38,51 @@
         
         <!-- AppData List -->
         <ui:DataGrid Grid.Row="2"
+                    x:Name="AppDataDataGrid"
                     ItemsSource="{Binding AppDataItems}"
                     AutoGenerateColumns="False"
-                    IsReadOnly="True"
-                    SelectionMode="Extended">
+                    IsReadOnly="False"
+                    CanUserSortColumns="True"
+                    SelectionMode="Extended"
+                    Sorting="AppDataDataGrid_Sorting">
             <DataGrid.Columns>
-                <DataGridCheckBoxColumn Binding="{Binding IsSelected, Mode=TwoWay}" Width="Auto"/>
-                <DataGridTextColumn Header="{Binding DataContext.L_ColName, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Name}" Width="*"/>
-                <DataGridTextColumn Header="{Binding DataContext.L_ColPath, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Path}" Width="300"/>
-                <DataGridTextColumn Header="{Binding DataContext.L_ColType, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Type}" Width="80"/>
-                <DataGridTextColumn Header="{Binding DataContext.L_ColSize, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding SizeText}" Width="80"/>
-                <DataGridTextColumn Header="{Binding DataContext.L_ColStatus, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Status}" Width="80"/>
+                <DataGridCheckBoxColumn Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        Width="36" MinWidth="36" MaxWidth="36"
+                                        CanUserResize="False"
+                                        IsReadOnly="False"/>
+                <DataGridTextColumn Header="{Binding DataContext.L_ColName, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Name}" SortMemberPath="Name" IsReadOnly="True" Width="*"/>
+                <DataGridTextColumn Header="{Binding DataContext.L_ColPath, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Path}" SortMemberPath="Path" IsReadOnly="True" Width="300"/>
+                <DataGridTextColumn Header="{Binding DataContext.L_ColType, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Type}" SortMemberPath="Type" IsReadOnly="True" Width="80"/>
+                <DataGridTemplateColumn Header="{Binding DataContext.L_ColSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        SortMemberPath="SizeBytes"
+                                        CanUserSort="True"
+                                        Width="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <TextBlock x:Name="SizeText"
+                                           Text="{Binding SizeText}"
+                                           Padding="4,0"
+                                           VerticalAlignment="Center"
+                                           Visibility="Collapsed"/>
+                                <ui:Button x:Name="CheckSizeButton"
+                                           Command="{Binding DataContext.CheckSizeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                           CommandParameter="{Binding}"
+                                           Content="{Binding DataContext.L_CheckSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                           Appearance="Secondary"
+                                           Padding="6,0"
+                                           MinHeight="24"/>
+                            </Grid>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding SizeChecked}" Value="True">
+                                    <Setter TargetName="SizeText" Property="Visibility" Value="Visible"/>
+                                    <Setter TargetName="CheckSizeButton" Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="{Binding DataContext.L_ColStatus, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Status}" SortMemberPath="Status" IsReadOnly="True" Width="80"/>
             </DataGrid.Columns>
         </ui:DataGrid>
         
@@ -61,8 +95,14 @@
             </Grid.ColumnDefinitions>
             
             <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,20,0">
-                <TextBlock Text="{Binding L_Target}" VerticalAlignment="Center"/>
-                <ui:TextBox Width="250" Text="{Binding TargetPath}" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding L_Target}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <ui:TextBox Width="320"
+                            Text="{Binding TargetPath, UpdateSourceTrigger=PropertyChanged}"
+                            VerticalAlignment="Center"
+                            Margin="0,0,6,0"/>
+                <ui:Button Command="{Binding BrowsePathCommand}"
+                           Content="{Binding L_BrowsePath}"
+                           VerticalAlignment="Center"/>
             </StackPanel>
             
             <StackPanel Grid.Column="2" Orientation="Horizontal">

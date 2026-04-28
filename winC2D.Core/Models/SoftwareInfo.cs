@@ -44,6 +44,12 @@ public class SoftwareInfo : System.ComponentModel.INotifyPropertyChanged
     protected void OnPropertyChanged(string propertyName)
         => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
 
+    private bool _isSelected;
+    private long _sizeBytes;
+    private bool _isSymlink;
+    private SoftwareStatus _status;
+    private bool _suspiciousChecked;
+
     /// <summary>
     /// Call this when the UI language changes so bound columns re-read localized text.
     /// </summary>
@@ -59,25 +65,75 @@ public class SoftwareInfo : System.ComponentModel.INotifyPropertyChanged
     /// <summary>Full path to the installation directory.</summary>
     public string InstallLocation { get; set; } = string.Empty;
 
+    /// <summary>Whether the user selected this directory for migration.</summary>
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set
+        {
+            if (_isSelected == value) return;
+            _isSelected = value;
+            OnPropertyChanged(nameof(IsSelected));
+        }
+    }
+
     /// <summary>
     /// Measured size in bytes.
     /// 0  = empty or not yet measured.
     /// &gt;0 = precise size.
     /// </summary>
-    public long SizeBytes { get; set; }
+    public long SizeBytes
+    {
+        get => _sizeBytes;
+        set
+        {
+            if (_sizeBytes == value) return;
+            _sizeBytes = value;
+            OnPropertyChanged(nameof(SizeBytes));
+            OnPropertyChanged(nameof(SizeText));
+        }
+    }
 
     /// <summary>Whether this directory is a reparse point (symlink).</summary>
-    public bool IsSymlink { get; set; }
+    public bool IsSymlink
+    {
+        get => _isSymlink;
+        set
+        {
+            if (_isSymlink == value) return;
+            _isSymlink = value;
+            OnPropertyChanged(nameof(IsSymlink));
+        }
+    }
 
     /// <summary>Current status of the directory.</summary>
-    public SoftwareStatus Status { get; set; }
+    public SoftwareStatus Status
+    {
+        get => _status;
+        set
+        {
+            if (_status == value) return;
+            _status = value;
+            OnPropertyChanged(nameof(Status));
+            OnPropertyChanged(nameof(SizeText));
+        }
+    }
 
     /// <summary>
     /// True when the directory has been fully inspected (size + exe presence checked).
     /// Always true after a scan because SoftwareScanner now does a precise calculation
     /// for every directory.
     /// </summary>
-    public bool SuspiciousChecked { get; set; }
+    public bool SuspiciousChecked
+    {
+        get => _suspiciousChecked;
+        set
+        {
+            if (_suspiciousChecked == value) return;
+            _suspiciousChecked = value;
+            OnPropertyChanged(nameof(SuspiciousChecked));
+        }
+    }
 
     /// <summary>Human-readable size string.</summary>
     public string SizeText

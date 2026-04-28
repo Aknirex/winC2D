@@ -1,3 +1,5 @@
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -20,6 +22,7 @@ public partial class AppDataMigrationViewModel : ObservableObject
     private readonly ISizeCacheService _sizeCache;
     private readonly ILocalizationService _localizationService;
     private readonly ILogger<AppDataMigrationViewModel> _logger;
+    private bool _isSynchronizingSelection;
     
     [ObservableProperty]
     private ObservableCollection<AppDataInfo> _appDataItems = new();
@@ -59,6 +62,7 @@ public partial class AppDataMigrationViewModel : ObservableObject
         _logger = logger;
 
         _localizationService.LanguageChanged += (_, _) => NotifyLocalizationChanged();
+        AppDataItems.CollectionChanged += AppDataItems_CollectionChanged;
     }
 
     private void NotifyLocalizationChanged()
@@ -73,6 +77,8 @@ public partial class AppDataMigrationViewModel : ObservableObject
         OnPropertyChanged(nameof(L_ColStatus));
         OnPropertyChanged(nameof(L_Target));
         OnPropertyChanged(nameof(L_Migrate));
+        OnPropertyChanged(nameof(L_CheckSize));
+        OnPropertyChanged(nameof(L_BrowsePath));
     }
 
     // ── Localized labels ──────────────────────────────────────────────
@@ -86,6 +92,29 @@ public partial class AppDataMigrationViewModel : ObservableObject
     public string L_ColStatus => _localizationService.GetString("AppDataMigration.ColStatus");
     public string L_Target    => _localizationService.GetString("AppDataMigration.Target");
     public string L_Migrate   => _localizationService.GetString("AppDataMigration.Migrate");
+    public string L_CheckSize => _localizationService.GetString("AppDataMigration.CheckSize");
+    public string L_BrowsePath => _localizationService.GetString("SoftwareMigration.BrowsePath");
+
+    [RelayCommand]
+    private void BrowsePath()
+    {
+        var dialog = new System.Windows.Forms.FolderBrowserDialog
+        {
+            Description            = "Select AppData migration target folder",
+            SelectedPath           = TargetPath,
+            ShowNewFolderButton    = true,
+            UseDescriptionForTitle = true
+        };
+
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK &&
+            !string.IsNullOrEmpty(dialog.SelectedPath))
+        {
+            TargetPath = dialog.SelectedPath;
+            var root = Path.GetPathRoot(dialog.SelectedPath)?.TrimEnd('\\', '/');
+            if (!string.IsNullOrEmpty(root))
+                TargetDisk = root;
+        }
+    }
     
     /// <summary>
     /// Scan for AppData folders
@@ -98,7 +127,7 @@ public partial class AppDataMigrationViewModel : ObservableObject
         
         IsScanning = true;
         StatusMessage = _localizationService.GetString("Status.ScanningAppData");
-        AppDataItems.Clear();
+        ClearAppDataItems();
         
         try
         {
@@ -136,14 +165,19 @@ public partial class AppDataMigrationViewModel : ObservableObject
             {
                 foreach (var dir in _fileSystem.GetDirectories(basePath, "*", false))
                 {
+                    var sizeChecked = _sizeCache.TryGet(dir, out var cached);
+                    var sizeBytes = sizeChecked ? cached.SizeBytes : 0;
+
                     var info = new AppDataInfo
                     {
                         Name = Path.GetFileName(dir),
                         Path = dir,
                         Type = type,
-                        Status = SoftwareStatus.Suspicious,
-                        SizeBytes = 0,
-                        SizeChecked = false
+                        Status = sizeChecked
+                            ? sizeBytes > 0 ? SoftwareStatus.Normal : SoftwareStatus.Empty
+                            : SoftwareStatus.Suspicious,
+                        SizeBytes = sizeBytes,
+                        SizeChecked = sizeChecked
                     };
                     
                     System.Windows.Application.Current?.Dispatcher.Invoke(() =>
@@ -236,7 +270,7 @@ public partial class AppDataMigrationViewModel : ObservableObject
         finally
         {
             IsMigrating = false;
-            SelectedItems.Clear();
+            ClearSelection();
         }
     }
     
@@ -261,17 +295,135 @@ public partial class AppDataMigrationViewModel : ObservableObject
             {
                 size = await Task.Run(() => _fileSystem.GetDirectorySize(appData.Path));
                 _sizeCache.Set(appData.Path, size);
+                await _sizeCache.SaveAsync();
             }
 
             appData.SizeBytes   = size;
             appData.SizeChecked = true;
             appData.Status      = size > 0 ? SoftwareStatus.Normal : SoftwareStatus.Empty;
-            
-            OnPropertyChanged(nameof(appData.SizeText));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to check AppData size: {Name}", appData.Name);
+        }
+    }
+
+    partial void OnAppDataItemsChanging(ObservableCollection<AppDataInfo> value)
+    {
+        value.CollectionChanged -= AppDataItems_CollectionChanged;
+        foreach (var item in value)
+            item.PropertyChanged -= AppDataItem_PropertyChanged;
+    }
+
+    partial void OnAppDataItemsChanged(ObservableCollection<AppDataInfo> value)
+    {
+        value.CollectionChanged += AppDataItems_CollectionChanged;
+        foreach (var item in value)
+            AttachAppDataItem(item);
+
+        RebuildSelectionFromItems();
+    }
+
+    private void AppDataItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (_isSynchronizingSelection)
+            return;
+
+        if (e.OldItems is not null)
+        {
+            foreach (AppDataInfo item in e.OldItems)
+            {
+                item.PropertyChanged -= AppDataItem_PropertyChanged;
+                SelectedItems.Remove(item);
+            }
+        }
+
+        if (e.NewItems is not null)
+        {
+            foreach (AppDataInfo item in e.NewItems)
+            {
+                AttachAppDataItem(item);
+                if (item.IsSelected && !SelectedItems.Contains(item))
+                    SelectedItems.Add(item);
+            }
+        }
+
+        if (e.Action == NotifyCollectionChangedAction.Reset)
+            RebuildSelectionFromItems();
+    }
+
+    private void AppDataItem_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (sender is not AppDataInfo item ||
+            e.PropertyName != nameof(AppDataInfo.IsSelected) ||
+            _isSynchronizingSelection)
+            return;
+
+        if (item.IsSelected)
+        {
+            if (!SelectedItems.Contains(item))
+                SelectedItems.Add(item);
+        }
+        else
+        {
+            SelectedItems.Remove(item);
+        }
+    }
+
+    private void AttachAppDataItem(AppDataInfo item)
+    {
+        item.PropertyChanged -= AppDataItem_PropertyChanged;
+        item.PropertyChanged += AppDataItem_PropertyChanged;
+    }
+
+    private void ClearAppDataItems()
+    {
+        _isSynchronizingSelection = true;
+        try
+        {
+            foreach (var item in AppDataItems)
+            {
+                item.PropertyChanged -= AppDataItem_PropertyChanged;
+                item.IsSelected = false;
+            }
+
+            AppDataItems.Clear();
+            SelectedItems.Clear();
+        }
+        finally
+        {
+            _isSynchronizingSelection = false;
+        }
+    }
+
+    private void ClearSelection()
+    {
+        _isSynchronizingSelection = true;
+        try
+        {
+            foreach (var item in SelectedItems.ToList())
+                item.IsSelected = false;
+
+            SelectedItems.Clear();
+        }
+        finally
+        {
+            _isSynchronizingSelection = false;
+        }
+    }
+
+    private void RebuildSelectionFromItems()
+    {
+        _isSynchronizingSelection = true;
+        try
+        {
+            SelectedItems.Clear();
+            foreach (var item in AppDataItems.Where(i => i.IsSelected))
+                SelectedItems.Add(item);
+        }
+        finally
+        {
+            _isSynchronizingSelection = false;
         }
     }
 }
@@ -279,14 +431,31 @@ public partial class AppDataMigrationViewModel : ObservableObject
 /// <summary>
 /// AppData folder information
 /// </summary>
-public class AppDataInfo
+public partial class AppDataInfo : ObservableObject
 {
-    public string Name { get; set; } = string.Empty;
-    public string Path { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;
-    public long SizeBytes { get; set; }
-    public bool SizeChecked { get; set; }
-    public SoftwareStatus Status { get; set; }
+    [ObservableProperty]
+    private bool _isSelected;
+
+    [ObservableProperty]
+    private string _name = string.Empty;
+
+    [ObservableProperty]
+    private string _path = string.Empty;
+
+    [ObservableProperty]
+    private string _type = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SizeText))]
+    private long _sizeBytes;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SizeText))]
+    private bool _sizeChecked;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SizeText))]
+    private SoftwareStatus _status;
     
     public string SizeText
     {
@@ -296,9 +465,13 @@ public class AppDataInfo
                 return "...";
             if (SizeBytes == 0)
                 return "0 KB";
+            if (SizeBytes < 1024)
+                return $"{SizeBytes} B";
             if (SizeBytes < 1024 * 1024)
-                return $"{SizeBytes / 1024} KB";
-            return $"{SizeBytes / (1024 * 1024)} MB";
+                return $"{Math.Max(1, SizeBytes / 1024)} KB";
+            if (SizeBytes < 1024L * 1024 * 1024)
+                return $"{SizeBytes / (1024 * 1024)} MB";
+            return $"{SizeBytes / (1024L * 1024 * 1024):F1} GB";
         }
     }
 }

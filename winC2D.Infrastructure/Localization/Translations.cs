@@ -68,6 +68,7 @@ internal static class Translations
             ["AppDataMigration.ColSize"]             = "Size",
             ["AppDataMigration.ColStatus"]           = "Status",
             ["AppDataMigration.Target"]              = "Target:",
+            ["AppDataMigration.CheckSize"]           = "Check",
 
             ["Log.Header"]                           = "Migration History and Rollback",
             ["Log.Refresh"]                          = "Refresh",
@@ -172,6 +173,7 @@ internal static class Translations
             ["AppDataMigration.ColSize"]             = "大小",
             ["AppDataMigration.ColStatus"]           = "状态",
             ["AppDataMigration.Target"]              = "目标：",
+            ["AppDataMigration.CheckSize"]           = "检查",
 
             ["Log.Header"]                           = "迁移历史与回滚",
             ["Log.Refresh"]                          = "刷新",
@@ -276,6 +278,7 @@ internal static class Translations
             ["AppDataMigration.ColSize"]             = "大小",
             ["AppDataMigration.ColStatus"]           = "狀態",
             ["AppDataMigration.Target"]              = "目標：",
+            ["AppDataMigration.CheckSize"]           = "檢查",
 
             ["Log.Header"]                           = "遷移歷史與回滾",
             ["Log.Refresh"]                          = "重新整理",
@@ -380,6 +383,7 @@ internal static class Translations
             ["AppDataMigration.ColSize"]             = "サイズ",
             ["AppDataMigration.ColStatus"]           = "状態",
             ["AppDataMigration.Target"]              = "ターゲット：",
+            ["AppDataMigration.CheckSize"]           = "確認",
 
             ["Log.Header"]                           = "移行履歴とロールバック",
             ["Log.Refresh"]                          = "更新",
@@ -484,6 +488,7 @@ internal static class Translations
             ["AppDataMigration.ColSize"]             = "크기",
             ["AppDataMigration.ColStatus"]           = "상태",
             ["AppDataMigration.Target"]              = "대상:",
+            ["AppDataMigration.CheckSize"]           = "확인",
 
             ["Log.Header"]                           = "마이그레이션 기록 및 롤백",
             ["Log.Refresh"]                          = "새로 고침",
@@ -588,6 +593,7 @@ internal static class Translations
             ["AppDataMigration.ColSize"]             = "Размер",
             ["AppDataMigration.ColStatus"]           = "Статус",
             ["AppDataMigration.Target"]              = "Цель:",
+            ["AppDataMigration.CheckSize"]           = "Проверить",
 
             ["Log.Header"]                           = "История миграций и откат",
             ["Log.Refresh"]                          = "Обновить",
@@ -692,6 +698,7 @@ internal static class Translations
             ["AppDataMigration.ColSize"]             = "Tamanho",
             ["AppDataMigration.ColStatus"]           = "Status",
             ["AppDataMigration.Target"]              = "Destino:",
+            ["AppDataMigration.CheckSize"]           = "Verificar",
 
             ["Log.Header"]                           = "Histórico de Migração e Reversão",
             ["Log.Refresh"]                          = "Atualizar",
