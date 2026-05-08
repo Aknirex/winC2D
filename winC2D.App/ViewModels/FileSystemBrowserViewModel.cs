@@ -2,6 +2,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -372,8 +373,17 @@ public partial class FileSystemBrowserViewModel : ObservableObject
         IsScanning = true;
         ScanProgress = 0;
 
-        // Take a snapshot of current items
+        // Take a snapshot of current items for the scanner to work on.
         var snapshot = Items.ToList();
+
+        // Build a fast lookup: FullPath → live item in the observable collection.
+        // Only directories need scanning; files are excluded.
+        var liveItemLookup = new Dictionary<string, FileSystemItem>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in Items)
+        {
+            if (item.IsDirectory && !item.IsSymlink)
+                liveItemLookup[item.FullPath] = item;
+        }
 
         try
         {
@@ -385,27 +395,27 @@ public partial class FileSystemBrowserViewModel : ObservableObject
                     CurrentScanDirectory = report.CurrentDirectory;
                     ScanProgress = report.ProgressPercent;
                     PushStatus($"正在计算: {report.ItemsFound}/{report.TotalDirectories} - {report.CurrentDirectory}", isBusy: true);
-                });
+                }, DispatcherPriority.Background);
             });
 
-            var updated = new Dictionary<string, FileSystemItem>(StringComparer.OrdinalIgnoreCase);
-            await foreach (var item in _browser.ScanSizesAsync(snapshot, progress, ct))
+            // Consume the stream: update live items in-place as each directory
+            // finishes scanning. This avoids replacing ObservableCollection elements,
+            // which would trigger WPF to destroy/recreate DataGrid rows and allocate
+            // unnecessary garbage.
+            await foreach (var scanned in _browser.ScanSizesAsync(snapshot, progress, ct))
             {
-                updated[item.FullPath] = item;
+                if (liveItemLookup.TryGetValue(scanned.FullPath, out var liveItem))
+                {
+                    // Update properties on the existing object – ObservableProperty
+                    // source-generators raise PropertyChanged automatically.
+                    liveItem.SizeBytes = scanned.SizeBytes;
+                    liveItem.SizeChecked = true;
+                    liveItem.Status = scanned.Status;
+                }
             }
 
-            // Persist cache
+            // Persist cache after all scanning completes.
             await _sizeCache.SaveAsync(ct);
-
-            // Merge results back into the live collection
-            await dispatcher.InvokeAsync(() =>
-            {
-                for (int i = 0; i < Items.Count; i++)
-                {
-                    if (updated.TryGetValue(Items[i].FullPath, out var newItem))
-                        Items[i] = newItem;
-                }
-            });
 
             PushStatus($"扫描完成: {snapshot.Count} 个项目", isBusy: false);
         }

@@ -173,6 +173,7 @@ public sealed class FileSystemBrowser : IFileSystemBrowser
         var channel = System.Threading.Channels.Channel.CreateUnbounded<FileSystemItem>(new()
         {
             SingleReader = true,
+            SingleWriter = false,
         });
 
         var semaphore = new SemaphoreSlim(ScanConcurrency, ScanConcurrency);
@@ -246,30 +247,23 @@ public sealed class FileSystemBrowser : IFileSystemBrowser
             channel.Writer.Complete();
         }, ct);
 
-        // Yield scanned directory items as they complete
-        var scannedDict = new Dictionary<string, FileSystemItem>(StringComparer.OrdinalIgnoreCase);
+        // Track which paths are directories so we know what remains to yield.
+        var dirFullPaths = new HashSet<string>(
+            dirsToScan.Select(d => d.FullPath), StringComparer.OrdinalIgnoreCase);
+
+        // Stream scanned directory items as they complete.
+        // The caller can update the UI progressively instead of waiting for all.
         await foreach (var scanned in channel.Reader.ReadAllAsync(ct))
-            scannedDict[scanned.FullPath] = scanned;
+            yield return scanned;
 
-        await producer;
+        await producer; // observe any exceptions from producer tasks
 
-        // Yield back ALL items in the original order, but with updated scan results
+        // Yield non-directory items (files) that were part of the original list
+        // but not scanned (they already have their size from enumeration).
         foreach (var item in items)
         {
-            if (!item.IsDirectory || item.IsSymlink)
-            {
-                // File: already has size from enumeration
+            if (!dirFullPaths.Contains(item.FullPath))
                 yield return item;
-            }
-            else if (scannedDict.TryGetValue(item.FullPath, out var updated))
-            {
-                yield return updated;
-            }
-            else
-            {
-                // Directory was not scanned (e.g. excluded by filter)
-                yield return item;
-            }
         }
     }
 
