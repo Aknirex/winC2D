@@ -13,11 +13,14 @@ namespace winC2D.App.Views;
 /// </summary>
 public partial class FileSystemBrowserView : UserControl
 {
+    private readonly FileSystemBrowserViewModel _viewModel;
     private bool _isLoaded;
 
-    public FileSystemBrowserView()
+    public FileSystemBrowserView(FileSystemBrowserViewModel viewModel)
     {
         InitializeComponent();
+        _viewModel = viewModel;
+        DataContext = viewModel;
         Loaded += OnLoaded;
     }
 
@@ -26,8 +29,7 @@ public partial class FileSystemBrowserView : UserControl
         if (_isLoaded) return;
         _isLoaded = true;
 
-        if (DataContext is FileSystemBrowserViewModel vm)
-            await vm.LoadAsync();
+        await _viewModel.LoadAsync();
     }
 
     /// <summary>
@@ -38,8 +40,7 @@ public partial class FileSystemBrowserView : UserControl
         if (sender is not DataGrid grid) return;
         if (grid.SelectedItem is not FileSystemItem item) return;
         if (!item.IsDirectory) return;
-        if (DataContext is not FileSystemBrowserViewModel vm) return;
 
-        vm.NavigateItemCommand.Execute(item);
+        _viewModel.NavigateItemCommand.Execute(item);
     }
 }
