@@ -36,13 +36,17 @@ public class FileSystem : IFileSystem
     
     public IEnumerable<string> GetDirectories(string path, string searchPattern = "*", bool recursive = false)
     {
-        var option = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+        var option = recursive
+            ? new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true, AttributesToSkip = FileAttributes.ReparsePoint }
+            : new EnumerationOptions { RecurseSubdirectories = false, IgnoreInaccessible = true };
         return Directory.GetDirectories(path, searchPattern, option);
     }
     
     public IEnumerable<string> GetFiles(string path, string searchPattern = "*", bool recursive = false)
     {
-        var option = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+        var option = recursive
+            ? new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true, AttributesToSkip = FileAttributes.ReparsePoint }
+            : new EnumerationOptions { RecurseSubdirectories = false, IgnoreInaccessible = true };
         return Directory.GetFiles(path, searchPattern, option);
     }
     

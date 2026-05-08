@@ -151,7 +151,7 @@ public class MigrationEngine : IMigrationEngine
             
             if (cts.Token.IsCancellationRequested)
             {
-                return await CancelAndRollbackAsync(task, stopwatch.Elapsed);
+                return await CancelAndRollbackAsync(task, stopwatch.Elapsed, cts.Token);
             }
             
             await _rollbackManager.RecordStepAsync(task.RollbackPoint.Id, CompletedStep.FilesCopied);
@@ -164,7 +164,7 @@ public class MigrationEngine : IMigrationEngine
             var symlinkCreated = await _symlinkManager.CreateDirectorySymlinkAsync(task.SourcePath, task.TargetPath);
             if (!symlinkCreated)
             {
-                return await FailAndRollbackAsync(task, "Failed to create symbolic link", null, stopwatch.Elapsed);
+                return await FailAndRollbackAsync(task, "Failed to create symbolic link", null, stopwatch.Elapsed, cts.Token);
             }
             
             await _rollbackManager.RecordStepAsync(task.RollbackPoint.Id, CompletedStep.SymlinkCreated);
@@ -195,12 +195,12 @@ public class MigrationEngine : IMigrationEngine
         }
         catch (OperationCanceledException)
         {
-            return await CancelAndRollbackAsync(task, stopwatch.Elapsed);
+            return await CancelAndRollbackAsync(task, stopwatch.Elapsed, cts.Token);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Migration task {TaskId} failed: {Message}", task.Id, ex.Message);
-            return await FailAndRollbackAsync(task, ex.Message, ex, stopwatch.Elapsed);
+            return await FailAndRollbackAsync(task, ex.Message, ex, stopwatch.Elapsed, cts.Token);
         }
         finally
         {
@@ -256,6 +256,14 @@ public class MigrationEngine : IMigrationEngine
     }
     
     /// <inheritdoc/>
+    /// <remarks>
+    /// Resuming unblocks the paused copy loop inside the already-running
+    /// <see cref="ExecuteAsync"/> call.  This method returns immediately;
+    /// the final result of the migration is delivered asynchronously via the
+    /// <see cref="StateChanged"/> event when <see cref="ExecuteAsync"/> completes.
+    /// To await the definitive outcome, subscribe to <see cref="StateChanged"/>
+    /// and watch for a terminal state.
+    /// </remarks>
     public Task<MigrationResult> ResumeAsync(string taskId, CancellationToken cancellationToken = default)
     {
         if (!_tasks.TryGetValue(taskId, out var task))
@@ -275,7 +283,8 @@ public class MigrationEngine : IMigrationEngine
         _logger.LogInformation("Migration task {TaskId} resumed", taskId);
         
         // The background execution loop is already running and waiting on the gate;
-        // there is nothing more to do here — return a "running" placeholder result.
+        // returning a placeholder result to indicate the resume request was accepted.
+        // The authoritative result arrives later via StateChanged / ProgressChanged events.
         return Task.FromResult(new MigrationResult
         {
             Success = true,
@@ -393,7 +402,12 @@ public class MigrationEngine : IMigrationEngine
                 Tasks = _tasks.Values.OrderBy(t => t.CreatedAt).ToList()
             };
             var json = JsonSerializer.Serialize(document, _jsonOptions);
-            File.WriteAllText(_storageFilePath, json);
+
+            // Atomic write: write to a temp file first, then rename to prevent
+            // corruption if the process crashes mid-write.
+            var tmpPath = _storageFilePath + ".tmp";
+            File.WriteAllText(tmpPath, json);
+            File.Move(tmpPath, _storageFilePath, overwrite: true);
         }
         catch (Exception ex)
         {
@@ -403,10 +417,14 @@ public class MigrationEngine : IMigrationEngine
     
     private string DetermineTargetPath(MigrationRequest request)
     {
-        var folderName = request.CustomTargetFolderName 
-            ?? _fileSystem.GetFileName(request.SourcePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)) 
-            ?? request.Name;
+        var sourceName = _fileSystem.GetFileName(
+            request.SourcePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
         
+        var folderName = request.CustomTargetFolderName
+            ?? sourceName
+            ?? request.Name
+            ?? "Unknown";
+
         // Sanitize folder name
         foreach (var c in _fileSystem.GetInvalidFileNameChars())
         {
@@ -414,77 +432,85 @@ public class MigrationEngine : IMigrationEngine
         }
         folderName = folderName.Trim().TrimEnd('.');
         
+        // Final safeguard: if sanitisation produced an empty string, fall back
+        if (string.IsNullOrWhiteSpace(folderName))
+            folderName = "MigratedApp";
+
         return _fileSystem.CombinePath(request.TargetRootPath, folderName);
     }
     
     private async Task CopyDirectoryAsync(MigrationTask task, string sourceDir, string targetDir, CancellationToken cancellationToken)
     {
-        _fileSystem.CreateDirectory(targetDir);
-        
-        var files = _fileSystem.GetFiles(sourceDir, "*", false).ToList();
-        var directories = _fileSystem.GetDirectories(sourceDir, "*", false).ToList();
-        
-        // Copy files
-        foreach (var file in files)
-        {
-            if (cancellationToken.IsCancellationRequested)
-                return;
-            
-            // Pause checkpoint: block here (without cancelling) if the task is paused.
-            if (_pauseGates.TryGetValue(task.Id, out var gate))
-                gate.Wait(cancellationToken);
-            
-            if (cancellationToken.IsCancellationRequested)
-                return;
-            
-            var fileName = _fileSystem.GetFileName(file);
-            var targetFile = _fileSystem.CombinePath(targetDir, fileName!);
-            
-            task.CurrentFile = fileName;
-            OnProgressChanged(task);
-            
-            // Use metadata-preserving copy to retain timestamps and attributes.
-            _fileSystem.CopyFilePreserveMetadata(file, targetFile, false);
-            
-            var fileSize = _fileSystem.GetFileSize(file);
-            task.CopiedBytes += fileSize;
-            task.CopiedFiles++;
-            SaveTasks();
-            
-            OnProgressChanged(task);
-        }
-        
-        // Copy subdirectories
-        foreach (var directory in directories)
-        {
-            if (cancellationToken.IsCancellationRequested)
-                return;
-            
-            // Pause checkpoint for subdirectories as well.
-            if (_pauseGates.TryGetValue(task.Id, out var gate))
-                gate.Wait(cancellationToken);
-            
-            if (cancellationToken.IsCancellationRequested)
-                return;
-            
-            var dirName = _fileSystem.GetFileName(directory);
-            var targetSubDir = _fileSystem.CombinePath(targetDir, dirName!);
-            
-            await CopyDirectoryAsync(task, directory, targetSubDir, cancellationToken);
-        }
+        // Iterative depth-first traversal to avoid stack overflow on deeply nested
+        // directory trees. Each stack entry is a (sourcePath, targetPath) pair.
+        var stack = new Stack<(string Source, string Target)>();
+        stack.Push((sourceDir, targetDir));
 
-        // Preserve source directory timestamps on the newly created target directory.
-        try
+        while (stack.Count > 0)
         {
-            var srcInfo = new DirectoryInfo(sourceDir);
-            var dstInfo = new DirectoryInfo(targetDir);
-            dstInfo.CreationTimeUtc   = srcInfo.CreationTimeUtc;
-            dstInfo.LastWriteTimeUtc  = srcInfo.LastWriteTimeUtc;
-            dstInfo.LastAccessTimeUtc = srcInfo.LastAccessTimeUtc;
-        }
-        catch
-        {
-            // Best-effort; not fatal.
+            if (cancellationToken.IsCancellationRequested)
+                return;
+
+            // Pause checkpoint
+            if (_pauseGates.TryGetValue(task.Id, out var gate))
+                gate.Wait(cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested)
+                return;
+
+            var (src, dst) = stack.Pop();
+            _fileSystem.CreateDirectory(dst);
+
+            // Copy files in this directory
+            var files = _fileSystem.GetFiles(src, "*", false).ToList();
+            foreach (var file in files)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+
+                if (_pauseGates.TryGetValue(task.Id, out gate))
+                    gate.Wait(cancellationToken);
+
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+
+                var fileName = _fileSystem.GetFileName(file);
+                var targetFile = _fileSystem.CombinePath(dst, fileName!);
+
+                task.CurrentFile = fileName;
+                OnProgressChanged(task);
+
+                _fileSystem.CopyFilePreserveMetadata(file, targetFile, false);
+
+                var fileSize = _fileSystem.GetFileSize(file);
+                task.CopiedBytes += fileSize;
+                task.CopiedFiles++;
+                SaveTasks();
+
+                OnProgressChanged(task);
+            }
+
+            // Push subdirectories onto the stack (order doesn't matter for DFS)
+            var directories = _fileSystem.GetDirectories(src, "*", false).ToList();
+            foreach (var directory in directories)
+            {
+                var dirName = _fileSystem.GetFileName(directory);
+                stack.Push((directory, _fileSystem.CombinePath(dst, dirName!)));
+            }
+
+            // Preserve source directory timestamps on the newly created target directory
+            try
+            {
+                var srcInfo = new DirectoryInfo(src);
+                var dstInfo = new DirectoryInfo(dst);
+                dstInfo.CreationTimeUtc   = srcInfo.CreationTimeUtc;
+                dstInfo.LastWriteTimeUtc  = srcInfo.LastWriteTimeUtc;
+                dstInfo.LastAccessTimeUtc = srcInfo.LastAccessTimeUtc;
+            }
+            catch
+            {
+                // Best-effort; not fatal.
+            }
         }
     }
     
@@ -502,7 +528,9 @@ public class MigrationEngine : IMigrationEngine
         return MigrationResult.Failed(task, message, ex);
     }
     
-    private async Task<MigrationResult> FailAndRollbackAsync(MigrationTask task, string message, Exception? ex, TimeSpan elapsed)
+    private async Task<MigrationResult> FailAndRollbackAsync(
+        MigrationTask task, string message, Exception? ex, TimeSpan elapsed,
+        CancellationToken cancellationToken = default)
     {
         task.State = MigrationState.RollingBack;
         SaveTasks();
@@ -510,7 +538,12 @@ public class MigrationEngine : IMigrationEngine
         
         if (task.RollbackPoint != null)
         {
-            var rollbackResult = await _rollbackManager.RollbackAsync(task.RollbackPoint.Id);
+            // Use a linked token with a generous timeout to prevent indefinite rollback hang,
+            // while still respecting the original cancellation request for a graceful stop.
+            using var rollbackCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            rollbackCts.CancelAfter(TimeSpan.FromMinutes(5));
+            
+            var rollbackResult = await _rollbackManager.RollbackAsync(task.RollbackPoint.Id, rollbackCts.Token);
             
             task.State = rollbackResult.Success ? MigrationState.RolledBack : MigrationState.PartialRollback;
             task.CompletedAt = DateTime.UtcNow;
@@ -532,7 +565,9 @@ public class MigrationEngine : IMigrationEngine
         return await FailTaskAsync(task, message, ex, elapsed);
     }
     
-    private async Task<MigrationResult> CancelAndRollbackAsync(MigrationTask task, TimeSpan elapsed)
+    private async Task<MigrationResult> CancelAndRollbackAsync(
+        MigrationTask task, TimeSpan elapsed,
+        CancellationToken cancellationToken = default)
     {
         task.State = MigrationState.Cancelled;
         task.CompletedAt = DateTime.UtcNow;
@@ -541,7 +576,10 @@ public class MigrationEngine : IMigrationEngine
         
         if (task.RollbackPoint != null)
         {
-            var rollbackResult = await _rollbackManager.RollbackAsync(task.RollbackPoint.Id);
+            using var rollbackCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            rollbackCts.CancelAfter(TimeSpan.FromMinutes(5));
+            
+            var rollbackResult = await _rollbackManager.RollbackAsync(task.RollbackPoint.Id, rollbackCts.Token);
             return new MigrationResult
             {
                 Success = false,

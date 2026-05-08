@@ -111,30 +111,49 @@ public class RollbackManager : IRollbackManager
             };
         }
         
-        _logger.LogInformation("Starting rollback for point {Id}", rollbackPointId);
+        _logger.LogInformation("Starting rollback for point {Id} with {Count} step(s) to reverse",
+            rollbackPointId, rollbackPoint.CompletedSteps.Count);
         
         var result = new RollbackResult();
         
         try
         {
-            // Rollback in reverse order of steps
+            // Rollback in reverse order of steps.
+            // We take a snapshot first because we'll mutate CompletedSteps as we succeed.
             var steps = rollbackPoint.CompletedSteps.ToList();
             steps.Reverse();
             
             foreach (var step in steps)
             {
                 if (cancellationToken.IsCancellationRequested)
+                {
+                    result.IsPartial = true;
+                    _logger.LogWarning("Rollback of point {Id} cancelled after rolling back {Count} step(s)",
+                        rollbackPointId, result.RolledBackSteps.Count);
                     break;
+                }
                 
                 var stepResult = await RollbackStepAsync(rollbackPoint, step);
-                result.RolledBackSteps.Add(step);
                 
                 if (!stepResult)
                 {
                     result.IsPartial = true;
-                    _logger.LogError("Failed to rollback step {Step}", step);
+                    result.FailedStep = step;
+                    _logger.LogError(
+                        "Failed to rollback step {Step} for point {Id}. " +
+                        "Rollback is partial: {RolledBackCount} step(s) succeeded. " +
+                        "Remaining steps that were NOT reverted: {Remaining}",
+                        step, rollbackPointId,
+                        result.RolledBackSteps.Count,
+                        string.Join(", ", rollbackPoint.CompletedSteps));
                     break;
                 }
+                
+                // Step succeeded: remove it from the persisted rollback point so that
+                // a crash / restart won't re-execute this rollback step.
+                rollbackPoint.CompletedSteps.Remove(step);
+                SaveState();
+                result.RolledBackSteps.Add(step);
             }
             
             result.Success = !result.IsPartial;
@@ -145,7 +164,8 @@ public class RollbackManager : IRollbackManager
             }
             else
             {
-                _logger.LogWarning("Partial rollback for point {Id}", rollbackPointId);
+                _logger.LogWarning("Partial rollback for point {Id}: {SuccessCount} succeeded, failed at {FailedStep}",
+                    rollbackPointId, result.RolledBackSteps.Count, result.FailedStep);
             }
         }
         catch (Exception ex)
@@ -268,7 +288,11 @@ public class RollbackManager : IRollbackManager
                 RollbackPoints = _rollbackPoints.Values.OrderBy(p => p.CreatedAt).ToList()
             };
             var json = JsonSerializer.Serialize(document, _jsonOptions);
-            File.WriteAllText(_storageFilePath, json);
+
+            // Atomic write to prevent corruption on crash mid-write.
+            var tmpPath = _storageFilePath + ".tmp";
+            File.WriteAllText(tmpPath, json);
+            File.Move(tmpPath, _storageFilePath, overwrite: true);
         }
         catch (Exception ex)
         {
@@ -358,14 +382,22 @@ public class RollbackManager : IRollbackManager
                     }
                     else
                     {
-                        // Source exists but is not a symlink - this shouldn't happen
-                        _logger.LogWarning("Source path exists but is not a symlink: {Path}", point.SourcePath);
+                        // Source exists but is not a symlink – unexpected state.
+                        // Refuse to continue because MoveDirectory would fail with
+                        // "destination already exists" and we do not want to overwrite
+                        // a real directory.
+                        _logger.LogError(
+                            "Rollback refused: SourcePath '{Source}' exists but is not a symlink. " +
+                            "This indicates an inconsistent state. Manual intervention required. " +
+                            "Backup is at '{Backup}'.",
+                            point.SourcePath, point.BackupPath);
+                        return false;
                     }
                 }
                 
                 // Move backup back to source
                 _fileSystem.MoveDirectory(point.BackupPath, point.SourcePath);
-                _logger.LogDebug("Restored source directory from backup: {Backup} -> {Source}", 
+                _logger.LogDebug("Restored source directory from backup: {Backup} -> {Source}",
                     point.BackupPath, point.SourcePath);
             }
             catch (Exception ex)

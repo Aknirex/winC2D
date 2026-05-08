@@ -9,6 +9,12 @@ public sealed class SizeCacheEntry
     public long SizeBytes { get; set; }
 
     /// <summary>
+    /// Whether at least one .exe file was found during the measurement.
+    /// Defaults to <see langword="false"/> for backward compatibility with older cache files.
+    /// </summary>
+    public bool HasExe { get; set; }
+
+    /// <summary>
     /// UTC timestamp of the directory's LastWriteTime when the size was measured.
     /// Used as a quick-staleness indicator (note: only reflects direct-child changes).
     /// </summary>
@@ -29,7 +35,9 @@ public interface ISizeCacheService
     bool TryGet(string path, out SizeCacheEntry entry);
 
     /// <summary>Store (or overwrite) the measured size for <paramref name="path"/>.</summary>
-    void Set(string path, long sizeBytes);
+    /// <param name="hasExe">Whether at least one .exe file was found. Defaults to false
+    /// for backward compatibility with callers that don't track .exe presence.</param>
+    void Set(string path, long sizeBytes, bool hasExe = false);
 
     /// <summary>
     /// Remove all entries from the in-memory cache, forcing every subsequent

@@ -213,6 +213,6 @@ public class SoftwareScannerTests
 
         await scanner.RecalculateSizeAsync(software);
 
-        _cacheMock.Verify(c => c.Set(path, It.IsAny<long>()), Times.Once);
+        _cacheMock.Verify(c => c.Set(path, It.IsAny<long>(), It.IsAny<bool>()), Times.Once);
     }
 }

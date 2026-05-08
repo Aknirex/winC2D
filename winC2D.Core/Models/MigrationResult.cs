@@ -127,6 +127,11 @@ public class RollbackResult
     public List<CompletedStep> RolledBackSteps { get; set; } = new();
     
     /// <summary>
+    /// The step at which rollback failed (only set when <see cref="IsPartial"/> is true).
+    /// </summary>
+    public CompletedStep? FailedStep { get; set; }
+    
+    /// <summary>
     /// Whether the rollback was partial (some steps could not be rolled back)
     /// </summary>
     public bool IsPartial { get; set; }

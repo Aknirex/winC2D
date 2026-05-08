@@ -82,7 +82,7 @@ public sealed class SizeCacheService : ISizeCacheService
     }
 
     /// <inheritdoc/>
-    public void Set(string path, long sizeBytes)
+    public void Set(string path, long sizeBytes, bool hasExe = false)
     {
         try
         {
@@ -92,6 +92,7 @@ public sealed class SizeCacheService : ISizeCacheService
             _cache[Normalise(path)] = new SizeCacheEntry
             {
                 SizeBytes             = sizeBytes,
+                HasExe                = hasExe,
                 DirectoryLastWriteUtc = info.LastWriteTimeUtc
             };
         }

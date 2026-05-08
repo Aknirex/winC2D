@@ -9,28 +9,20 @@ namespace winC2D.Infrastructure.Services;
 /// <summary>
 /// Streams <see cref="SoftwareInfo"/> items from Program Files directories.
 ///
-/// Status assignment rules (applied after every scan, fast or precise):
+/// Status assignment rules:
 ///   Migrated   – directory is a reparse point (symlink)
 ///   Empty      – no files and no sub-directories at all
-///   Normal     – has at least one .exe (or size > SmallAppThreshold)
-///   SmallApp   – has files but no .exe AND size ≤ SmallAppThreshold
-///                (replaces the old "Suspicious" label for normal small dirs)
-///   Residual   – directory exists but has only files/dirs with no .exe found
-///                AND the precise check confirmed this (SuspiciousChecked=true)
+///   Normal     – has at least one .exe file
+///   Residual   – has files/dirs but no .exe found
 ///
-/// "Suspicious" is intentionally NOT assigned based on size alone.
+/// "Suspicious" is intentionally NOT assigned by the scanner;
+/// it is reserved for manual user review during migration.
 /// </summary>
 public sealed class SoftwareScanner : ISoftwareScanner
 {
     private readonly IFileSystem _fileSystem;
     private readonly ISizeCacheService _sizeCache;
     private readonly ILogger<SoftwareScanner> _logger;
-
-    /// <summary>
-    /// Directories smaller than this are considered "small apps" rather than suspicious.
-    /// Value: 50 MB – large enough to exclude most genuine software.
-    /// </summary>
-    private const long SmallAppThreshold = 50L * 1024 * 1024;
 
     /// <summary>Max concurrent size calculations during a full scan.</summary>
     private const int ScanConcurrency = 4;
@@ -179,8 +171,9 @@ public sealed class SoftwareScanner : ISoftwareScanner
             _logger.LogWarning(ex, "Error during precise size calculation for {Path}", path);
         }
 
-        // Write result into cache so next fast scan can reuse it
-        _sizeCache.Set(path, size);
+        // Write result into cache so next fast scan can reuse it.
+        // Include .exe presence so cached reads produce accurate statuses.
+        _sizeCache.Set(path, size, hasExe);
 
         software.SizeBytes         = size;
         software.SuspiciousChecked = true;
@@ -245,23 +238,24 @@ public sealed class SoftwareScanner : ISoftwareScanner
         // ── Try cache ────────────────────────────────────────────────────
         if (_sizeCache.TryGet(path, out var cached))
         {
-            var (cachedStatus, _) = AnalyseSize(cached.SizeBytes);
+            // Cache now includes HasExe, so we can produce an accurate status
+            // without a full re-scan.
             return new SoftwareInfo
             {
                 Name              = name,
                 InstallLocation   = path,
                 IsSymlink         = false,
                 SizeBytes         = cached.SizeBytes,
-                Status            = cachedStatus,
-                SuspiciousChecked = true   // cache implies a previous precise measurement
+                Status            = DetermineStatus(isSymlink: false, size: cached.SizeBytes, hasExe: cached.HasExe),
+                SuspiciousChecked = true
             };
         }
-
+        
         // ── Cache miss: precise full calculation ─────────────────────────
         long size   = 0;
         bool hasExe = false;
         bool hasAny = false;
-
+        
         try
         {
             await Task.Run(() =>
@@ -274,7 +268,7 @@ public sealed class SoftwareScanner : ISoftwareScanner
                         hasExe = true;
                     try { size += _fileSystem.GetFileSize(file); } catch { }
                 }
-
+                
                 if (!hasAny)
                     hasAny = _fileSystem.GetDirectories(path, "*", false).Any();
             }, ct);
@@ -284,14 +278,15 @@ public sealed class SoftwareScanner : ISoftwareScanner
         {
             _logger.LogWarning(ex, "Error scanning {Path}", path);
         }
-
-        // Write into cache so subsequent fast launches reuse this measurement
-        _sizeCache.Set(path, size);
-
+        
+        // Write into cache so subsequent fast launches reuse this measurement.
+        // Include .exe presence so cached reads produce accurate statuses.
+        _sizeCache.Set(path, size, hasExe);
+        
         var status = hasAny
             ? DetermineStatus(isSymlink: false, size: size, hasExe: hasExe)
             : SoftwareStatus.Empty;
-
+        
         return new SoftwareInfo
         {
             Name              = name,
@@ -302,29 +297,20 @@ public sealed class SoftwareScanner : ISoftwareScanner
             SuspiciousChecked = true
         };
     }
-
+    
     /// <summary>
     /// Derives the display status from measured size and .exe presence.
-    /// "Suspicious" is no longer assigned here – it is only used by migration
-    /// logic to mean "needs manual review" (e.g. no .exe found after precise check).
+    /// "Suspicious" is never assigned here – it is reserved for manual user
+    /// review during migration.
     /// </summary>
     private static SoftwareStatus DetermineStatus(bool isSymlink, long size, bool hasExe)
     {
         if (isSymlink) return SoftwareStatus.Migrated;
+        // Check .exe presence first: a 0-byte .exe is still an executable.
+        if (hasExe)    return SoftwareStatus.Normal;
         if (size == 0) return SoftwareStatus.Empty;
-        if (!hasExe)   return SoftwareStatus.Residual;   // has files but no executable
-        return SoftwareStatus.Normal;
-    }
-
-    /// <summary>
-    /// Derives status purely from a cached size value (no .exe info available).
-    /// Returns the status and whether the info came from cache.
-    /// </summary>
-    private static (SoftwareStatus status, bool fromCache) AnalyseSize(long sizeBytes)
-    {
-        if (sizeBytes == 0) return (SoftwareStatus.Empty, true);
-        // Without exe info we fall back to Normal – the precise check can downgrade it later.
-        return (SoftwareStatus.Normal, true);
+        // Has files but no .exe — likely an uninstalled leftover.
+        return SoftwareStatus.Residual;
     }
 
     private static string Normalise(string path) =>
