@@ -2,6 +2,8 @@ using System.ComponentModel;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Data;
+using System.Windows.Threading;
+using winC2D.App.Helpers;
 using winC2D.App.ViewModels;
 using winC2D.Core.Models;
 
@@ -12,10 +14,16 @@ namespace winC2D.App.Views;
 /// </summary>
 public partial class SoftwareMigrationView : UserControl
 {
+    private readonly SoftwareMigrationViewModel _viewModel;
+
     public SoftwareMigrationView(SoftwareMigrationViewModel viewModel)
     {
         InitializeComponent();
+        _viewModel = viewModel;
         DataContext = viewModel;
+
+        // Auto-fit DataGrid columns after scan/refresh completes.
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 
     /// <summary>
@@ -56,5 +64,21 @@ public partial class SoftwareMigrationView : UserControl
         view.SortDescriptions.Clear();
         view.SortDescriptions.Add(new SortDescription(nameof(SoftwareInfo.SizeBytes), nextDirection));
         view.Refresh();
+    }
+
+    /// <summary>
+    /// When the ViewModel finishes scanning (IsScanning goes false),
+    /// auto-fit the DataGrid columns to their content.
+    /// </summary>
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SoftwareMigrationViewModel.IsScanning)
+            && !_viewModel.IsScanning)
+        {
+            // Defer to allow the DataGrid to finish binding and layout.
+            Dispatcher.BeginInvoke(
+                () => DataGridAutoFitHelper.AutoFitColumns(SoftwareDataGrid),
+                DispatcherPriority.Loaded);
+        }
     }
 }

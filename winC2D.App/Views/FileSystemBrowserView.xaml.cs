@@ -1,8 +1,11 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using winC2D.Core.Models;
+using System.Windows.Threading;
+using winC2D.App.Helpers;
 using winC2D.App.ViewModels;
+using winC2D.Core.Models;
 
 namespace winC2D.App.Views;
 
@@ -22,6 +25,9 @@ public partial class FileSystemBrowserView : UserControl
         _viewModel = viewModel;
         DataContext = viewModel;
         Loaded += OnLoaded;
+
+        // Auto-fit DataGrid columns after navigation / refresh completes.
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -42,5 +48,20 @@ public partial class FileSystemBrowserView : UserControl
         if (!item.IsDirectory) return;
 
         _viewModel.NavigateItemCommand.Execute(item);
+    }
+
+    /// <summary>
+    /// When the ViewModel signals that navigation content has changed
+    /// (CurrentPath is updated), auto-fit the DataGrid columns.
+    /// </summary>
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(FileSystemBrowserViewModel.CurrentPath))
+        {
+            // Defer to allow the DataGrid to finish binding and layout.
+            Dispatcher.BeginInvoke(
+                () => DataGridAutoFitHelper.AutoFitColumns(FileSystemDataGrid),
+                DispatcherPriority.Loaded);
+        }
     }
 }

@@ -54,39 +54,48 @@ public class FileSystem : IFileSystem
     {
         if (!Directory.Exists(path))
             return 0;
-        
+
         long size = 0;
-        
+
         try
         {
-            // Use enumeration for better performance and cancellation support
+            // Use DirectoryInfo.EnumerateFiles which returns FileInfo objects with
+            // Length pre-populated from WIN32_FIND_DATA, avoiding a second system
+            // call per file that Directory.EnumerateFiles → new FileInfo() would incur.
+            // For a directory with 100k files this saves ~100k GetFileAttributesEx calls.
+            var dirInfo = new DirectoryInfo(path);
             var enumerationOptions = new EnumerationOptions
             {
                 RecurseSubdirectories = true,
-                IgnoreInaccessible = true
+                IgnoreInaccessible = true,
+                // Skip reparse points (symlinks, junctions) to avoid double-counting / infinite loops
+                AttributesToSkip = FileAttributes.ReparsePoint | FileAttributes.System,
             };
-            
-            foreach (var file in Directory.EnumerateFiles(path, "*", enumerationOptions))
+
+            int count = 0;
+            foreach (var file in dirInfo.EnumerateFiles("*", enumerationOptions))
             {
-                if (cancellationToken.IsCancellationRequested)
+                // Batch cancellation check: only poll every 512 files.
+                // IsCancellationRequested on CancellationToken involves an interlocked
+                // read and a volatile barrier; doing it per-file for millions of files
+                // adds measurable overhead.
+                if ((++count & 0x1FF) == 0 && cancellationToken.IsCancellationRequested)
                     break;
-                
-                try
-                {
-                    var fileInfo = new FileInfo(file);
-                    size += fileInfo.Length;
-                }
-                catch
-                {
-                    // Ignore files that can't be accessed
-                }
+
+                // file.Length uses the cached nFileSizeLow/nFileSizeHigh from the
+                // native FindFirstFile/FindNextFile call – no extra syscall needed.
+                size += file.Length;
             }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch
         {
-            // Return what we have so far
+            // Return what we have so far (partial size is better than zero).
         }
-        
+
         return size;
     }
     

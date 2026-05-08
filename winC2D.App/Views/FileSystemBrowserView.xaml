@@ -8,7 +8,7 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="220"/>
+            <ColumnDefinition Width="220" MinWidth="160" MaxWidth="380"/>
             <ColumnDefinition Width="4"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
@@ -53,7 +53,8 @@
                                             Padding="0"
                                             Cursor="Hand"
                                             HorizontalContentAlignment="Stretch">
-                                        <ContentPresenter Content="{TemplateBinding Content}"/>
+                                        <ContentPresenter Content="{TemplateBinding Content}"
+                                                          ContentTemplate="{TemplateBinding ContentTemplate}"/>
                                     </Button>
                                 </ControlTemplate>
                             </Setter.Value>
@@ -109,7 +110,8 @@
                                             Padding="4,3"
                                             Cursor="Hand"
                                             HorizontalContentAlignment="Stretch">
-                                        <ContentPresenter Content="{TemplateBinding Content}"/>
+                                        <ContentPresenter Content="{TemplateBinding Content}"
+                                                          ContentTemplate="{TemplateBinding ContentTemplate}"/>
                                     </Button>
                                 </ControlTemplate>
                             </Setter.Value>
@@ -143,7 +145,7 @@
 
                             <!-- Free space bar -->
                             <Grid Grid.Row="1" Grid.Column="1" Margin="0,3,8,4">
-                                <ProgressBar Value="{Binding UsagePercent}" Maximum="100" Height="4"
+                                <ProgressBar Value="{Binding UsagePercent, Mode=OneWay}" Maximum="100" Height="4"
                                              Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                              Background="{DynamicResource ControlFillColorSecondaryBrush}"/>
                             </Grid>
@@ -155,7 +157,8 @@
 
         <!-- GridSplitter -->
         <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Stretch"
-                      Background="{DynamicResource CardStrokeColorDefaultBrush}"/>
+                       ResizeBehavior="PreviousAndNext" ResizeDirection="Columns"
+                       Background="{DynamicResource CardStrokeColorDefaultBrush}"/>
 
         <!-- ══════════════════════════════════════════ -->
         <!-- RIGHT MAIN CONTENT -->
@@ -273,6 +276,7 @@
 
             <!-- ── DataGrid ───────────────────────────── -->
             <DataGrid Grid.Row="2"
+                      x:Name="FileSystemDataGrid"
                       ItemsSource="{Binding Items}"
                       AutoGenerateColumns="False"
                       IsReadOnly="False"
@@ -330,7 +334,7 @@
                     </DataGridTemplateColumn>
 
                     <!-- Size -->
-                    <DataGridTextColumn Header="大小" Binding="{Binding SizeText}"
+                    <DataGridTextColumn Header="大小" Binding="{Binding SizeText, Mode=OneWay}"
                                         SortMemberPath="SizeBytes" Width="90"
                                         IsReadOnly="True"/>
 
