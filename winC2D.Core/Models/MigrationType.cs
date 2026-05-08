@@ -18,5 +18,10 @@ public enum MigrationType
     /// <summary>
     /// User folder migration (Documents, Pictures, etc.)
     /// </summary>
-    UserFolder
+    UserFolder,
+    
+    /// <summary>
+    /// Generic file or folder migration from any path via the Explorer browser.
+    /// </summary>
+    Generic
 }

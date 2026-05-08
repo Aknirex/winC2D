@@ -19,6 +19,7 @@ internal static class Translations
             ["Nav.Settings"]                         = "Settings",
             ["Nav.Logs"]                             = "Logs",
             ["Nav.About"]                            = "About",
+            ["Nav.Explorer"]                         = "File Explorer",
 
             ["Status.Ready"]                         = "Ready",
             ["Status.Scanning"]                      = "Scanning…",
@@ -124,6 +125,7 @@ internal static class Translations
             ["Nav.Settings"]                         = "设置",
             ["Nav.Logs"]                             = "日志",
             ["Nav.About"]                            = "关于",
+            ["Nav.Explorer"]                         = "文件浏览器",
 
             ["Status.Ready"]                         = "就绪",
             ["Status.Scanning"]                      = "正在扫描…",

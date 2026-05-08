@@ -27,7 +27,7 @@ public partial class MainWindow : FluentWindow
         // 将 DI 容器挂到 NavigationView，使其能解析页面实例
         RootNavigation.SetServiceProvider(_serviceProvider);
 
-        // 导航到默认页
-        RootNavigation.Navigate(typeof(SoftwareMigrationView));
+        // 导航到默认页 — Explorer 视图
+        RootNavigation.Navigate(typeof(FileSystemBrowserView));
     }
 }

@@ -29,14 +29,18 @@
         <ui:NavigationView x:Name="RootNavigation"
                            Grid.Row="1">
             <ui:NavigationView.MenuItems>
+                <ui:NavigationViewItem x:Name="NavExplorer"
+                                        Icon="{ui:SymbolIcon Folder24}"
+                                        Content="{Binding L_NavExplorer}"
+                                        TargetPageType="{x:Type views:FileSystemBrowserView}"/>
                 <ui:NavigationViewItem x:Name="NavSoftware"
-                                       Icon="{ui:SymbolIcon Apps24}"
-                                       Content="{Binding L_NavSoftware}"
-                                       TargetPageType="{x:Type views:SoftwareMigrationView}"/>
+                                        Icon="{ui:SymbolIcon Apps24}"
+                                        Content="{Binding L_NavSoftware}"
+                                        TargetPageType="{x:Type views:SoftwareMigrationView}"/>
                 <ui:NavigationViewItem x:Name="NavAppData"
-                                       Icon="{ui:SymbolIcon FolderOpen24}"
-                                       Content="{Binding L_NavAppData}"
-                                       TargetPageType="{x:Type views:AppDataMigrationView}"/>
+                                        Icon="{ui:SymbolIcon FolderOpen24}"
+                                        Content="{Binding L_NavAppData}"
+                                        TargetPageType="{x:Type views:AppDataMigrationView}"/>
                 <ui:NavigationViewItem x:Name="NavSettings"
                                        Icon="{ui:SymbolIcon Settings24}"
                                        Content="{Binding L_NavSettings}"

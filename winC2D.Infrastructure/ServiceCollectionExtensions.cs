@@ -26,6 +26,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ISizeCacheService, SizeCacheService>();
         services.AddSingleton<ISoftwareScanner, SoftwareScanner>();
         services.AddSingleton<IMigrationEngine, MigrationEngine>();
+        services.AddSingleton<IFileSystemBrowser, FileSystemBrowser>();
         
         // Localization
         services.AddSingleton<ILocalizationService, LocalizationService>();

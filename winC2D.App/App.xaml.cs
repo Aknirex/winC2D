@@ -49,6 +49,7 @@ public partial class App : Application
         services.AddSingleton<AppDataMigrationViewModel>();
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<LogViewModel>();
+        services.AddSingleton<FileSystemBrowserViewModel>();
         
         // Add Views
         services.AddSingleton<MainWindow>();
@@ -57,6 +58,7 @@ public partial class App : Application
         services.AddSingleton<SettingsView>();
         services.AddSingleton<LogView>();
         services.AddSingleton<AboutView>();
+        services.AddSingleton<FileSystemBrowserView>();
         
         _serviceProvider = services.BuildServiceProvider();
     }

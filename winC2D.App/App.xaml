@@ -17,6 +17,7 @@
             <converters:SoftwareStatusTextConverter x:Key="SoftwareStatusTextConverter"/>
             <converters:SizeCellTooltipConverter x:Key="SizeCellTooltipConverter"/>
             <converters:StatusCellTooltipConverter x:Key="StatusCellTooltipConverter"/>
+            <converters:FileSystemItemStatusConverter x:Key="FileSystemItemStatusConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
