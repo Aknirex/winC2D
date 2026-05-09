@@ -9,7 +9,7 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="220" MinWidth="160" MaxWidth="380"/>
-            <ColumnDefinition Width="4"/>
+            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
@@ -156,8 +156,9 @@
         </Grid>
 
         <!-- GridSplitter -->
-        <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Stretch"
+        <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch"
                        ResizeBehavior="PreviousAndNext" ResizeDirection="Columns"
+                       ShowsPreview="True"
                        Background="{DynamicResource CardStrokeColorDefaultBrush}"/>
 
         <!-- ══════════════════════════════════════════ -->

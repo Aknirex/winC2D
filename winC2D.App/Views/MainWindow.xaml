@@ -27,7 +27,9 @@
 
         <!-- Navigation：NavigationView 内置 Frame，通过 TargetPageType + SetServiceProvider 驱动 -->
         <ui:NavigationView x:Name="RootNavigation"
-                           Grid.Row="1">
+                            Grid.Row="1"
+                            IsBackButtonVisible="Collapsed"
+                            OpenPaneLength="260">
             <ui:NavigationView.MenuItems>
                 <ui:NavigationViewItem x:Name="NavExplorer"
                                         Icon="{ui:SymbolIcon Folder24}"

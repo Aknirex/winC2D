@@ -88,7 +88,8 @@ public partial class App : Application
         _logger?.LogInformation("Application starting...");
         
         // Check for administrator privileges — auto-elevate
-        if (!IsRunningAsAdministrator())
+        // Skip elevation when debugging or when --no-elevate flag is present
+        if (!IsRunningAsAdministrator() && !System.Diagnostics.Debugger.IsAttached && !e.Args.Contains("--no-elevate"))
         {
             _logger?.LogWarning("Not running as administrator. Requesting elevation.");
             RequestElevation();
