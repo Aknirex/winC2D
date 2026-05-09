@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [4.1.2] - 2026-05-09
+## [4.1.5] - 2026-05-09
 
 ### Added
 - **Resizable navigation pane** — Main window left navigation sidebar now supports drag-to-resize (180px–500px). Cursor changes to ↔ when hovering near the right edge of the pane.
@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **FileSystemBrowser sidebar splitter** — GridSplitter widened from 4px to 6px for easier grabbing; splitter column changed to `Auto` sizing for proper resize behavior.
 - **Removed back button** — NavigationView's built-in back button hidden (`IsBackButtonVisible="Collapsed"`) as it served no useful purpose in the single-level navigation structure.
-- **Version bumped** to 4.1.2
+- **Version bumped** to 4.1.5
 
 ### Fixed
 - Fixed ambiguous type references between WPF and WinForms namespaces (`Point`, `Cursors`, `Brushes`, `Panel`, `SolidColorBrush`, `Color`) in `MainWindow.xaml.cs`
@@ -136,7 +136,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[4.1.2]: https://github.com/Aknirex/winC2D/releases/tag/v4.1.2
+[4.1.5]: https://github.com/Aknirex/winC2D/releases/tag/v4.1.5
 [4.1.0]: https://github.com/Aknirex/winC2D/releases/tag/v4.1.0
 [4.0.0]: https://github.com/Aknirex/winC2D/releases/tag/v4.0.0
 [3.3.0]: https://github.com/Aknirex/winC2D/releases/tag/v3.3.0
