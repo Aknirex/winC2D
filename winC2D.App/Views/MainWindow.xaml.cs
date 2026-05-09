@@ -1,9 +1,6 @@
 using System;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Media;
 using Wpf.Ui.Controls;
 using winC2D.App.ViewModels;
 
@@ -15,11 +12,14 @@ namespace winC2D.App.Views;
 public partial class MainWindow : FluentWindow
 {
     private readonly IServiceProvider _serviceProvider;
-    private Thumb? _paneResizeThumb;
-    private Grid? _paneRoot;
 
     private const double MinPaneWidth = 180;
     private const double MaxPaneWidth = 500;
+    private const double ResizeGripWidth = 6;
+
+    private bool _isResizing;
+    private System.Windows.Point _resizeStartPoint;
+    private double _resizeStartWidth;
 
     public MainWindow(MainViewModel viewModel, IServiceProvider serviceProvider)
     {
@@ -39,77 +39,72 @@ public partial class MainWindow : FluentWindow
         // 导航到默认页 — Explorer 视图
         RootNavigation.Navigate(typeof(FileSystemBrowserView));
 
-        // 为导航栏添加可拖拽调整宽度的 Thumb
-        AddPaneResizeThumb();
+        // 为导航栏添加鼠标拖拽调整宽度支持（使用 Preview 隧道事件避免被子元素拦截）
+        RootNavigation.PreviewMouseMove += RootNavigation_PreviewMouseMove;
+        RootNavigation.PreviewMouseLeftButtonDown += RootNavigation_PreviewMouseLeftButtonDown;
+        RootNavigation.PreviewMouseLeftButtonUp += RootNavigation_PreviewMouseLeftButtonUp;
+        RootNavigation.MouseLeave += RootNavigation_MouseLeave;
     }
 
     /// <summary>
-    /// 在 NavigationView 的内部 PaneRoot 右侧添加可拖拽调整宽度的 Thumb。
+    /// 判断鼠标是否处于可拖拽区域（导航栏右边缘 ±ResizeGripWidth）。
     /// </summary>
-    private void AddPaneResizeThumb()
+    private bool IsInResizeZone(System.Windows.Point mousePos)
     {
-        // 确保模板已应用
-        RootNavigation.ApplyTemplate();
+        double paneEdge = RootNavigation.OpenPaneLength;
+        return mousePos.X >= paneEdge - ResizeGripWidth
+            && mousePos.X <= paneEdge + ResizeGripWidth
+            && RootNavigation.IsPaneOpen;
+    }
 
-        _paneRoot = RootNavigation.Template.FindName("PART_PaneRoot", RootNavigation) as Grid;
-        if (_paneRoot is null) return;
+    private void RootNavigation_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        var pos = e.GetPosition(RootNavigation);
 
-        _paneResizeThumb = new Thumb
+        if (_isResizing)
         {
-            Width = 6,
-            Cursor = Cursors.SizeWE,
-            HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Stretch,
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
-            Margin = new Thickness(0, 0, -3, 0),
-        };
+            var delta = pos.X - _resizeStartPoint.X;
+            var newWidth = _resizeStartWidth + delta;
+            if (newWidth < MinPaneWidth) newWidth = MinPaneWidth;
+            if (newWidth > MaxPaneWidth) newWidth = MaxPaneWidth;
+            RootNavigation.OpenPaneLength = newWidth;
+            return;
+        }
 
-        // 给 Thumb 添加一条细竖线作为视觉提示（悬停时高亮）
-        _paneResizeThumb.Template = CreateResizeThumbTemplate();
-
-        _paneResizeThumb.DragDelta += OnPaneResizeDragDelta;
-
-        // 确保 Thumb 跨越 Grid 所有行，且在最顶层
-        Grid.SetRowSpan(_paneResizeThumb, 999);
-        Panel.SetZIndex(_paneResizeThumb, 1000);
-
-        _paneRoot.Children.Add(_paneResizeThumb);
+        // 在拖拽区域内显示水平调整光标
+        RootNavigation.Cursor = IsInResizeZone(pos)
+            ? System.Windows.Input.Cursors.SizeWE
+            : null;
     }
 
-    /// <summary>
-    /// 创建 Thumb 模板：中间一条细竖线作为拖拽手柄的视觉提示。
-    /// </summary>
-    private static ControlTemplate CreateResizeThumbTemplate()
+    private void RootNavigation_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        var template = new ControlTemplate(typeof(Thumb));
-        var fef = new FrameworkElementFactory(typeof(Border));
-        fef.SetValue(Border.BackgroundProperty, Brushes.Transparent);
-
-        var gridFef = new FrameworkElementFactory(typeof(Grid));
-        gridFef.SetValue(Grid.HorizontalAlignmentProperty, HorizontalAlignment.Center);
-
-        var lineFef = new FrameworkElementFactory(typeof(Border));
-        lineFef.SetValue(Border.WidthProperty, 1.0);
-        lineFef.SetValue(Border.VerticalAlignmentProperty, VerticalAlignment.Stretch);
-        lineFef.SetValue(Border.BackgroundProperty, new SolidColorBrush(Color.FromArgb(0x40, 0x80, 0x80, 0x80)));
-        lineFef.SetValue(Border.MarginProperty, new Thickness(0, 8, 0, 8));
-        lineFef.SetValue(Border.CornerRadiusProperty, new CornerRadius(0.5));
-
-        gridFef.AppendChild(lineFef);
-        fef.AppendChild(gridFef);
-        template.VisualTree = fef;
-        return template;
+        var pos = e.GetPosition(RootNavigation);
+        if (IsInResizeZone(pos))
+        {
+            _isResizing = true;
+            _resizeStartPoint = pos;
+            _resizeStartWidth = RootNavigation.OpenPaneLength;
+            RootNavigation.CaptureMouse();
+            e.Handled = true;
+        }
     }
 
-    /// <summary>
-    /// 拖拽 Thumb 时动态调整导航栏宽度。
-    /// </summary>
-    private void OnPaneResizeDragDelta(object sender, DragDeltaEventArgs e)
+    private void RootNavigation_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        var newWidth = RootNavigation.OpenPaneLength + e.HorizontalChange;
-        if (newWidth < MinPaneWidth) newWidth = MinPaneWidth;
-        if (newWidth > MaxPaneWidth) newWidth = MaxPaneWidth;
-        RootNavigation.OpenPaneLength = newWidth;
+        if (_isResizing)
+        {
+            _isResizing = false;
+            RootNavigation.ReleaseMouseCapture();
+            e.Handled = true;
+        }
+    }
+
+    private void RootNavigation_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (!_isResizing)
+        {
+            RootNavigation.Cursor = null;
+        }
     }
 }
