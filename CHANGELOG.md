@@ -7,24 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [4.1.2] - 2026-05-09
+
 ### Added
-- **File Metadata Preservation** — File copy operations now preserve original creation time, last write time, and file attributes during migration
-- **About Page Localization** — Full internationalization support for About/Info page across 7 languages (English, 中文简体, 中文繁體, 日本語, 한국어, Русский, Português Brasileiro)
-- **Language-Aware Documentation Links** — About page automatically routes documentation links to language-specific wiki pages based on application language selection
+- **Resizable navigation pane** — Main window left navigation sidebar now supports drag-to-resize (180px–500px). Cursor changes to ↔ when hovering near the right edge of the pane.
 
 ### Changed
-- About page UI simplified by removing Features and Technology Stack expandable cards, improving clarity and reducing clutter
-- Pause/Resume behavior redesigned to use gate-based implementation instead of cancel-based semantics, preventing unintended rollbacks
-- Enhanced localization service to synchronize both `CurrentCulture` and `CurrentUICulture` for consistent number and date formatting across the application
+- **FileSystemBrowser sidebar splitter** — GridSplitter widened from 4px to 6px for easier grabbing; splitter column changed to `Auto` sizing for proper resize behavior.
+- **Removed back button** — NavigationView's built-in back button hidden (`IsBackButtonVisible="Collapsed"`) as it served no useful purpose in the single-level navigation structure.
+- **Version bumped** to 4.1.2
 
 ### Fixed
-- **Critical:** RollbackPoint.BackupPath no longer lost during serialization—now properly recorded and restored on application restart
-- Thread-safety issue: Replaced non-thread-safe `Dictionary` with `ConcurrentDictionary` in migration state tracking (fixes potential race conditions)
-- SizeCellTooltipConverter dead code check (changed from `SizeBytes == -1` to proper empty folder detection)
-- Migration engine: Fixed 8+ indentation errors in SaveTasks() method that could affect file persistence
-- Rollback manager: Fixed indentation errors in SaveState() method
-- AboutView localization service injection: Service now properly injected via constructor rather than deferred setup
-- Build process: Verified all changes compile with 0 warnings and 0 errors
+- Fixed ambiguous type references between WPF and WinForms namespaces (`Point`, `Cursors`, `Brushes`, `Panel`, `SolidColorBrush`, `Color`) in `MainWindow.xaml.cs`
 
 ---
 
@@ -140,6 +136,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[4.1.2]: https://github.com/Aknirex/winC2D/releases/tag/v4.1.2
 [4.1.0]: https://github.com/Aknirex/winC2D/releases/tag/v4.1.0
 [4.0.0]: https://github.com/Aknirex/winC2D/releases/tag/v4.0.0
 [3.3.0]: https://github.com/Aknirex/winC2D/releases/tag/v3.3.0
