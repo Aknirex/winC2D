@@ -46,10 +46,19 @@
                     SelectionMode="Extended"
                     Sorting="AppDataDataGrid_Sorting">
             <DataGrid.Columns>
-                <DataGridCheckBoxColumn Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                        Width="36" MinWidth="36" MaxWidth="36"
+                <DataGridTemplateColumn Width="36" MinWidth="36" MaxWidth="36"
                                         CanUserResize="False"
-                                        IsReadOnly="False"/>
+                                        IsReadOnly="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Focusable="False"
+                                      PreviewMouseLeftButtonDown="CheckBox_PreviewMouseLeftButtonDown"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="{Binding DataContext.L_ColName, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Name}" SortMemberPath="Name" IsReadOnly="True" Width="*"/>
                 <DataGridTextColumn Header="{Binding DataContext.L_ColPath, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Path}" SortMemberPath="Path" IsReadOnly="True" Width="300"/>
                 <DataGridTextColumn Header="{Binding DataContext.L_ColType, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Type}" SortMemberPath="Type" IsReadOnly="True" Width="80"/>

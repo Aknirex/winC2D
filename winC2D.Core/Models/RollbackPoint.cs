@@ -14,6 +14,16 @@ public enum CompletedStep
     /// Files have been copied to target
     /// </summary>
     FilesCopied,
+
+    /// <summary>
+    /// Files have been copied to a temporary target directory
+    /// </summary>
+    TempFilesCopied,
+
+    /// <summary>
+    /// Temporary target directory has been renamed to the final target
+    /// </summary>
+    TargetFinalized,
     
     /// <summary>
     /// Symbolic link has been created
@@ -65,6 +75,11 @@ public class RollbackPoint
     /// Temporary backup path (renamed source)
     /// </summary>
     public string? BackupPath { get; set; }
+
+    /// <summary>
+    /// Temporary target path used while copying files
+    /// </summary>
+    public string? TempTargetPath { get; set; }
     
     /// <summary>
     /// List of completed steps

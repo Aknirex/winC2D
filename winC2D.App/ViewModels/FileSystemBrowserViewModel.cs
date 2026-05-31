@@ -458,35 +458,6 @@ public partial class FileSystemBrowserViewModel : ObservableObject
             return;
         }
 
-        if (!_browser.DirectoryExists(TargetPath))
-        {
-            try { Directory.CreateDirectory(TargetPath); }
-            catch (Exception ex)
-            {
-                PushStatus($"无法创建目标目录: {ex.Message}", isBusy: false);
-                return;
-            }
-        }
-
-        // BUG-008: refuse to migrate to the same drive
-        var targetDriveRoot = Path.GetPathRoot(TargetPath)
-            ?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) ?? string.Empty;
-        var sameDriveItems = SelectedItems
-            .Where(s =>
-            {
-                var srcRoot = Path.GetPathRoot(s.FullPath)
-                    ?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                return string.Equals(srcRoot, targetDriveRoot, StringComparison.OrdinalIgnoreCase);
-            })
-            .Select(s => s.Name)
-            .ToList();
-
-        if (sameDriveItems.Count > 0)
-        {
-            PushStatus($"错误: {string.Join(", ", sameDriveItems)} 与目标磁盘相同", isBusy: false);
-            return;
-        }
-
         IsMigrating = true;
         MigrationProgress = 0;
 

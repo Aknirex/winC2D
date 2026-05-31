@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Threading;
 using winC2D.App.Helpers;
 using winC2D.App.ViewModels;
@@ -22,6 +23,12 @@ public partial class AppDataMigrationView : UserControl
 
         // Auto-fit DataGrid columns after scan completes.
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+    }
+
+    private void CheckBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount > 1)
+            e.Handled = true;
     }
 
     private void AppDataDataGrid_Sorting(object sender, DataGridSortingEventArgs e)

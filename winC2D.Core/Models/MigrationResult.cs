@@ -86,17 +86,17 @@ public class MigrationResult
     /// <summary>
     /// Create a failed result
     /// </summary>
-    public static MigrationResult Failed(MigrationTask task, string errorMessage, Exception? exception = null)
+    public static MigrationResult Failed(MigrationTask? task, string errorMessage, Exception? exception = null)
     {
         return new MigrationResult
         {
             Success = false,
-            TaskId = task.Id,
-            FinalState = task.State,
+            TaskId = task?.Id ?? string.Empty,
+            FinalState = task?.State ?? MigrationState.Failed,
             ErrorMessage = errorMessage,
             Exception = exception,
-            SourcePath = task.SourcePath,
-            TargetPath = task.TargetPath
+            SourcePath = task?.SourcePath ?? string.Empty,
+            TargetPath = task?.TargetPath ?? string.Empty
         };
     }
 }

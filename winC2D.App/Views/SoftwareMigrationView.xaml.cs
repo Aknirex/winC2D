@@ -44,6 +44,12 @@ public partial class SoftwareMigrationView : UserControl
             : null;
     }
 
+    private void CheckBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount > 1)
+            e.Handled = true;
+    }
+
     private void SoftwareDataGrid_Sorting(object sender, DataGridSortingEventArgs e)
     {
         if (e.Column.SortMemberPath != nameof(SoftwareInfo.SizeBytes))

@@ -44,10 +44,35 @@ public partial class FileSystemBrowserView : UserControl
     private void DataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (sender is not DataGrid grid) return;
+        if (IsFromCheckBox(e.OriginalSource as DependencyObject))
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (grid.SelectedItem is not FileSystemItem item) return;
         if (!item.IsDirectory) return;
 
         _viewModel.NavigateItemCommand.Execute(item);
+    }
+
+    private void CheckBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount > 1)
+            e.Handled = true;
+    }
+
+    private static bool IsFromCheckBox(DependencyObject? source)
+    {
+        while (source is not null)
+        {
+            if (source is System.Windows.Controls.CheckBox)
+                return true;
+
+            source = System.Windows.Media.VisualTreeHelper.GetParent(source);
+        }
+
+        return false;
     }
 
     /// <summary>

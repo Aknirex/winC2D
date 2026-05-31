@@ -202,27 +202,9 @@ public partial class AppDataMigrationViewModel : ObservableObject
         if (IsMigrating || SelectedItems.Count == 0)
             return;
 
-        // BUG-008: refuse to migrate to the same drive as the source.
-        var targetDriveRoot = Path.GetPathRoot(TargetPath)
-            ?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-            ?? string.Empty;
-
-        var sameDriveItems = SelectedItems
-            .Where(s => string.Equals(
-                Path.GetPathRoot(s.Path)
-                    ?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
-                targetDriveRoot,
-                StringComparison.OrdinalIgnoreCase))
-            .Select(s => s.Name)
-            .ToList();
-
-        if (sameDriveItems.Count > 0)
+        if (string.IsNullOrWhiteSpace(TargetPath))
         {
-            StatusMessage = _localizationService.GetString(
-                "Status.SameDriveError", string.Join(", ", sameDriveItems), targetDriveRoot);
-            _logger.LogWarning(
-                "AppData migration aborted: target drive {Drive} is the same as source for: {Items}",
-                targetDriveRoot, string.Join(", ", sameDriveItems));
+            StatusMessage = _localizationService.GetString("Status.MigrationError", "Target path is empty.");
             return;
         }
         
@@ -238,7 +220,8 @@ public partial class AppDataMigrationViewModel : ObservableObject
                     Type           = MigrationType.AppData,
                     Name           = appData.Name,
                     SourcePath     = appData.Path,
-                    TargetRootPath = TargetPath
+                    TargetRootPath = Path.Combine(TargetPath, appData.Type),
+                    CustomTargetFolderName = appData.Name
                 };
                 
                 var task   = await _migrationEngine.CreateTaskAsync(request);

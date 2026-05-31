@@ -107,11 +107,20 @@
             </DataGrid.ContextMenu>
 
             <DataGrid.Columns>
-                <!-- Fixed-width checkbox column -->
-                <DataGridCheckBoxColumn Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                        Width="36" MinWidth="36" MaxWidth="36"
+                <!-- Fixed-width checkbox column: template avoids DataGrid's first-click edit mode. -->
+                <DataGridTemplateColumn Width="36" MinWidth="36" MaxWidth="36"
                                         CanUserResize="False"
-                                        IsReadOnly="False"/>
+                                        IsReadOnly="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Focusable="False"
+                                      PreviewMouseLeftButtonDown="CheckBox_PreviewMouseLeftButtonDown"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
 
                 <!-- Name -->
                 <DataGridTextColumn Header="{Binding DataContext.L_ColName,

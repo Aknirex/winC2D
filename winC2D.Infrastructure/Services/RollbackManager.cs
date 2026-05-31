@@ -53,7 +53,8 @@ public class RollbackManager : IRollbackManager
             CreatedAt = DateTime.UtcNow,
             Type = task.Type,
             SourcePath = task.SourcePath,
-            TargetPath = task.TargetPath
+            TargetPath = task.TargetPath,
+            TempTargetPath = task.TempTargetPath
         };
         
         _rollbackPoints[rollbackPoint.Id] = rollbackPoint;
@@ -98,6 +99,23 @@ public class RollbackManager : IRollbackManager
         
         return Task.CompletedTask;
     }
+
+    /// <inheritdoc/>
+    public Task SetTempTargetPathAsync(string rollbackPointId, string tempTargetPath)
+    {
+        if (!_rollbackPoints.TryGetValue(rollbackPointId, out var rollbackPoint))
+        {
+            _logger.LogWarning("Rollback point not found when setting temp target path: {Id}", rollbackPointId);
+            return Task.CompletedTask;
+        }
+
+        rollbackPoint.TempTargetPath = tempTargetPath;
+        SaveState();
+        _logger.LogDebug("Set temp target path '{TempTargetPath}' on rollback point {Id}",
+            tempTargetPath, rollbackPointId);
+
+        return Task.CompletedTask;
+    }
     
     /// <inheritdoc/>
     public async Task<RollbackResult> RollbackAsync(string rollbackPointId, CancellationToken cancellationToken = default)
@@ -121,6 +139,7 @@ public class RollbackManager : IRollbackManager
             // Rollback in reverse order of steps.
             // We take a snapshot first because we'll mutate CompletedSteps as we succeed.
             var steps = rollbackPoint.CompletedSteps.ToList();
+            var originalSteps = steps.ToHashSet();
             steps.Reverse();
             
             foreach (var step in steps)
@@ -133,7 +152,7 @@ public class RollbackManager : IRollbackManager
                     break;
                 }
                 
-                var stepResult = await RollbackStepAsync(rollbackPoint, step);
+                var stepResult = await RollbackStepAsync(rollbackPoint, step, originalSteps);
                 
                 if (!stepResult)
                 {
@@ -300,13 +319,20 @@ public class RollbackManager : IRollbackManager
         }
     }
     
-    private async Task<bool> RollbackStepAsync(RollbackPoint point, CompletedStep step)
+    private async Task<bool> RollbackStepAsync(
+        RollbackPoint point,
+        CompletedStep step,
+        IReadOnlySet<CompletedStep> originalSteps)
     {
         return step switch
         {
             CompletedStep.BackupDeleted => await RollbackBackupDeletedAsync(point),
             CompletedStep.SymlinkCreated => await RollbackSymlinkCreatedAsync(point),
-            CompletedStep.FilesCopied => await RollbackFilesCopiedAsync(point),
+            CompletedStep.TargetFinalized => await RollbackTargetFinalizedAsync(
+                point, originalSteps.Contains(CompletedStep.BackupDeleted)),
+            CompletedStep.TempFilesCopied => await RollbackTempFilesCopiedAsync(point),
+            CompletedStep.FilesCopied => await RollbackFilesCopiedAsync(
+                point, originalSteps.Contains(CompletedStep.BackupDeleted)),
             CompletedStep.SourceRenamed => await RollbackSourceRenamedAsync(point),
             _ => true
         };
@@ -314,17 +340,11 @@ public class RollbackManager : IRollbackManager
     
     private Task<bool> RollbackBackupDeletedAsync(RollbackPoint point)
     {
-        // The backup directory was already deleted as the final cleanup step.
-        // Files now live at TargetPath, but there is no backup to restore from.
-        // This is an unrecoverable state — return false so the caller marks the
-        // rollback as partial (IsPartial = true) instead of silently succeeding.
-        _logger.LogError(
-            "Cannot rollback BackupDeleted step for rollback point {Id}: " +
-            "backup directory was already deleted. " +
-            "Source='{SourcePath}', Target='{TargetPath}', Backup='{BackupPath}'. " +
-            "Files remain at the target location. Manual intervention required.",
-            point.Id, point.SourcePath, point.TargetPath, point.BackupPath ?? "<unknown>");
-        return Task.FromResult(false);
+        // Backup deletion is not directly reversible. Completed migrations are
+        // restored from TargetPath when TargetFinalized/FilesCopied is rolled back.
+        _logger.LogDebug("Backup was deleted for rollback point {Id}; source will be restored from target if needed.",
+            point.Id);
+        return Task.FromResult(true);
     }
     
     private async Task<bool> RollbackSymlinkCreatedAsync(RollbackPoint point)
@@ -346,24 +366,67 @@ public class RollbackManager : IRollbackManager
         return true;
     }
     
-    private async Task<bool> RollbackFilesCopiedAsync(RollbackPoint point)
+    private async Task<bool> RollbackTargetFinalizedAsync(RollbackPoint point, bool backupWasDeleted)
     {
-        // Delete the copied files from target
-        if (_fileSystem.DirectoryExists(point.TargetPath))
+        if (!_fileSystem.DirectoryExists(point.TargetPath))
+            return true;
+
+        if (backupWasDeleted)
+            return await RestoreSourceFromTargetAsync(point);
+
+        try
         {
-            try
-            {
-                _fileSystem.DeleteDirectory(point.TargetPath, true);
-                _logger.LogDebug("Deleted target directory: {Path}", point.TargetPath);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to delete target directory: {Path}", point.TargetPath);
-                return false;
-            }
+            _fileSystem.DeleteDirectory(point.TargetPath, true);
+            _logger.LogDebug("Deleted finalized target directory: {Path}", point.TargetPath);
+            return true;
         }
-        
-        return true;
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete finalized target directory: {Path}", point.TargetPath);
+            return false;
+        }
+    }
+
+    private Task<bool> RollbackTempFilesCopiedAsync(RollbackPoint point)
+    {
+        if (string.IsNullOrWhiteSpace(point.TempTargetPath) ||
+            !_fileSystem.DirectoryExists(point.TempTargetPath))
+            return Task.FromResult(true);
+
+        try
+        {
+            _fileSystem.DeleteDirectory(point.TempTargetPath, true);
+            _logger.LogDebug("Deleted temporary target directory: {Path}", point.TempTargetPath);
+            return Task.FromResult(true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete temporary target directory: {Path}", point.TempTargetPath);
+            return Task.FromResult(false);
+        }
+    }
+
+    private async Task<bool> RollbackFilesCopiedAsync(RollbackPoint point, bool backupWasDeleted)
+    {
+        // Legacy compatibility: older versions copied directly to TargetPath
+        // and recorded FilesCopied instead of TempFilesCopied/TargetFinalized.
+        if (!_fileSystem.DirectoryExists(point.TargetPath))
+            return true;
+
+        if (backupWasDeleted)
+            return await RestoreSourceFromTargetAsync(point);
+
+        try
+        {
+            _fileSystem.DeleteDirectory(point.TargetPath, true);
+            _logger.LogDebug("Deleted target directory: {Path}", point.TargetPath);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete target directory: {Path}", point.TargetPath);
+            return false;
+        }
     }
     
     private async Task<bool> RollbackSourceRenamedAsync(RollbackPoint point)
@@ -408,6 +471,88 @@ public class RollbackManager : IRollbackManager
         }
         
         return true;
+    }
+
+    private async Task<bool> RestoreSourceFromTargetAsync(RollbackPoint point)
+    {
+        var restoreTempPath = point.SourcePath + "_rollback_" + Guid.NewGuid().ToString("N");
+
+        try
+        {
+            if (_fileSystem.DirectoryExists(point.SourcePath))
+            {
+                if (_symlinkManager.IsSymlink(point.SourcePath))
+                {
+                    var deleted = await _symlinkManager.DeleteSymlinkAsync(point.SourcePath);
+                    if (!deleted)
+                        return false;
+                }
+                else
+                {
+                    _logger.LogError(
+                        "Rollback refused: SourcePath '{Source}' exists but is not a symlink. " +
+                        "Target remains at '{Target}'.",
+                        point.SourcePath, point.TargetPath);
+                    return false;
+                }
+            }
+
+            CopyDirectory(point.TargetPath, restoreTempPath);
+            _fileSystem.MoveDirectory(restoreTempPath, point.SourcePath);
+            _fileSystem.DeleteDirectory(point.TargetPath, true);
+
+            _logger.LogDebug("Restored source from target: {Target} -> {Source}",
+                point.TargetPath, point.SourcePath);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to restore source from target");
+            try
+            {
+                if (_fileSystem.DirectoryExists(restoreTempPath))
+                    _fileSystem.DeleteDirectory(restoreTempPath, true);
+            }
+            catch { }
+
+            return false;
+        }
+    }
+
+    private void CopyDirectory(string sourceDir, string targetDir)
+    {
+        var stack = new Stack<(string Source, string Target)>();
+        stack.Push((sourceDir, targetDir));
+
+        while (stack.Count > 0)
+        {
+            var (src, dst) = stack.Pop();
+            _fileSystem.CreateDirectory(dst);
+
+            foreach (var file in _fileSystem.GetFiles(src, "*", false))
+            {
+                var fileName = _fileSystem.GetFileName(file)
+                    ?? throw new IOException($"Cannot determine file name for '{file}'.");
+                _fileSystem.CopyFilePreserveMetadata(file, _fileSystem.CombinePath(dst, fileName), false);
+            }
+
+            foreach (var directory in _fileSystem.GetDirectories(src, "*", false))
+            {
+                var dirName = _fileSystem.GetFileName(directory)
+                    ?? throw new IOException($"Cannot determine directory name for '{directory}'.");
+                stack.Push((directory, _fileSystem.CombinePath(dst, dirName)));
+            }
+
+            try
+            {
+                var srcInfo = new DirectoryInfo(src);
+                var dstInfo = new DirectoryInfo(dst);
+                dstInfo.CreationTimeUtc = srcInfo.CreationTimeUtc;
+                dstInfo.LastWriteTimeUtc = srcInfo.LastWriteTimeUtc;
+                dstInfo.LastAccessTimeUtc = srcInfo.LastAccessTimeUtc;
+            }
+            catch { }
+        }
     }
     
     #endregion

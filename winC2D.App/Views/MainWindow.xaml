@@ -35,10 +35,6 @@
                                         Icon="{ui:SymbolIcon Folder24}"
                                         Content="{Binding L_NavExplorer}"
                                         TargetPageType="{x:Type views:FileSystemBrowserView}"/>
-                <ui:NavigationViewItem x:Name="NavSoftware"
-                                        Icon="{ui:SymbolIcon Apps24}"
-                                        Content="{Binding L_NavSoftware}"
-                                        TargetPageType="{x:Type views:SoftwareMigrationView}"/>
                 <ui:NavigationViewItem x:Name="NavAppData"
                                         Icon="{ui:SymbolIcon FolderOpen24}"
                                         Content="{Binding L_NavAppData}"

@@ -29,6 +29,13 @@ public interface IRollbackManager
     /// <param name="rollbackPointId">Rollback point ID</param>
     /// <param name="backupPath">Absolute path to the renamed backup directory</param>
     Task SetBackupPathAsync(string rollbackPointId, string backupPath);
+
+    /// <summary>
+    /// Set the temporary target path on an existing rollback point.
+    /// </summary>
+    /// <param name="rollbackPointId">Rollback point ID</param>
+    /// <param name="tempTargetPath">Absolute path to the temporary target directory</param>
+    Task SetTempTargetPathAsync(string rollbackPointId, string tempTargetPath);
     
     /// <summary>
     /// Rollback to the state before migration

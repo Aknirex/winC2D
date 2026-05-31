@@ -378,27 +378,9 @@ public partial class SoftwareMigrationViewModel : ObservableObject
     {
         if (IsMigrating || SelectedItems.Count == 0) return;
 
-        // BUG-008: refuse to migrate to the same drive as the source.
-        var targetDriveRoot = System.IO.Path.GetPathRoot(TargetPath)
-            ?.TrimEnd(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar)
-            ?? string.Empty;
-
-        var sameDriveItems = SelectedItems
-            .Where(s => string.Equals(
-                System.IO.Path.GetPathRoot(s.InstallLocation)
-                    ?.TrimEnd(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar),
-                targetDriveRoot,
-                StringComparison.OrdinalIgnoreCase))
-            .Select(s => s.Name)
-            .ToList();
-
-        if (sameDriveItems.Count > 0)
+        if (string.IsNullOrWhiteSpace(TargetPath))
         {
-            PushStatus(_localizationService.GetString(
-                "Status.SameDriveError", string.Join(", ", sameDriveItems), targetDriveRoot), isBusy: false);
-            _logger.LogWarning(
-                "Migration aborted: target drive {Drive} is the same as the source drive for: {Items}",
-                targetDriveRoot, string.Join(", ", sameDriveItems));
+            PushStatus(_localizationService.GetString("Status.MigrationError", "Target path is empty."), isBusy: false);
             return;
         }
 

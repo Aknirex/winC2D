@@ -65,6 +65,7 @@ public class MigrationEngine : IMigrationEngine
             Name = request.Name,
             SourcePath = request.SourcePath,
             TargetPath = DetermineTargetPath(request),
+            VerifyFiles = request.VerifyFiles,
             State = MigrationState.Pending,
             CreatedAt = DateTime.UtcNow
         };
@@ -113,20 +114,17 @@ public class MigrationEngine : IMigrationEngine
             SaveTasks();
             OnStateChanged(task);
             
-            // Validate source
-            if (!_fileSystem.DirectoryExists(task.SourcePath))
-            {
-                return await FailTaskAsync(task, $"Source directory not found: {task.SourcePath}", null, stopwatch.Elapsed);
-            }
-            
-            // Check if target already exists
-            if (_fileSystem.DirectoryExists(task.TargetPath))
-            {
-                return await FailTaskAsync(task, $"Target directory already exists: {task.TargetPath}", null, stopwatch.Elapsed);
-            }
+            var validationError = ValidateTaskPaths(task);
+            if (validationError is not null)
+                return await FailTaskAsync(task, validationError, null, stopwatch.Elapsed);
+
+            var tempTargetPath = BuildTempTargetPath(task.TargetPath);
+            task.TempTargetPath = tempTargetPath;
+            SaveTasks();
             
             // Create rollback point
             task.RollbackPoint = await _rollbackManager.CreateRollbackPointAsync(task);
+            await _rollbackManager.SetTempTargetPathAsync(task.RollbackPoint.Id, tempTargetPath);
             SaveTasks();
             
             // Step 1: Rename source directory (atomic operation to detect locked files)
@@ -146,17 +144,22 @@ public class MigrationEngine : IMigrationEngine
             await _rollbackManager.SetBackupPathAsync(task.RollbackPoint.Id, backupPath);
             SaveTasks();
             
-            // Step 2: Copy files to target
-            await CopyDirectoryAsync(task, backupPath, task.TargetPath, cts.Token);
+            // Step 2: Copy files to an isolated temporary target. The final
+            // target path should not appear until the copy has completed.
+            await CopyDirectoryAsync(task, backupPath, tempTargetPath, cts.Token);
             
             if (cts.Token.IsCancellationRequested)
             {
                 return await CancelAndRollbackAsync(task, stopwatch.Elapsed, cts.Token);
             }
             
-            await _rollbackManager.RecordStepAsync(task.RollbackPoint.Id, CompletedStep.FilesCopied);
+            await _rollbackManager.RecordStepAsync(task.RollbackPoint.Id, CompletedStep.TempFilesCopied);
+
+            // Step 3: Atomically promote the fully-copied temp directory to the final target
+            _fileSystem.MoveDirectory(tempTargetPath, task.TargetPath);
+            await _rollbackManager.RecordStepAsync(task.RollbackPoint.Id, CompletedStep.TargetFinalized);
             
-            // Step 3: Create symbolic link
+            // Step 4: Create symbolic link
             task.State = MigrationState.CreatingSymlink;
             SaveTasks();
             OnStateChanged(task);
@@ -169,7 +172,7 @@ public class MigrationEngine : IMigrationEngine
             
             await _rollbackManager.RecordStepAsync(task.RollbackPoint.Id, CompletedStep.SymlinkCreated);
             
-            // Step 4: Delete backup directory
+            // Step 5: Delete backup directory
             task.State = MigrationState.CleaningUp;
             SaveTasks();
             OnStateChanged(task);
@@ -182,9 +185,6 @@ public class MigrationEngine : IMigrationEngine
             task.CompletedAt = DateTime.UtcNow;
             SaveTasks();
             OnStateChanged(task);
-            
-            // Clean up rollback point
-            await _rollbackManager.DeleteRollbackPointAsync(task.RollbackPoint.Id);
             
             stopwatch.Stop();
             
@@ -340,7 +340,20 @@ public class MigrationEngine : IMigrationEngine
             };
         }
         
-        return await _rollbackManager.RollbackAsync(task.RollbackPoint.Id, cancellationToken);
+        task.State = MigrationState.RollingBack;
+        SaveTasks();
+        OnStateChanged(task);
+
+        var result = await _rollbackManager.RollbackAsync(task.RollbackPoint.Id, cancellationToken);
+
+        task.State = result.Success ? MigrationState.RolledBack : MigrationState.PartialRollback;
+        task.CompletedAt = DateTime.UtcNow;
+        if (!result.Success)
+            task.ErrorMessage = result.ErrorMessage ?? "Rollback failed";
+        SaveTasks();
+        OnStateChanged(task);
+
+        return result;
     }
     
     /// <inheritdoc/>
@@ -438,6 +451,75 @@ public class MigrationEngine : IMigrationEngine
 
         return _fileSystem.CombinePath(request.TargetRootPath, folderName);
     }
+
+    private string? ValidateTaskPaths(MigrationTask task)
+    {
+        if (string.IsNullOrWhiteSpace(task.SourcePath))
+            return "Source path is empty.";
+
+        if (string.IsNullOrWhiteSpace(task.TargetPath))
+            return "Target path is empty.";
+
+        if (!_fileSystem.DirectoryExists(task.SourcePath))
+            return $"Source directory not found: {task.SourcePath}";
+
+        if (_fileSystem.IsSymlink(task.SourcePath))
+            return $"Source is already a symbolic link: {task.SourcePath}";
+
+        if (_fileSystem.DirectoryExists(task.TargetPath) || _fileSystem.FileExists(task.TargetPath))
+            return $"Target path already exists: {task.TargetPath}";
+
+        try
+        {
+            var sourcePath = NormalizeFullPath(task.SourcePath);
+            var targetPath = NormalizeFullPath(task.TargetPath);
+
+            if (string.Equals(sourcePath, targetPath, StringComparison.OrdinalIgnoreCase))
+                return "Target path is the same as the source path.";
+
+            if (IsChildPath(targetPath, sourcePath))
+                return "Target path cannot be inside the source directory.";
+
+            if (IsChildPath(sourcePath, targetPath))
+                return "Source path cannot be inside the target directory.";
+        }
+        catch (Exception ex)
+        {
+            return $"Invalid migration path: {ex.Message}";
+        }
+
+        return null;
+    }
+
+    private string BuildTempTargetPath(string targetPath)
+    {
+        string tempPath;
+        do
+        {
+            tempPath = targetPath + "_copying_" + Guid.NewGuid().ToString("N");
+        }
+        while (_fileSystem.DirectoryExists(tempPath) || _fileSystem.FileExists(tempPath));
+
+        return tempPath;
+    }
+
+    private static string NormalizeFullPath(string path)
+    {
+        var fullPath = Path.GetFullPath(path.Trim());
+        return fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+    }
+
+    private static bool IsChildPath(string candidateChild, string parent)
+    {
+        if (string.Equals(candidateChild, parent, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var parentWithSeparator = parent.EndsWith(Path.DirectorySeparatorChar)
+            ? parent
+            : parent + Path.DirectorySeparatorChar;
+
+        return candidateChild.StartsWith(parentWithSeparator, StringComparison.OrdinalIgnoreCase);
+    }
     
     private async Task CopyDirectoryAsync(MigrationTask task, string sourceDir, string targetDir, CancellationToken cancellationToken)
     {
@@ -483,6 +565,13 @@ public class MigrationEngine : IMigrationEngine
                 _fileSystem.CopyFilePreserveMetadata(file, targetFile, false);
 
                 var fileSize = _fileSystem.GetFileSize(file);
+                if (task.VerifyFiles)
+                {
+                    var copiedSize = _fileSystem.GetFileSize(targetFile);
+                    if (copiedSize != fileSize)
+                        throw new IOException($"File verification failed for '{fileName}'.");
+                }
+
                 task.CopiedBytes += fileSize;
                 task.CopiedFiles++;
                 SaveTasks();
@@ -538,9 +627,9 @@ public class MigrationEngine : IMigrationEngine
         
         if (task.RollbackPoint != null)
         {
-            // Use a linked token with a generous timeout to prevent indefinite rollback hang,
-            // while still respecting the original cancellation request for a graceful stop.
-            using var rollbackCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            // Use a fresh timeout token so a cancelled copy operation does not
+            // immediately cancel the rollback that protects the original data.
+            using var rollbackCts = new CancellationTokenSource();
             rollbackCts.CancelAfter(TimeSpan.FromMinutes(5));
             
             var rollbackResult = await _rollbackManager.RollbackAsync(task.RollbackPoint.Id, rollbackCts.Token);
@@ -576,7 +665,7 @@ public class MigrationEngine : IMigrationEngine
         
         if (task.RollbackPoint != null)
         {
-            using var rollbackCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            using var rollbackCts = new CancellationTokenSource();
             rollbackCts.CancelAfter(TimeSpan.FromMinutes(5));
             
             var rollbackResult = await _rollbackManager.RollbackAsync(task.RollbackPoint.Id, rollbackCts.Token);

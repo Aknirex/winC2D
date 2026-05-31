@@ -115,6 +115,16 @@ public class MigrationTask
     /// Temporary backup path (renamed source during migration)
     /// </summary>
     public string? BackupPath { get; set; }
+
+    /// <summary>
+    /// Temporary target path used while copying files
+    /// </summary>
+    public string? TempTargetPath { get; set; }
+
+    /// <summary>
+    /// Whether files should be verified after copying
+    /// </summary>
+    public bool VerifyFiles { get; set; } = true;
     
     /// <summary>
     /// Current state of the task

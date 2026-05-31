@@ -303,10 +303,19 @@
                 </DataGrid.Resources>
 
                 <DataGrid.Columns>
-                    <!-- Checkbox -->
-                    <DataGridCheckBoxColumn Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                            Width="36" MinWidth="36" MaxWidth="36"
-                                            CanUserResize="False" IsReadOnly="False"/>
+                    <!-- Checkbox: template avoids DataGrid's first-click edit mode. -->
+                    <DataGridTemplateColumn Width="36" MinWidth="36" MaxWidth="36"
+                                            CanUserResize="False" IsReadOnly="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          Focusable="False"
+                                          PreviewMouseLeftButtonDown="CheckBox_PreviewMouseLeftButtonDown"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
                     <!-- Name with icon -->
                     <DataGridTemplateColumn Header="名称" Width="*" SortMemberPath="Name"
