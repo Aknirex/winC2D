@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.1.6] - 2026-05-31
+
+### Changed
+- Removed the top-level Software Migration navigation item so the file browser is the primary migration entry point.
+- AppData migrations now place `Local`, `Roaming`, and `LocalLow` items under separate target folders to avoid same-name collisions.
+
+### Fixed
+- Restored reliable migration behavior by copying into a temporary target directory, finalizing atomically, and preserving rollback data after successful migrations.
+- Fixed rollback for completed migrations so the original path can be restored from the migrated target.
+- Removed the same-drive migration hard block; unsafe nested or conflicting paths are still rejected by the migration engine.
+- Fixed list checkbox interactions so a single click toggles selection immediately and fast clicks do not open folders.
+
+---
+
 ## [4.1.5] - 2026-05-09
 
 ### Added
@@ -136,6 +150,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[4.1.6]: https://github.com/Aknirex/winC2D/releases/tag/v4.1.6
 [4.1.5]: https://github.com/Aknirex/winC2D/releases/tag/v4.1.5
 [4.1.0]: https://github.com/Aknirex/winC2D/releases/tag/v4.1.0
 [4.0.0]: https://github.com/Aknirex/winC2D/releases/tag/v4.0.0
