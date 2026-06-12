@@ -36,7 +36,10 @@ public partial class App : Application
         // Agent CLI mode: no windows, stdout is machine-readable JSON.
         if (e.Args.Any(a => string.Equals(a, "--cli", StringComparison.OrdinalIgnoreCase)))
         {
+            var previousContext = SynchronizationContext.Current;
+            SynchronizationContext.SetSynchronizationContext(null);
             var exitCode = RunCliAsync(e.Args).GetAwaiter().GetResult();
+            SynchronizationContext.SetSynchronizationContext(previousContext);
             Shutdown(exitCode);
             return;
         }

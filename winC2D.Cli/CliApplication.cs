@@ -580,6 +580,43 @@ public static class CliApplication
     private static object BuildUsage() => new
     {
         success = true,
+        agentInstructions = new
+        {
+            intent = "Use this CLI when a user asks to move a Windows software folder to another drive.",
+            naturalLanguageExample = "用 winC2D 把 \"C:\\Program Files\\TeamSpeak\" 移动到 \"D:\\Program Files\\\" 下",
+            pathMapping = new
+            {
+                source = "Use the quoted source folder as --source.",
+                targetDrive = "Use the drive letter from the destination path as --target-drive, for example D:.",
+                targetSubfolder = "Use the remaining destination folder path as --target-subfolder, for example Program Files."
+            },
+            requiredWorkflow = new[]
+            {
+                "Run privilege-status first.",
+                "Run disk-info to inspect available target drives.",
+                "Run migrate with --dry-run before any real migration.",
+                "Only run a real migration when dry-run returns success=true and canProceed=true.",
+                "For real migration, add --yes and keep the same --source, --target-drive, and --target-subfolder values.",
+                "Store the returned taskId.",
+                "Poll status --task-id <taskId> until state is Completed, Failed, RolledBack, PartialRollback, or Cancelled.",
+                "After Completed, verify that the source path is a symbolic link and the target path exists."
+            },
+            safetyRules = new[]
+            {
+                "Do not skip dry-run.",
+                "Do not run migrate --yes if blockers is not empty.",
+                "Do not migrate system folders such as C:\\Windows.",
+                "If the source application is running, ask the user to close it before migration."
+            },
+            exampleCommands = new[]
+            {
+                "winC2D.App.exe --cli privilege-status",
+                "winC2D.App.exe --cli disk-info",
+                "winC2D.App.exe --cli migrate --source \"C:\\Program Files\\TeamSpeak\" --target-drive D: --target-subfolder \"Program Files\" --dry-run",
+                "winC2D.App.exe --cli migrate --source \"C:\\Program Files\\TeamSpeak\" --target-drive D: --target-subfolder \"Program Files\" --yes",
+                "winC2D.App.exe --cli status --task-id \"<taskId>\""
+            }
+        },
         commands = new[]
         {
             "privilege-status",

@@ -2,6 +2,7 @@
 .localtestzone/
 .docs/
 *.binlog
+logs
 # Visual Studio
 .vs/
 # Build results
