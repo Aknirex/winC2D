@@ -31,14 +31,14 @@ After migrating software, winC2D creates **symbolic links (symlinks)** at the or
 - 🌏 In-app language switching — 7 languages supported
 - 🌙 Dark / Light theme follows system, switchable manually
 - 🛡️ Automatically requests administrator elevation on launch
-- 🤖 **MCP Server mode** — expose all migration capabilities to AI agents via the [Model Context Protocol](https://modelcontextprotocol.io/)
+- 🤖 **Agent CLI mode** — expose migration capabilities to AI agents and scripts through `winC2D.exe --cli`
 
 ## Tech Stack
 
 - C# · .NET 8.0 · WPF
 - [WPF-UI](https://github.com/lepoco/wpfui) (Fluent Design)
 - CommunityToolkit.Mvvm · Microsoft.Extensions.DependencyInjection
-- [ModelContextProtocol SDK](https://github.com/modelcontextprotocol/csharp-sdk) (MCP Server mode)
+- Machine-readable Agent CLI built on the same Core / Infrastructure services as the GUI
 
 ## Download & Run
 
@@ -52,31 +52,35 @@ After migrating software, winC2D creates **symbolic links (symlinks)** at the or
 2. Run as **Administrator** (the app will prompt for elevation automatically)
 3. Requires Windows 10 / 11
 
-## MCP Server Mode (for AI Agents)
+## Agent CLI Mode
 
-winC2D v4.0 ships a built-in **MCP (Model Context Protocol) server** so that AI agents (Claude, GitHub Copilot, etc.) can scan software and drive space, then perform migrations autonomously.
+winC2D v4.2 ships a built-in CLI mode for AI agents, scripts, and terminal automation. The same `winC2D.exe` can be opened normally for the GUI or called with `--cli` for machine-readable JSON output.
 
-### Available MCP Tools
+### Commands
 
-| Tool | Description | Requires Elevation |
+| Command | Description | Requires Elevation |
 |---|---|---|
-| `get_privilege_status` | Check current privilege level and available operations | No |
-| `get_disk_info` | List all fixed drives with free/total space | No |
-| `scan_software` | Stream all installed software with size and migration status | No |
-| `migrate_software` | Move software to another drive with symlink + optional dry-run | Yes |
-| `get_task_status` | Poll migration progress by taskId | No |
-| `rollback_migration` | Restore software to original path | Yes |
-| `list_migrations` | List all migration tasks in the current session | No |
+| `privilege-status` | Check current privilege level and available operations | No |
+| `disk-info` | List all fixed drives with free/total space | No |
+| `scan` | Scan installed software with size and migration status | No |
+| `migrate` | Move software to another drive with symlink + optional dry-run | Yes |
+| `status` | Poll migration progress by taskId | No |
+| `rollback` | Restore software to original path | Yes |
+| `list` | List persisted migration tasks | No |
 
 ### Agent Workflow
 
+```powershell
+.\winC2D.exe --cli privilege-status
+.\winC2D.exe --cli disk-info
+.\winC2D.exe --cli scan
+.\winC2D.exe --cli migrate --source "C:\Program Files\App" --target-drive D: --dry-run
+.\winC2D.exe --cli migrate --source "C:\Program Files\App" --target-drive D: --yes
+.\winC2D.exe --cli status --task-id "<taskId>"
+.\winC2D.exe --cli rollback --task-id "<taskId>" --yes
 ```
-get_privilege_status → get_disk_info → scan_software
-  → migrate_software(dryRun=true)    # validate first
-  → migrate_software(dryRun=false)   # get taskId
-  → get_task_status (poll every 3-5s until Completed/Failed)
-  → rollback_migration (optional)
-```
+
+`migrate` starts a hidden worker process and returns a `taskId` immediately. Use `status` until the state is `Completed`, `Failed`, `RolledBack`, or `PartialRollback`. Add `--wait` if you want the command to poll before returning.
 
 ### Privilege Requirements
 
@@ -90,40 +94,10 @@ Creating symbolic links requires either **Administrator** rights or **Windows De
 
 Enable Developer Mode: **Settings → System → Developer Options → Developer Mode**
 
-### Claude Desktop Configuration
+For elevated agent runs, start the shell / agent host as Administrator, enable Developer Mode, or use [gsudo](https://github.com/gerardog/gsudo):
 
-```json
-{
-  "mcpServers": {
-    "winC2D": {
-      "command": "C:\\path\\to\\winC2D.exe",
-      "args": ["--mcp"]
-    }
-  }
-}
-```
-
-> **Note**: The process must run with symlink privileges. Options:
-> - Start Claude Desktop as Administrator, **or**
-> - Enable Windows Developer Mode (recommended — permanent, no UAC prompt), **or**
-> - Use [gsudo](https://github.com/gerardog/gsudo): `"command": "gsudo"`, `"args": ["C:\\path\\to\\winC2D.exe", "--mcp"]`
-
-### VS Code / GitHub Copilot Configuration
-
-Add to your VS Code `settings.json`:
-
-```json
-{
-  "mcp": {
-    "servers": {
-      "winC2D": {
-        "type": "stdio",
-        "command": "C:\\path\\to\\winC2D.exe",
-        "args": ["--mcp"]
-      }
-    }
-  }
-}
+```powershell
+gsudo .\winC2D.exe --cli migrate --source "C:\Program Files\App" --target-drive D: --yes
 ```
 
 ## Contributing

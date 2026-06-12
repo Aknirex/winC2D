@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.2.0] - 2026-05-31
+
+### Added
+- Added Agent CLI mode via `winC2D.exe --cli` with JSON output for privilege checks, disk info, scanning, migration, task status, rollback, and task listing.
+- Added asynchronous CLI migrations that return a `taskId` immediately and execute through a hidden worker process.
+- Added CLI tests for argument validation, JSON output, task queries, and redirected process execution.
+
+### Changed
+- The same published executable now supports both the GUI and the agent-facing CLI mode.
+- Release documentation now describes `--cli` usage for AI agents and scripts.
+
+### Removed
+- Removed MCP server mode, `--mcp`, `--mcp-poc`, and the ModelContextProtocol dependency.
+
+---
+
 ## [4.1.6] - 2026-05-31
 
 ### Changed
@@ -150,6 +166,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[4.2.0]: https://github.com/Aknirex/winC2D/releases/tag/v4.2.0
 [4.1.6]: https://github.com/Aknirex/winC2D/releases/tag/v4.1.6
 [4.1.5]: https://github.com/Aknirex/winC2D/releases/tag/v4.1.5
 [4.1.0]: https://github.com/Aknirex/winC2D/releases/tag/v4.1.0

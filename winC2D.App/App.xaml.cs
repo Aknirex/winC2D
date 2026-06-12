@@ -2,13 +2,13 @@ using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using winC2D.Cli;
 using winC2D.Core.Services;
 using winC2D.Infrastructure;
 using winC2D.Infrastructure.Localization;
 using winC2D.App.Converters;
 using winC2D.App.ViewModels;
 using winC2D.App.Views;
-using winC2D.Mcp;
 
 namespace winC2D.App;
 
@@ -29,60 +29,21 @@ public partial class App : Application
     
     public App()
     {
-        // Configure dependency injection
-        var services = new ServiceCollection();
-        
-        // Add logging
-        services.AddLogging(builder =>
-        {
-            builder.AddDebug();
-            builder.AddConsole();
-            builder.SetMinimumLevel(LogLevel.Debug);
-        });
-        
-        // Add winC2D services
-        services.AddWinC2DServices();
-        
-        // Add ViewModels
-        services.AddSingleton<MainViewModel>();
-        services.AddSingleton<SoftwareMigrationViewModel>();
-        services.AddSingleton<AppDataMigrationViewModel>();
-        services.AddSingleton<SettingsViewModel>();
-        services.AddSingleton<LogViewModel>();
-        services.AddSingleton<FileSystemBrowserViewModel>();
-        
-        // Add Views
-        services.AddSingleton<MainWindow>();
-        services.AddSingleton<SoftwareMigrationView>();
-        services.AddSingleton<AppDataMigrationView>();
-        services.AddSingleton<SettingsView>();
-        services.AddSingleton<LogView>();
-        services.AddSingleton<AboutView>();
-        services.AddSingleton<FileSystemBrowserView>();
-        
-        _serviceProvider = services.BuildServiceProvider();
     }
     
     protected override void OnStartup(StartupEventArgs e)
     {
-        // ── MCP server mode: AI agent entry point ────────────────────────────────
-        if (e.Args.Contains("--mcp"))
+        // Agent CLI mode: no windows, stdout is machine-readable JSON.
+        if (e.Args.Any(a => string.Equals(a, "--cli", StringComparison.OrdinalIgnoreCase)))
         {
-            // No windows, no WPF dispatcher — pure stdio JSON-RPC server.
-            McpHostService.RunAsync(e.Args).GetAwaiter().GetResult();
-            Shutdown(0);
-            return;
-        }
-
-        // ── MCP POC mode: kept for debugging / channel verification ───────────
-        if (e.Args.Contains("--mcp-poc"))
-        {
-            McpPoc.RunAsync(e.Args).GetAwaiter().GetResult();
-            Shutdown(0);
+            var exitCode = RunCliAsync(e.Args).GetAwaiter().GetResult();
+            Shutdown(exitCode);
             return;
         }
 
         base.OnStartup(e);
+
+        _serviceProvider = BuildGuiServices();
         
         _logger = _serviceProvider?.GetRequiredService<ILogger<App>>();
         _logger?.LogInformation("Application starting...");
@@ -111,6 +72,67 @@ public partial class App : Application
         // Show main window
         var mainWindow = _serviceProvider?.GetRequiredService<MainWindow>();
         mainWindow?.Show();
+    }
+
+    private static ServiceProvider BuildGuiServices()
+    {
+        var services = new ServiceCollection();
+
+        services.AddLogging(builder =>
+        {
+            builder.AddDebug();
+            builder.AddConsole();
+            builder.SetMinimumLevel(LogLevel.Debug);
+        });
+
+        services.AddWinC2DServices();
+
+        services.AddSingleton<MainViewModel>();
+        services.AddSingleton<SoftwareMigrationViewModel>();
+        services.AddSingleton<AppDataMigrationViewModel>();
+        services.AddSingleton<SettingsViewModel>();
+        services.AddSingleton<LogViewModel>();
+        services.AddSingleton<FileSystemBrowserViewModel>();
+
+        services.AddSingleton<MainWindow>();
+        services.AddSingleton<SoftwareMigrationView>();
+        services.AddSingleton<AppDataMigrationView>();
+        services.AddSingleton<SettingsView>();
+        services.AddSingleton<LogView>();
+        services.AddSingleton<AboutView>();
+        services.AddSingleton<FileSystemBrowserView>();
+
+        return services.BuildServiceProvider();
+    }
+
+    private static ServiceProvider BuildCliServices()
+    {
+        var services = new ServiceCollection();
+
+        services.AddLogging(builder =>
+        {
+            builder.ClearProviders();
+            builder.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
+            builder.SetMinimumLevel(LogLevel.Warning);
+        });
+
+        services.AddWinC2DServices();
+
+        return services.BuildServiceProvider();
+    }
+
+    private static async Task<int> RunCliAsync(string[] args)
+    {
+        using var services = BuildCliServices();
+        var executablePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+
+        return await CliApplication.RunAsync(
+            args,
+            services,
+            Console.Out,
+            Console.Error,
+            BuildCliServices,
+            executablePath);
     }
     
     protected override void OnExit(ExitEventArgs e)

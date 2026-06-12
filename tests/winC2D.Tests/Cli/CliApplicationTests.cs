@@ -1,0 +1,197 @@
+using System.Diagnostics;
+using System.Text.Json;
+using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
+using winC2D.Cli;
+using winC2D.Core.Models;
+using winC2D.Core.Services;
+using Xunit;
+
+namespace winC2D.Tests.Cli;
+
+public class CliApplicationTests
+{
+    [Fact]
+    public async Task PrivilegeStatus_ShouldWriteSingleJsonObject()
+    {
+        var result = await RunCliAsync(["--cli", "privilege-status"]);
+
+        result.ExitCode.Should().Be((int)CliExitCode.Success);
+        result.Lines.Should().HaveCount(1);
+        result.Root.GetProperty("success").GetBoolean().Should().BeTrue();
+        result.Root.GetProperty("privilegeLevel").GetString().Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task UnknownOption_ShouldReturnArgumentErrorJson()
+    {
+        var result = await RunCliAsync(["--cli", "list", "--wat"]);
+
+        result.ExitCode.Should().Be((int)CliExitCode.ArgumentError);
+        result.Root.GetProperty("success").GetBoolean().Should().BeFalse();
+        result.Root.GetProperty("error").GetString().Should().Be("ARGUMENT_ERROR");
+    }
+
+    [Fact]
+    public async Task MigrateWithoutYes_ShouldReturnArgumentErrorBeforeWriteOperation()
+    {
+        var result = await RunCliAsync([
+            "--cli", "migrate",
+            "--source", @"C:\Program Files\TestApp",
+            "--target-drive", "D:"
+        ]);
+
+        result.ExitCode.Should().Be((int)CliExitCode.ArgumentError);
+        result.Root.GetProperty("error").GetString().Should().Be("CONFIRMATION_REQUIRED");
+    }
+
+    [Fact]
+    public async Task MigrateDryRun_WhenSourceMissing_ShouldReturnValidationJson()
+    {
+        var fileSystem = new Mock<winC2D.Core.FileSystem.IFileSystem>();
+        fileSystem.Setup(f => f.DirectoryExists(It.IsAny<string>())).Returns(false);
+        fileSystem.Setup(f => f.FileExists(It.IsAny<string>())).Returns(false);
+        fileSystem.Setup(f => f.GetDrives()).Returns(Array.Empty<DriveInfo>());
+
+        var services = new ServiceCollection()
+            .AddSingleton(fileSystem.Object)
+            .BuildServiceProvider();
+
+        var result = await RunCliAsync([
+            "--cli", "migrate",
+            "--source", @"C:\Program Files\MissingApp",
+            "--target-drive", "D:",
+            "--dry-run"
+        ], services);
+
+        result.ExitCode.Should().Be((int)CliExitCode.BusinessFailure);
+        result.Root.GetProperty("success").GetBoolean().Should().BeFalse();
+        result.Root.GetProperty("dryRun").GetBoolean().Should().BeTrue();
+        result.Root.GetProperty("blockers").GetArrayLength().Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task Status_WhenTaskMissing_ShouldReturnTaskNotFound()
+    {
+        var engine = new Mock<IMigrationEngine>();
+        engine.Setup(e => e.GetTaskAsync("missing")).ReturnsAsync((MigrationTask?)null);
+
+        var services = new ServiceCollection()
+            .AddSingleton(engine.Object)
+            .BuildServiceProvider();
+
+        var result = await RunCliAsync(["--cli", "status", "--task-id", "missing"], services);
+
+        result.ExitCode.Should().Be((int)CliExitCode.TaskNotFound);
+        result.Root.GetProperty("error").GetString().Should().Be("TASK_NOT_FOUND");
+    }
+
+    [Fact]
+    public async Task List_ShouldFilterCompletedTasks()
+    {
+        var engine = new Mock<IMigrationEngine>();
+        engine.Setup(e => e.GetAllTasksAsync()).ReturnsAsync([
+            new MigrationTask
+            {
+                Id = "completed",
+                Name = "Done",
+                State = MigrationState.Completed,
+                SourcePath = @"C:\A",
+                TargetPath = @"D:\MigratedApps\A",
+                CreatedAt = DateTime.UtcNow
+            },
+            new MigrationTask
+            {
+                Id = "running",
+                Name = "Running",
+                State = MigrationState.Copying,
+                SourcePath = @"C:\B",
+                TargetPath = @"D:\MigratedApps\B",
+                CreatedAt = DateTime.UtcNow
+            }
+        ]);
+
+        var services = new ServiceCollection()
+            .AddSingleton(engine.Object)
+            .BuildServiceProvider();
+
+        var result = await RunCliAsync(["--cli", "list", "--state", "completed"], services);
+
+        result.ExitCode.Should().Be((int)CliExitCode.Success);
+        result.Root.GetProperty("count").GetInt32().Should().Be(1);
+        result.Root.GetProperty("tasks")[0].GetProperty("taskId").GetString().Should().Be("completed");
+    }
+
+    [Fact]
+    public async Task BuiltAppProcess_ShouldSupportCliPrivilegeStatusWithRedirectedStdout()
+    {
+        var repoRoot = FindRepoRoot();
+        var debugExe = Path.Combine(repoRoot, "winC2D.App", "bin", "Debug", "net8.0-windows", "winC2D.App.exe");
+        var releaseExe = Path.Combine(repoRoot, "winC2D.App", "bin", "Release", "net8.0-windows", "winC2D.App.exe");
+#if DEBUG
+        var candidates = new[] { debugExe, releaseExe };
+#else
+        var candidates = new[] { releaseExe, debugExe };
+#endif
+        var exe = candidates.FirstOrDefault(File.Exists);
+        if (exe is null)
+            return;
+
+        using var process = new Process();
+        process.StartInfo = new ProcessStartInfo
+        {
+            FileName = exe,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+        process.StartInfo.ArgumentList.Add("--cli");
+        process.StartInfo.ArgumentList.Add("privilege-status");
+
+        process.Start().Should().BeTrue();
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+        var completed = await Task.Run(() => process.WaitForExit(15_000));
+        completed.Should().BeTrue("the CLI smoke test should complete quickly");
+
+        var stdout = (await stdoutTask).Trim();
+        var stderr = await stderrTask;
+        process.ExitCode.Should().Be((int)CliExitCode.Success, stderr);
+        stdout.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).Should().HaveCount(1);
+
+        using var document = JsonDocument.Parse(stdout);
+        document.RootElement.GetProperty("success").GetBoolean().Should().BeTrue();
+        document.RootElement.GetProperty("privilegeLevel").GetString().Should().NotBeNullOrWhiteSpace();
+    }
+
+    private static async Task<CliRunResult> RunCliAsync(string[] args, IServiceProvider? services = null)
+    {
+        services ??= new ServiceCollection().BuildServiceProvider();
+        var stdout = new StringWriter();
+        var stderr = new StringWriter();
+
+        var exitCode = await CliApplication.RunAsync(args, services, stdout, stderr);
+        var text = stdout.ToString().Trim();
+        var lines = text.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        using var document = JsonDocument.Parse(text);
+
+        return new CliRunResult(exitCode, document.RootElement.Clone(), lines, stderr.ToString());
+    }
+
+    private static string FindRepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "winC2D.sln")))
+                return dir.FullName;
+            dir = dir.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate repository root.");
+    }
+
+    private sealed record CliRunResult(int ExitCode, JsonElement Root, string[] Lines, string Stderr);
+}

@@ -24,6 +24,7 @@ After migrating software, winC2D creates **symbolic links (symlinks)** at the or
 - 🌏 In-app language switching — 7 languages supported
 - 🌙 Dark / Light theme follows system, switchable manually
 - 🛡️ Automatically requests administrator elevation on launch
+- 🤖 Agent CLI mode via `winC2D.exe --cli` for AI agents and scripts
 
 ## Tech Stack
 
@@ -42,3 +43,18 @@ After migrating software, winC2D creates **symbolic links (symlinks)** at the or
 
 2. Run as **Administrator** (the app will prompt for elevation automatically)
 3. Requires Windows 10 / 11
+
+## Agent CLI Mode
+
+Use the same executable with `--cli` for JSON output:
+
+```powershell
+.\winC2D.exe --cli privilege-status
+.\winC2D.exe --cli disk-info
+.\winC2D.exe --cli scan
+.\winC2D.exe --cli migrate --source "C:\Program Files\App" --target-drive D: --dry-run
+.\winC2D.exe --cli migrate --source "C:\Program Files\App" --target-drive D: --yes
+.\winC2D.exe --cli status --task-id "<taskId>"
+```
+
+Real migrations require Administrator rights or Windows Developer Mode.

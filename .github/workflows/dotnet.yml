@@ -212,7 +212,7 @@ jobs:
         body: |
           ## winC2D v${{ steps.version.outputs.VERSION }}
 
-          Windows disk migration assistant — move installed software and user folders from C drive to any disk, with symlinks keeping original paths intact.
+          Windows disk migration assistant — move installed software and user folders from C drive to any disk, with symlinks keeping original paths intact. The same executable also supports Agent CLI mode with `--cli` for AI agents and scripts.
 
           ### 📦 Downloads
 
@@ -226,6 +226,15 @@ jobs:
           2. Run as **Administrator**
           3. Scan → Select software → Migrate
 
+          ### 🤖 Agent CLI
+          ```powershell
+          .\winC2D.exe --cli privilege-status
+          .\winC2D.exe --cli scan
+          .\winC2D.exe --cli migrate --source "C:\Program Files\App" --target-drive D: --dry-run
+          .\winC2D.exe --cli migrate --source "C:\Program Files\App" --target-drive D: --yes
+          .\winC2D.exe --cli status --task-id "<taskId>"
+          ```
+
           ### 🌏 Languages Supported
           简体中文 · 繁體中文 · English · 日本語 · 한국어 · Русский · Português (Brasil)
 
@@ -234,7 +243,7 @@ jobs:
           ${{ steps.changelog.outputs.changelog }}
 
           ---
-          [📖 Documentation](https://github.com/SKR7lex/winC2D#readme) · [🐛 Report Issue](https://github.com/SKR7lex/winC2D/issues)
+          [📖 Documentation](https://github.com/Aknirex/winC2D#readme) · [🐛 Report Issue](https://github.com/Aknirex/winC2D/issues)
         files: |
           ./artifacts/winC2D-v${{ steps.version.outputs.VERSION }}-standalone.exe
           ./artifacts/winC2D-v${{ steps.version.outputs.VERSION }}-framework-dependent.exe
