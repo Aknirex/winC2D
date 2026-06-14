@@ -30,26 +30,98 @@
         
         <!-- Filters -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+            <CheckBox Content="{Binding L_ShowRunning}" IsChecked="{Binding ShowRunning}" Margin="0,0,15,0"/>
             <CheckBox Content="{Binding L_ShowSuccessful}" IsChecked="{Binding ShowSuccessful}" Margin="0,0,15,0"/>
             <CheckBox Content="{Binding L_ShowFailed}" IsChecked="{Binding ShowFailed}" Margin="0,0,15,0"/>
             <CheckBox Content="{Binding L_ShowRolledBack}" IsChecked="{Binding ShowRolledBack}"/>
         </StackPanel>
         
         <!-- Log List -->
-        <ui:DataGrid Grid.Row="2"
-                    ItemsSource="{Binding LogEntries}"
+        <DataGrid Grid.Row="2"
+                    ItemsSource="{Binding EntriesView}"
                     SelectedItem="{Binding SelectedEntry, Mode=TwoWay}"
                     AutoGenerateColumns="False"
                     IsReadOnly="True"
-                    SelectionMode="Single">
+                    SelectionMode="Single"
+                    SelectionUnit="FullRow"
+                    HeadersVisibility="Column"
+                    GridLinesVisibility="Horizontal"
+                    RowHeight="32"
+                    ColumnHeaderHeight="32"
+                    Background="{DynamicResource CardBackgroundBrush}">
+            <DataGrid.Resources>
+                <Style x:Key="LogCellTextStyle" TargetType="TextBlock">
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                </Style>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Background" Value="{DynamicResource CardStrokeColorDefaultBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                    <Setter Property="Padding" Value="8,4"/>
+                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                </Style>
+                <Style TargetType="DataGridRow">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource AccentFillColorSecondaryBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Padding" Value="8,4"/>
+                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=DataGridRow}}"/>
+                </Style>
+            </DataGrid.Resources>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="{Binding DataContext.L_ColTime, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Time, StringFormat='yyyy-MM-dd HH:mm:ss'}" Width="150"/>
-                <DataGridTextColumn Header="{Binding DataContext.L_ColType, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Type}" Width="80"/>
-                <DataGridTextColumn Header="{Binding DataContext.L_ColSource, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding SourcePath}" Width="*"/>
-                <DataGridTextColumn Header="{Binding DataContext.L_ColTarget, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding TargetPath}" Width="*"/>
-                <DataGridTextColumn Header="{Binding DataContext.L_ColStatus, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Status}" Width="100"/>
+                <DataGridTextColumn Binding="{Binding Time, StringFormat='yyyy-MM-dd HH:mm:ss'}" Width="150" ElementStyle="{StaticResource LogCellTextStyle}">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{Binding DataContext.L_ColTime, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Name}" Width="140" ElementStyle="{StaticResource LogCellTextStyle}">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{Binding DataContext.L_ColName, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Status}" Width="110" ElementStyle="{StaticResource LogCellTextStyle}">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{Binding DataContext.L_ColStatus, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Progress}" Width="80" ElementStyle="{StaticResource LogCellTextStyle}">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{Binding DataContext.L_ColProgress, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Files}" Width="90" ElementStyle="{StaticResource LogCellTextStyle}">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{Binding DataContext.L_ColFiles, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding SourcePath}" Width="1.4*" ElementStyle="{StaticResource LogCellTextStyle}">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{Binding DataContext.L_ColSource, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding TargetPath}" Width="1.4*" ElementStyle="{StaticResource LogCellTextStyle}">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{Binding DataContext.L_ColTarget, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Message}" Width="2*" ElementStyle="{StaticResource LogCellTextStyle}">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{Binding DataContext.L_ColMessage, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
             </DataGrid.Columns>
-        </ui:DataGrid>
+        </DataGrid>
         
         <!-- Actions -->
         <Grid Grid.Row="3" Margin="0,10,0,0">
@@ -61,12 +133,12 @@
             <StackPanel Grid.Column="0" Orientation="Horizontal">
                 <ui:Button Command="{Binding RollbackCommand}"
                           Content="{Binding L_RollbackSelected}"
-                          IsEnabled="{Binding SelectedEntry, Converter={StaticResource NullToBooleanConverter}}"
                           Margin="0,0,10,0"/>
             </StackPanel>
             
             <StackPanel Grid.Column="1" Orientation="Horizontal">
                 <ui:Button Command="{Binding ExportLogCommand}" Content="{Binding L_ExportLog}" Margin="0,0,10,0"/>
+                <ui:Button Command="{Binding ClearStaleCommand}" Content="{Binding L_ClearStale}" Margin="0,0,10,0"/>
                 <ui:Button Command="{Binding ClearLogCommand}" Content="{Binding L_ClearHistory}"/>
             </StackPanel>
         </Grid>

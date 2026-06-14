@@ -15,7 +15,7 @@ public class CliApplicationTests
     [Fact]
     public async Task PrivilegeStatus_ShouldWriteSingleJsonObject()
     {
-        var result = await RunCliAsync(["--cli", "privilege-status"]);
+        var result = await RunCliAsync(["privilege-status"]);
 
         result.ExitCode.Should().Be((int)CliExitCode.Success);
         result.Lines.Should().HaveCount(1);
@@ -26,7 +26,7 @@ public class CliApplicationTests
     [Fact]
     public async Task UnknownOption_ShouldReturnArgumentErrorJson()
     {
-        var result = await RunCliAsync(["--cli", "list", "--wat"]);
+        var result = await RunCliAsync(["list", "--wat"]);
 
         result.ExitCode.Should().Be((int)CliExitCode.ArgumentError);
         result.Root.GetProperty("success").GetBoolean().Should().BeFalse();
@@ -37,9 +37,9 @@ public class CliApplicationTests
     public async Task MigrateWithoutYes_ShouldReturnArgumentErrorBeforeWriteOperation()
     {
         var result = await RunCliAsync([
-            "--cli", "migrate",
+            "migrate",
             "--source", @"C:\Program Files\TestApp",
-            "--target-drive", "D:"
+            "--target", @"D:\Program Files"
         ]);
 
         result.ExitCode.Should().Be((int)CliExitCode.ArgumentError);
@@ -49,19 +49,23 @@ public class CliApplicationTests
     [Fact]
     public async Task MigrateDryRun_WhenSourceMissing_ShouldReturnValidationJson()
     {
-        var fileSystem = new Mock<winC2D.Core.FileSystem.IFileSystem>();
-        fileSystem.Setup(f => f.DirectoryExists(It.IsAny<string>())).Returns(false);
-        fileSystem.Setup(f => f.FileExists(It.IsAny<string>())).Returns(false);
-        fileSystem.Setup(f => f.GetDrives()).Returns(Array.Empty<DriveInfo>());
+        var engine = new Mock<IMigrationEngine>();
+        engine.Setup(e => e.ValidateAsync(It.IsAny<MigrationRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MigrationPreflightResult
+            {
+                SourcePath = @"C:\Program Files\MissingApp",
+                TargetPath = @"D:\Program Files\MissingApp",
+                Blockers = ["Source path does not exist: C:\\Program Files\\MissingApp"]
+            });
 
         var services = new ServiceCollection()
-            .AddSingleton(fileSystem.Object)
+            .AddSingleton(engine.Object)
             .BuildServiceProvider();
 
         var result = await RunCliAsync([
-            "--cli", "migrate",
+            "migrate",
             "--source", @"C:\Program Files\MissingApp",
-            "--target-drive", "D:",
+            "--target", @"D:\Program Files",
             "--dry-run"
         ], services);
 
@@ -81,7 +85,7 @@ public class CliApplicationTests
             .AddSingleton(engine.Object)
             .BuildServiceProvider();
 
-        var result = await RunCliAsync(["--cli", "status", "--task-id", "missing"], services);
+        var result = await RunCliAsync(["status", "--task-id", "missing"], services);
 
         result.ExitCode.Should().Be((int)CliExitCode.TaskNotFound);
         result.Root.GetProperty("error").GetString().Should().Be("TASK_NOT_FOUND");
@@ -116,7 +120,7 @@ public class CliApplicationTests
             .AddSingleton(engine.Object)
             .BuildServiceProvider();
 
-        var result = await RunCliAsync(["--cli", "list", "--state", "completed"], services);
+        var result = await RunCliAsync(["list", "--state", "completed"], services);
 
         result.ExitCode.Should().Be((int)CliExitCode.Success);
         result.Root.GetProperty("count").GetInt32().Should().Be(1);
@@ -124,11 +128,11 @@ public class CliApplicationTests
     }
 
     [Fact]
-    public async Task BuiltAppProcess_ShouldSupportCliPrivilegeStatusWithRedirectedStdout()
+    public async Task BuiltCliProcess_ShouldSupportPrivilegeStatusWithRedirectedStdout()
     {
         var repoRoot = FindRepoRoot();
-        var debugExe = Path.Combine(repoRoot, "winC2D.App", "bin", "Debug", "net8.0-windows", "winC2D.App.exe");
-        var releaseExe = Path.Combine(repoRoot, "winC2D.App", "bin", "Release", "net8.0-windows", "winC2D.App.exe");
+        var debugExe = Path.Combine(repoRoot, "winC2D.Cli", "bin", "Debug", "net8.0-windows", "winC2D.Cli.exe");
+        var releaseExe = Path.Combine(repoRoot, "winC2D.Cli", "bin", "Release", "net8.0-windows", "winC2D.Cli.exe");
 #if DEBUG
         var candidates = new[] { debugExe, releaseExe };
 #else
@@ -147,7 +151,6 @@ public class CliApplicationTests
             RedirectStandardError = true,
             CreateNoWindow = true
         };
-        process.StartInfo.ArgumentList.Add("--cli");
         process.StartInfo.ArgumentList.Add("privilege-status");
 
         process.Start().Should().BeTrue();

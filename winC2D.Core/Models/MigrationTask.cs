@@ -71,6 +71,13 @@ public enum MigrationState
 /// </summary>
 public class MigrationTask
 {
+    public const int CurrentSchemaVersion = 2;
+
+    /// <summary>
+    /// Persisted task schema version.
+    /// </summary>
+    public int SchemaVersion { get; set; } = CurrentSchemaVersion;
+
     /// <summary>
     /// Unique task identifier
     /// </summary>
@@ -90,6 +97,46 @@ public class MigrationTask
     /// Task completion time
     /// </summary>
     public DateTime? CompletedAt { get; set; }
+
+    /// <summary>
+    /// Worker process id when this task is executed by the agent CLI.
+    /// </summary>
+    public int? WorkerProcessId { get; set; }
+
+    /// <summary>
+    /// When the worker process was started.
+    /// </summary>
+    public DateTime? WorkerStartedAt { get; set; }
+
+    /// <summary>
+    /// Last observed heartbeat from the worker process.
+    /// </summary>
+    public DateTime? LastHeartbeatAt { get; set; }
+
+    /// <summary>
+    /// Per-task worker log path.
+    /// </summary>
+    public string? WorkerLogPath { get; set; }
+
+    /// <summary>
+    /// Cross-process cancellation request timestamp.
+    /// </summary>
+    public DateTime? CancelRequestedAt { get; set; }
+
+    /// <summary>
+    /// Whether cancellation should roll back partial changes.
+    /// </summary>
+    public bool CancelRollback { get; set; } = true;
+
+    /// <summary>
+    /// Cross-process pause request timestamp.
+    /// </summary>
+    public DateTime? PauseRequestedAt { get; set; }
+
+    /// <summary>
+    /// Cross-process resume request timestamp.
+    /// </summary>
+    public DateTime? ResumeRequestedAt { get; set; }
     
     /// <summary>
     /// Type of migration

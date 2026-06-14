@@ -12,16 +12,6 @@ public static class CliApplication
 {
     private const string InternalRunTaskCommand = "__run-task";
 
-    private static readonly string[] Blacklist =
-    [
-        @"C:\Windows",
-        @"C:\Program Files\Windows NT",
-        @"C:\Program Files\Common Files",
-        @"C:\Program Files\Windows Defender",
-        @"C:\Program Files (x86)\Windows NT",
-        @"C:\Program Files (x86)\Common Files",
-    ];
-
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = false,
@@ -52,10 +42,15 @@ public static class CliApplication
                 "privilege-status" => await WriteAsync(stdout, CliExitCode.Success, BuildPrivilegeStatus()),
                 "disk-info" => await WriteAsync(stdout, CliExitCode.Success, BuildDiskInfo(services)),
                 "scan" => await ScanAsync(commandArgs, services, stdout, cancellationToken),
+                "preflight" => await PreflightAsync(commandArgs, services, stdout, cancellationToken),
                 "migrate" => await MigrateAsync(commandArgs, services, stdout, stderr, serviceProviderFactory, executablePath, cancellationToken),
                 "status" => await StatusAsync(commandArgs, services, stdout),
+                "pause" => await PauseAsync(commandArgs, services, stdout, cancellationToken),
+                "resume" => await ResumeAsync(commandArgs, services, stdout, cancellationToken),
+                "cancel" => await CancelAsync(commandArgs, services, stdout, cancellationToken),
                 "rollback" => await RollbackAsync(commandArgs, services, stdout, cancellationToken),
                 "list" => await ListAsync(commandArgs, services, stdout),
+                "cleanup" => await CleanupAsync(commandArgs, services, stdout, cancellationToken),
                 "help" or "--help" or "-h" => await WriteAsync(stdout, CliExitCode.Success, BuildUsage()),
                 InternalRunTaskCommand => await RunTaskAsync(commandArgs, services, stdout, cancellationToken),
                 _ => await WriteAsync(stdout, CliExitCode.ArgumentError, Error("UNKNOWN_COMMAND", $"Unknown CLI command: {command}"))
@@ -126,6 +121,58 @@ public static class CliApplication
         });
     }
 
+    private static MigrationRequest BuildMigrationRequest(CliArguments parsed)
+    {
+        var sourcePath = Require(parsed, "source").TrimEnd('\\', '/');
+        var targetPath = Require(parsed, "target").TrimEnd('\\', '/');
+        if (string.IsNullOrWhiteSpace(Path.GetPathRoot(targetPath)))
+            throw new CliParseException("--target must be an absolute destination directory such as D:\\Program Files.");
+
+        return new MigrationRequest
+        {
+            Name = Path.GetFileName(sourcePath),
+            SourcePath = sourcePath,
+            TargetRootPath = targetPath,
+            Type = MigrationType.Software,
+            CreateSymlink = true,
+            VerifyFiles = ParseBool(parsed.GetValueOrDefault("verify"), defaultValue: true, "verify")
+        };
+    }
+
+    private static object BuildPreflightPayload(MigrationPreflightResult validation, bool dryRun)
+    {
+        return new
+        {
+            success = validation.CanProceed,
+            dryRun = dryRun ? true : (bool?)null,
+            canProceed = validation.CanProceed,
+            sourcePath = validation.SourcePath,
+            targetPath = validation.TargetPath,
+            sourceSizeBytes = validation.SourceSizeBytes,
+            targetFreeBytes = validation.TargetFreeBytes,
+            sourceSizeMb = Math.Round(validation.SourceSizeBytes / 1_048_576.0, 1),
+            targetDriveFreeGb = Math.Round(validation.TargetFreeBytes / 1_073_741_824.0, 1),
+            hasEnoughSpace = validation.HasEnoughSpace,
+            isSourceSymlink = validation.IsSourceSymlink,
+            blockers = validation.Blockers,
+            warnings = validation.Warnings
+        };
+    }
+
+    private static async Task<int> PreflightAsync(
+        string[] args,
+        IServiceProvider services,
+        TextWriter stdout,
+        CancellationToken cancellationToken)
+    {
+        var parsed = Parse(args, valueOptions: ["source", "target", "verify"], flags: []);
+        EnsureNoPositionals(parsed);
+        var request = BuildMigrationRequest(parsed);
+        var validation = await services.GetRequiredService<IMigrationEngine>().ValidateAsync(request, cancellationToken);
+
+        return await WriteAsync(stdout, validation.CanProceed ? CliExitCode.Success : CliExitCode.BusinessFailure, BuildPreflightPayload(validation, dryRun: false));
+    }
+
     private static async Task<int> MigrateAsync(
         string[] args,
         IServiceProvider services,
@@ -137,17 +184,14 @@ public static class CliApplication
     {
         var parsed = Parse(
             args,
-            valueOptions: ["source", "target-drive", "target-subfolder", "verify", "timeout-seconds"],
+            valueOptions: ["source", "target", "verify", "timeout-seconds"],
             flags: ["dry-run", "yes", "wait"]);
         EnsureNoPositionals(parsed);
 
-        var sourcePath = Require(parsed, "source").TrimEnd('\\', '/');
-        var targetDrive = NormalizeDrive(Require(parsed, "target-drive"));
-        var targetSubFolder = parsed.GetValueOrDefault("target-subfolder") ?? "MigratedApps";
+        var request = BuildMigrationRequest(parsed);
         var dryRun = parsed.HasFlag("dry-run");
         var wait = parsed.HasFlag("wait");
-        var verifyFiles = ParseBool(parsed.GetValueOrDefault("verify"), defaultValue: true, "verify");
-        var timeoutSeconds = ParseInt(parsed.GetValueOrDefault("timeout-seconds"), defaultValue: 0, "timeout-seconds");
+        var timeoutSeconds = ParseInt(parsed.GetValueOrDefault("timeout-seconds"), defaultValue: 1800, "timeout-seconds");
 
         if (!dryRun && !parsed.HasFlag("yes"))
             return await WriteAsync(stdout, CliExitCode.ArgumentError, Error("CONFIRMATION_REQUIRED", "Real migrations require --yes. Use --dry-run first to validate."));
@@ -155,26 +199,13 @@ public static class CliApplication
         if (!dryRun && !PrivilegeChecker.CanMigrate())
             return await WriteAsync(stdout, CliExitCode.InsufficientPrivileges, PrivilegeChecker.BuildInsufficientPrivilegesError());
 
-        var validation = ValidateMigrationRequest(services, sourcePath, targetDrive, targetSubFolder);
+        var engine = services.GetRequiredService<IMigrationEngine>();
+        var validation = await engine.ValidateAsync(request, cancellationToken);
 
         if (dryRun)
-        {
-            return await WriteAsync(stdout, validation.Blockers.Count == 0 ? CliExitCode.Success : CliExitCode.BusinessFailure, new
-            {
-                success = validation.Blockers.Count == 0,
-                dryRun = true,
-                sourcePath,
-                targetPath = validation.TargetPath,
-                sourceSizeMb = Math.Round(validation.SourceSizeBytes / 1_048_576.0, 1),
-                targetDriveFreeGb = Math.Round(validation.TargetDriveFreeBytes / 1_073_741_824.0, 1),
-                hasEnoughSpace = validation.HasEnoughSpace,
-                isSourceSymlink = validation.IsSourceSymlink,
-                canProceed = validation.Blockers.Count == 0,
-                blockers = validation.Blockers
-            });
-        }
+            return await WriteAsync(stdout, validation.CanProceed ? CliExitCode.Success : CliExitCode.BusinessFailure, BuildPreflightPayload(validation, dryRun: true));
 
-        if (validation.Blockers.Count > 0)
+        if (!validation.CanProceed)
         {
             return await WriteAsync(stdout, CliExitCode.BusinessFailure, new
             {
@@ -185,21 +216,22 @@ public static class CliApplication
             });
         }
 
-        var engine = services.GetRequiredService<IMigrationEngine>();
-        var task = await engine.CreateTaskAsync(new MigrationRequest
-        {
-            Name = Path.GetFileName(sourcePath),
-            SourcePath = sourcePath,
-            TargetRootPath = Path.Combine(targetDrive.TrimEnd('\\') + "\\", targetSubFolder),
-            Type = MigrationType.Software,
-            CreateSymlink = true,
-            VerifyFiles = verifyFiles
-        }, cancellationToken);
+        var task = await engine.CreateTaskAsync(request, cancellationToken);
 
-        var workerStarted = StartWorkerProcess(executablePath, task.Id, stderr);
-        if (!workerStarted)
+        var worker = await StartWorkerProcessAsync(executablePath, task.Id, services, stderr, cancellationToken);
+        if (!worker.Success)
         {
-            return await WriteAsync(stdout, CliExitCode.UnhandledException, Error("WORKER_START_FAILED", "Could not start the hidden CLI worker process."));
+            task.State = MigrationState.Failed;
+            task.CompletedAt = DateTime.UtcNow;
+            task.ErrorMessage = worker.ErrorMessage ?? "Could not start the hidden CLI worker process.";
+            if (services.GetService<IMigrationTaskStore>() is { } failureStore)
+                await failureStore.UpsertAsync(task, immediate: true, cancellationToken);
+
+            return await WriteAsync(stdout, CliExitCode.UnhandledException, Error("WORKER_START_FAILED", worker.ErrorMessage ?? "Could not start the hidden CLI worker process.", new
+            {
+                taskId = task.Id,
+                workerLogPath = task.WorkerLogPath
+            }));
         }
 
         if (wait)
@@ -209,8 +241,11 @@ public static class CliApplication
         {
             success = true,
             taskId = task.Id,
-            status = "running",
-            sourcePath,
+            state = task.State.ToString(),
+            workerPid = worker.ProcessId,
+            workerLogPath = task.WorkerLogPath,
+            startedAt = task.WorkerStartedAt,
+            sourcePath = request.SourcePath,
             targetPath = task.TargetPath,
             sizeMb = Math.Round(validation.SourceSizeBytes / 1_048_576.0, 1),
             message = "Migration started. Call status with this taskId until state is Completed, Failed, RolledBack, or PartialRollback."
@@ -227,7 +262,53 @@ public static class CliApplication
         if (task is null)
             return await WriteAsync(stdout, CliExitCode.TaskNotFound, Error("TASK_NOT_FOUND", $"Task not found: {taskId}", new { taskId }));
 
-        return await WriteAsync(stdout, CliExitCode.Success, BuildTaskStatus(task));
+        return await WriteAsync(stdout, CliExitCode.Success, BuildTaskStatus(task, services.GetService<IMigrationTaskStore>()));
+    }
+
+    private static async Task<int> PauseAsync(string[] args, IServiceProvider services, TextWriter stdout, CancellationToken cancellationToken)
+    {
+        var parsed = Parse(args, valueOptions: ["task-id"], flags: []);
+        EnsureNoPositionals(parsed);
+        var taskId = Require(parsed, "task-id");
+        var engine = services.GetRequiredService<IMigrationEngine>();
+        var task = await engine.GetTaskAsync(taskId);
+        if (task is null)
+            return await WriteAsync(stdout, CliExitCode.TaskNotFound, Error("TASK_NOT_FOUND", $"Task not found: {taskId}", new { taskId }));
+
+        await engine.RequestPauseAsync(taskId, cancellationToken);
+        return await WriteAsync(stdout, CliExitCode.Success, new { success = true, taskId, requested = "pause" });
+    }
+
+    private static async Task<int> ResumeAsync(string[] args, IServiceProvider services, TextWriter stdout, CancellationToken cancellationToken)
+    {
+        var parsed = Parse(args, valueOptions: ["task-id"], flags: []);
+        EnsureNoPositionals(parsed);
+        var taskId = Require(parsed, "task-id");
+        var engine = services.GetRequiredService<IMigrationEngine>();
+        var task = await engine.GetTaskAsync(taskId);
+        if (task is null)
+            return await WriteAsync(stdout, CliExitCode.TaskNotFound, Error("TASK_NOT_FOUND", $"Task not found: {taskId}", new { taskId }));
+
+        await engine.RequestResumeAsync(taskId, cancellationToken);
+        return await WriteAsync(stdout, CliExitCode.Success, new { success = true, taskId, requested = "resume" });
+    }
+
+    private static async Task<int> CancelAsync(string[] args, IServiceProvider services, TextWriter stdout, CancellationToken cancellationToken)
+    {
+        var parsed = Parse(args, valueOptions: ["task-id"], flags: ["yes", "no-rollback"]);
+        EnsureNoPositionals(parsed);
+        var taskId = Require(parsed, "task-id");
+        if (!parsed.HasFlag("yes"))
+            return await WriteAsync(stdout, CliExitCode.ArgumentError, Error("CONFIRMATION_REQUIRED", "Cancel requires --yes."));
+
+        var engine = services.GetRequiredService<IMigrationEngine>();
+        var task = await engine.GetTaskAsync(taskId);
+        if (task is null)
+            return await WriteAsync(stdout, CliExitCode.TaskNotFound, Error("TASK_NOT_FOUND", $"Task not found: {taskId}", new { taskId }));
+
+        var rollback = !parsed.HasFlag("no-rollback");
+        await engine.RequestCancelAsync(taskId, rollback, cancellationToken);
+        return await WriteAsync(stdout, CliExitCode.Success, new { success = true, taskId, requested = "cancel", rollback });
     }
 
     private static async Task<int> RollbackAsync(
@@ -288,15 +369,19 @@ public static class CliApplication
         EnsureNoPositionals(parsed);
         var stateFilter = (parsed.GetValueOrDefault("state") ?? "all").ToLowerInvariant();
 
-        if (stateFilter is not ("all" or "completed" or "failed" or "running"))
-            return await WriteAsync(stdout, CliExitCode.ArgumentError, Error("INVALID_STATE_FILTER", "State must be one of: all, completed, failed, running."));
+        if (stateFilter is not ("all" or "completed" or "failed" or "running" or "stale"))
+            return await WriteAsync(stdout, CliExitCode.ArgumentError, Error("INVALID_STATE_FILTER", "State must be one of: all, completed, failed, running, stale."));
 
-        var all = await services.GetRequiredService<IMigrationEngine>().GetAllTasksAsync();
+        var engine = services.GetRequiredService<IMigrationEngine>();
+        var store = services.GetService<IMigrationTaskStore>();
+        var all = await engine.GetAllTasksAsync();
+        var now = DateTime.UtcNow;
         var filtered = stateFilter switch
         {
             "completed" => all.Where(t => t.State == MigrationState.Completed),
             "failed" => all.Where(t => t.State is MigrationState.Failed or MigrationState.RolledBack or MigrationState.PartialRollback),
-            "running" => all.Where(IsRunningState),
+            "running" => all.Where(t => IsRunningState(t) && (store is null || !store.IsStale(t, now))),
+            "stale" => all.Where(t => store is not null && store.IsStale(t, now)),
             _ => all
         };
 
@@ -313,6 +398,11 @@ public static class CliApplication
                 sizeMb = t.TotalBytes > 0 ? Math.Round(t.TotalBytes / 1_048_576.0, 1) : 0,
                 createdAt = t.CreatedAt,
                 completedAt = t.CompletedAt,
+                workerPid = t.WorkerProcessId,
+                workerLogPath = t.WorkerLogPath,
+                lastHeartbeatAt = t.LastHeartbeatAt,
+                isStale = store?.IsStale(t, now),
+                staleReason = store is not null && store.IsStale(t, now) ? store.GetStaleReason(t, now) : null,
                 errorMessage = t.ErrorMessage
             })
             .ToList();
@@ -323,6 +413,37 @@ public static class CliApplication
             stateFilter,
             count = tasks.Count,
             tasks
+        });
+    }
+
+    private static async Task<int> CleanupAsync(
+        string[] args,
+        IServiceProvider services,
+        TextWriter stdout,
+        CancellationToken cancellationToken)
+    {
+        var parsed = Parse(args, valueOptions: ["state", "older-than-days"], flags: ["yes"]);
+        EnsureNoPositionals(parsed);
+        if (!parsed.HasFlag("yes"))
+            return await WriteAsync(stdout, CliExitCode.ArgumentError, Error("CONFIRMATION_REQUIRED", "Cleanup requires --yes."));
+
+        var state = (parsed.GetValueOrDefault("state") ?? "stale").ToLowerInvariant();
+        if (state is not ("stale" or "terminal"))
+            return await WriteAsync(stdout, CliExitCode.ArgumentError, Error("INVALID_STATE_FILTER", "Cleanup state must be stale or terminal."));
+
+        var options = new TaskCleanupOptions
+        {
+            State = state == "stale" ? TaskCleanupState.Stale : TaskCleanupState.Terminal,
+            OlderThanDays = ParseInt(parsed.GetValueOrDefault("older-than-days"), defaultValue: 30, "older-than-days")
+        };
+
+        var removed = await services.GetRequiredService<IMigrationEngine>().CleanupTasksAsync(options, cancellationToken);
+        return await WriteAsync(stdout, CliExitCode.Success, new
+        {
+            success = true,
+            removed,
+            state,
+            olderThanDays = options.OlderThanDays
         });
     }
 
@@ -346,7 +467,30 @@ public static class CliApplication
             return await WriteAsync(stdout, CliExitCode.TaskNotFound, Error("TASK_NOT_FOUND", $"Task not found: {taskId}", new { taskId }));
         }
 
-        var result = await engine.ExecuteAsync(task, cancellationToken);
+        var logPath = EnsureWorkerLogPath(task);
+        task.WorkerProcessId = Environment.ProcessId;
+        task.WorkerStartedAt ??= DateTime.UtcNow;
+        task.LastHeartbeatAt = DateTime.UtcNow;
+        task.WorkerLogPath = logPath;
+        if (services.GetService<IMigrationTaskStore>() is { } store)
+            await store.UpsertAsync(task, immediate: true, cancellationToken);
+
+        MigrationResult result;
+        try
+        {
+            result = await engine.ExecuteAsync(task, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            task.State = MigrationState.Failed;
+            task.CompletedAt = DateTime.UtcNow;
+            task.ErrorMessage = ex.Message;
+            if (services.GetService<IMigrationTaskStore>() is { } exceptionStore)
+                await exceptionStore.UpsertAsync(task, immediate: true, cancellationToken);
+            await AppendWorkerLogAsync(logPath, ex.ToString());
+            throw;
+        }
+
         var updated = await engine.GetTaskAsync(taskId);
 
         if (quiet)
@@ -400,6 +544,34 @@ public static class CliApplication
             if (IsTerminalState(task.State))
                 return await WriteAsync(stdout, task.State == MigrationState.Completed ? CliExitCode.Success : CliExitCode.BusinessFailure, BuildTaskStatus(task));
 
+            if (task.State == MigrationState.Pending &&
+                (DateTime.UtcNow - task.CreatedAt).TotalSeconds >= 60 &&
+                fallbackServices.GetService<IMigrationTaskStore>() is { } pendingStore &&
+                pendingStore.IsStale(task, DateTime.UtcNow))
+            {
+                return await WriteAsync(stdout, CliExitCode.BusinessFailure, new
+                {
+                    success = false,
+                    error = "STALE_PENDING",
+                    message = $"Task {taskId} is still Pending and no live worker was found.",
+                    task = BuildTaskStatus(task, pendingStore)
+                });
+            }
+
+            if (fallbackServices.GetService<IMigrationTaskStore>() is { } store &&
+                store.IsStale(task, DateTime.UtcNow))
+            {
+                return await WriteAsync(stdout, CliExitCode.BusinessFailure, new
+                {
+                    success = false,
+                    error = store.IsWorkerAlive(task) ? "WAIT_TIMEOUT" : "WORKER_EXITED",
+                    message = store.IsWorkerAlive(task)
+                        ? $"Timed out waiting for task {taskId}."
+                        : $"Worker for task {taskId} is not running and the task is not terminal.",
+                    task = BuildTaskStatus(task, store)
+                });
+            }
+
             if (timeoutSeconds > 0 && (DateTime.UtcNow - startedAt).TotalSeconds >= timeoutSeconds)
             {
                 return await WriteAsync(stdout, CliExitCode.BusinessFailure, new
@@ -407,81 +579,12 @@ public static class CliApplication
                     success = false,
                     error = "WAIT_TIMEOUT",
                     message = $"Timed out waiting for task {taskId}. The hidden worker may still be running; call status to continue polling.",
-                    task = BuildTaskStatus(task)
+                    task = BuildTaskStatus(task, fallbackServices.GetService<IMigrationTaskStore>())
                 });
             }
 
             await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
         }
-    }
-
-    private static MigrationValidation ValidateMigrationRequest(
-        IServiceProvider services,
-        string sourcePath,
-        string targetDrive,
-        string targetSubFolder)
-    {
-        var fileSystem = services.GetRequiredService<IFileSystem>();
-        var folderName = Path.GetFileName(sourcePath);
-        var targetPath = Path.Combine(targetDrive.TrimEnd('\\') + "\\", targetSubFolder, folderName);
-        var blockers = new List<string>();
-
-        var sourceExists = fileSystem.DirectoryExists(sourcePath);
-        if (!sourceExists)
-            blockers.Add($"Source path does not exist: {sourcePath}");
-
-        var isSymlink = sourceExists && fileSystem.IsSymlink(sourcePath);
-        if (isSymlink)
-            blockers.Add("Source is already a symbolic link. Use rollback to undo an existing migration first.");
-
-        foreach (var blocked in Blacklist)
-        {
-            if (sourcePath.StartsWith(blocked, StringComparison.OrdinalIgnoreCase))
-            {
-                blockers.Add($"Source path is in the system blacklist: {blocked}");
-                break;
-            }
-        }
-
-        long sourceSizeBytes = 0;
-        if (sourceExists && !isSymlink)
-        {
-            try
-            {
-                sourceSizeBytes = fileSystem.GetDirectorySize(sourcePath);
-            }
-            catch (Exception ex)
-            {
-                blockers.Add($"Cannot read source directory: {ex.Message}");
-            }
-        }
-
-        var targetDriveInfo = fileSystem.GetDrives()
-            .FirstOrDefault(d => d.IsReady &&
-                                 d.RootDirectory.FullName.StartsWith(
-                                     targetDrive.TrimEnd('\\') + "\\",
-                                     StringComparison.OrdinalIgnoreCase));
-
-        if (targetDriveInfo is null)
-            blockers.Add($"Target drive not found or not ready: {targetDrive}");
-
-        var targetDriveFreeBytes = targetDriveInfo?.AvailableFreeSpace ?? 0L;
-        var hasEnoughSpace = targetDriveFreeBytes > (long)(sourceSizeBytes * 1.1);
-        if (targetDriveInfo is not null && !hasEnoughSpace)
-        {
-            blockers.Add($"Insufficient disk space on {targetDrive}. Need {sourceSizeBytes / 1_048_576.0:F0} MB, available {targetDriveFreeBytes / 1_048_576.0:F0} MB.");
-        }
-
-        if (fileSystem.DirectoryExists(targetPath) || fileSystem.FileExists(targetPath))
-            blockers.Add($"Target path already exists: {targetPath}");
-
-        return new MigrationValidation(
-            targetPath,
-            sourceSizeBytes,
-            targetDriveFreeBytes,
-            hasEnoughSpace,
-            isSymlink,
-            blockers);
     }
 
     private static object BuildPrivilegeStatus()
@@ -552,9 +655,11 @@ public static class CliApplication
         };
     }
 
-    private static object BuildTaskStatus(MigrationTask task)
+    private static object BuildTaskStatus(MigrationTask task, IMigrationTaskStore? store = null)
     {
         var success = task.State is not (MigrationState.Failed or MigrationState.PartialRollback);
+        var now = DateTime.UtcNow;
+        var isStale = store?.IsStale(task, now);
         return new
         {
             success,
@@ -572,6 +677,12 @@ public static class CliApplication
             elapsedSeconds = task.StartedAt.HasValue
                 ? (int)(DateTime.UtcNow - task.StartedAt.Value).TotalSeconds
                 : 0,
+            workerPid = task.WorkerProcessId,
+            workerStartedAt = task.WorkerStartedAt,
+            lastHeartbeatAt = task.LastHeartbeatAt,
+            workerLogPath = task.WorkerLogPath,
+            isStale,
+            staleReason = isStale == true ? store?.GetStaleReason(task, now) : null,
             errorMessage = task.ErrorMessage,
             completedAt = task.CompletedAt
         };
@@ -587,8 +698,7 @@ public static class CliApplication
             pathMapping = new
             {
                 source = "Use the quoted source folder as --source.",
-                targetDrive = "Use the drive letter from the destination path as --target-drive, for example D:.",
-                targetSubfolder = "Use the remaining destination folder path as --target-subfolder, for example Program Files."
+                target = "Use the destination root folder as --target, for example D:\\Program Files. The source folder name is appended automatically."
             },
             requiredWorkflow = new[]
             {
@@ -596,7 +706,7 @@ public static class CliApplication
                 "Run disk-info to inspect available target drives.",
                 "Run migrate with --dry-run before any real migration.",
                 "Only run a real migration when dry-run returns success=true and canProceed=true.",
-                "For real migration, add --yes and keep the same --source, --target-drive, and --target-subfolder values.",
+                "For real migration, add --yes and keep the same --source and --target values.",
                 "Store the returned taskId.",
                 "Poll status --task-id <taskId> until state is Completed, Failed, RolledBack, PartialRollback, or Cancelled.",
                 "After Completed, verify that the source path is a symbolic link and the target path exists."
@@ -610,11 +720,12 @@ public static class CliApplication
             },
             exampleCommands = new[]
             {
-                "winC2D.App.exe --cli privilege-status",
-                "winC2D.App.exe --cli disk-info",
-                "winC2D.App.exe --cli migrate --source \"C:\\Program Files\\TeamSpeak\" --target-drive D: --target-subfolder \"Program Files\" --dry-run",
-                "winC2D.App.exe --cli migrate --source \"C:\\Program Files\\TeamSpeak\" --target-drive D: --target-subfolder \"Program Files\" --yes",
-                "winC2D.App.exe --cli status --task-id \"<taskId>\""
+                "winC2D.Cli.exe privilege-status",
+                "winC2D.Cli.exe disk-info",
+                "winC2D.Cli.exe preflight --source \"C:\\Program Files\\TeamSpeak\" --target \"D:\\Program Files\"",
+                "winC2D.Cli.exe migrate --source \"C:\\Program Files\\TeamSpeak\" --target \"D:\\Program Files\" --dry-run",
+                "winC2D.Cli.exe migrate --source \"C:\\Program Files\\TeamSpeak\" --target \"D:\\Program Files\" --yes",
+                "winC2D.Cli.exe status --task-id \"<taskId>\""
             }
         },
         commands = new[]
@@ -622,48 +733,90 @@ public static class CliApplication
             "privilege-status",
             "disk-info",
             "scan [--directories <comma-separated-paths>]",
-            "migrate --source <path> --target-drive <drive> [--target-subfolder MigratedApps] [--dry-run] [--verify true|false] [--yes] [--wait] [--timeout-seconds 0]",
+            "preflight --source <path> --target <path> [--verify true|false]",
+            "migrate --source <path> --target <path> [--dry-run] [--verify true|false] [--yes] [--wait] [--timeout-seconds 1800]",
             "status --task-id <id>",
+            "pause --task-id <id>",
+            "resume --task-id <id>",
+            "cancel --task-id <id> [--no-rollback] --yes",
             "rollback --task-id <id> --yes",
-            "list [--state all|completed|failed|running]"
+            "list [--state all|completed|failed|running|stale]",
+            "cleanup --state stale|terminal [--older-than-days 30] --yes"
         }
     };
 
-    private static bool StartWorkerProcess(string? executablePath, string taskId, TextWriter stderr)
+    private static async Task<WorkerStartResult> StartWorkerProcessAsync(
+        string? executablePath,
+        string taskId,
+        IServiceProvider services,
+        TextWriter stderr,
+        CancellationToken cancellationToken)
     {
         try
         {
             executablePath ??= Environment.ProcessPath;
             if (string.IsNullOrWhiteSpace(executablePath) || !File.Exists(executablePath))
-                return false;
+                return new WorkerStartResult(false, null, "CLI executable path was not found.");
+
+            var engine = services.GetRequiredService<IMigrationEngine>();
+            var task = await engine.GetTaskAsync(taskId);
+            if (task is null)
+                return new WorkerStartResult(false, null, $"Task not found: {taskId}");
+
+            task.WorkerLogPath = EnsureWorkerLogPath(task);
+            task.WorkerStartedAt = DateTime.UtcNow;
 
             var startInfo = new ProcessStartInfo
             {
                 FileName = executablePath,
-                UseShellExecute = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden,
-                Arguments = $"--cli {InternalRunTaskCommand} --task-id {taskId} --quiet"
             };
+            startInfo.ArgumentList.Add(InternalRunTaskCommand);
+            startInfo.ArgumentList.Add("--task-id");
+            startInfo.ArgumentList.Add(taskId);
+            startInfo.ArgumentList.Add("--quiet");
 
-            Process.Start(startInfo);
-            return true;
+            var process = Process.Start(startInfo);
+            if (process is null)
+                return new WorkerStartResult(false, null, "Process.Start returned null.");
+
+            task.WorkerProcessId = process.Id;
+            task.LastHeartbeatAt = DateTime.UtcNow;
+            if (services.GetService<IMigrationTaskStore>() is { } store)
+                await store.UpsertAsync(task, immediate: true, cancellationToken);
+
+            return new WorkerStartResult(true, process.Id, null);
         }
         catch (Exception ex)
         {
             stderr.WriteLine(ex.ToString());
-            return false;
+            return new WorkerStartResult(false, null, ex.Message);
         }
+    }
+
+    private static string EnsureWorkerLogPath(MigrationTask task)
+    {
+        if (!string.IsNullOrWhiteSpace(task.WorkerLogPath))
+            return task.WorkerLogPath;
+
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var logDir = Path.Combine(localAppData, "winC2D", "logs", "tasks");
+        Directory.CreateDirectory(logDir);
+        return Path.Combine(logDir, $"{task.Id}.log");
+    }
+
+    private static async Task AppendWorkerLogAsync(string path, string message)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        await File.AppendAllTextAsync(path, $"[{DateTime.UtcNow:O}] {message}{Environment.NewLine}");
     }
 
     private static List<string> NormalizeArgs(string[] args)
     {
         var result = new List<string>();
-        var start = 0;
-        var cliIndex = Array.FindIndex(args, a => string.Equals(a, "--cli", StringComparison.OrdinalIgnoreCase));
-        if (cliIndex >= 0)
-            start = cliIndex + 1;
-
-        for (var i = start; i < args.Length; i++)
+        for (var i = 0; i < args.Length; i++)
         {
             if (string.Equals(args[i], "--json", StringComparison.OrdinalIgnoreCase))
                 continue;
@@ -722,16 +875,6 @@ public static class CliApplication
         return value;
     }
 
-    private static string NormalizeDrive(string drive)
-    {
-        drive = drive.Trim().TrimEnd('\\', '/');
-        if (drive.Length == 1 && char.IsLetter(drive[0]))
-            drive += ":";
-        if (drive.Length != 2 || drive[1] != ':' || !char.IsLetter(drive[0]))
-            throw new CliParseException("--target-drive must be a drive letter such as D:.");
-        return drive.ToUpperInvariant();
-    }
-
     private static bool ParseBool(string? value, bool defaultValue, string optionName)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -788,13 +931,7 @@ public static class CliApplication
         string Status,
         bool? IsSymlink);
 
-    private sealed record MigrationValidation(
-        string TargetPath,
-        long SourceSizeBytes,
-        long TargetDriveFreeBytes,
-        bool HasEnoughSpace,
-        bool IsSourceSymlink,
-        List<string> Blockers);
+    private sealed record WorkerStartResult(bool Success, int? ProcessId, string? ErrorMessage);
 
     private sealed class CliArguments(
         Dictionary<string, string> values,

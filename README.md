@@ -31,7 +31,7 @@ After migrating software, winC2D creates **symbolic links (symlinks)** at the or
 - 🌏 In-app language switching — 7 languages supported
 - 🌙 Dark / Light theme follows system, switchable manually
 - 🛡️ Automatically requests administrator elevation on launch
-- 🤖 **Agent CLI mode** — expose migration capabilities to AI agents and scripts through `winC2D.exe --cli`
+- 🤖 **Agent CLI mode** — expose migration capabilities to AI agents and scripts through `winC2D.Cli.exe`
 
 ## Tech Stack
 
@@ -54,7 +54,7 @@ After migrating software, winC2D creates **symbolic links (symlinks)** at the or
 
 ## Agent CLI Mode
 
-winC2D v4.2 ships a built-in CLI mode for AI agents, scripts, and terminal automation. The same `winC2D.exe` can be opened normally for the GUI or called with `--cli` for machine-readable JSON output.
+winC2D ships two explicit entry points: `winC2D.App.exe` for the GUI and `winC2D.Cli.exe` for AI agents, scripts, and terminal automation. The CLI writes one machine-readable JSON object to stdout.
 
 ### Commands
 
@@ -63,21 +63,24 @@ winC2D v4.2 ships a built-in CLI mode for AI agents, scripts, and terminal autom
 | `privilege-status` | Check current privilege level and available operations | No |
 | `disk-info` | List all fixed drives with free/total space | No |
 | `scan` | Scan installed software with size and migration status | No |
+| `preflight` | Validate a migration before starting it | No |
 | `migrate` | Move software to another drive with symlink + optional dry-run | Yes |
 | `status` | Poll migration progress by taskId | No |
+| `pause` / `resume` / `cancel` | Control a running worker task | No |
 | `rollback` | Restore software to original path | Yes |
-| `list` | List persisted migration tasks | No |
+| `list` / `cleanup` | Inspect or clean persisted migration tasks | No |
 
 ### Agent Workflow
 
 ```powershell
-.\winC2D.exe --cli privilege-status
-.\winC2D.exe --cli disk-info
-.\winC2D.exe --cli scan
-.\winC2D.exe --cli migrate --source "C:\Program Files\App" --target-drive D: --dry-run
-.\winC2D.exe --cli migrate --source "C:\Program Files\App" --target-drive D: --yes
-.\winC2D.exe --cli status --task-id "<taskId>"
-.\winC2D.exe --cli rollback --task-id "<taskId>" --yes
+.\winC2D.Cli.exe privilege-status
+.\winC2D.Cli.exe disk-info
+.\winC2D.Cli.exe scan
+.\winC2D.Cli.exe preflight --source "C:\Program Files\App" --target "D:\Program Files"
+.\winC2D.Cli.exe migrate --source "C:\Program Files\App" --target "D:\Program Files" --dry-run
+.\winC2D.Cli.exe migrate --source "C:\Program Files\App" --target "D:\Program Files" --yes
+.\winC2D.Cli.exe status --task-id "<taskId>"
+.\winC2D.Cli.exe rollback --task-id "<taskId>" --yes
 ```
 
 `migrate` starts a hidden worker process and returns a `taskId` immediately. Use `status` until the state is `Completed`, `Failed`, `RolledBack`, or `PartialRollback`. Add `--wait` if you want the command to poll before returning.
@@ -97,7 +100,7 @@ Enable Developer Mode: **Settings → System → Developer Options → Developer
 For elevated agent runs, start the shell / agent host as Administrator, enable Developer Mode, or use [gsudo](https://github.com/gerardog/gsudo):
 
 ```powershell
-gsudo .\winC2D.exe --cli migrate --source "C:\Program Files\App" --target-drive D: --yes
+gsudo .\winC2D.Cli.exe migrate --source "C:\Program Files\App" --target "D:\Program Files" --yes
 ```
 
 ## Contributing

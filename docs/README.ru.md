@@ -24,7 +24,7 @@ winC2D — инструмент миграции дисков для Windows. П
 - 🌏 Переключение языка прямо в интерфейсе — 7 языков
 - 🌙 Тёмная / светлая тема следует за системой, переключается вручную
 - 🛡️ Автоматический запрос прав администратора при запуске
-- 🤖 Режим Agent CLI через `winC2D.exe --cli` для AI-агентов и скриптов
+- 🤖 Режим Agent CLI через `winC2D.Cli.exe` для AI-агентов и скриптов
 
 ## Стек технологий
 
@@ -46,15 +46,16 @@ winC2D — инструмент миграции дисков для Windows. П
 
 ## Режим Agent CLI
 
-Тот же исполняемый файл поддерживает `--cli` и выводит JSON:
+`winC2D.Cli.exe` выводит JSON:
 
 ```powershell
-.\winC2D.exe --cli privilege-status
-.\winC2D.exe --cli disk-info
-.\winC2D.exe --cli scan
-.\winC2D.exe --cli migrate --source "C:\Program Files\App" --target-drive D: --dry-run
-.\winC2D.exe --cli migrate --source "C:\Program Files\App" --target-drive D: --yes
-.\winC2D.exe --cli status --task-id "<taskId>"
+.\winC2D.Cli.exe privilege-status
+.\winC2D.Cli.exe disk-info
+.\winC2D.Cli.exe scan
+.\winC2D.Cli.exe preflight --source "C:\Program Files\App" --target "D:\Program Files"
+.\winC2D.Cli.exe migrate --source "C:\Program Files\App" --target "D:\Program Files" --dry-run
+.\winC2D.Cli.exe migrate --source "C:\Program Files\App" --target "D:\Program Files" --yes
+.\winC2D.Cli.exe status --task-id "<taskId>"
 ```
 
 Для реальной миграции нужны права администратора или Windows Developer Mode.

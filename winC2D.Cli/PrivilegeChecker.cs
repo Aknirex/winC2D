@@ -61,7 +61,7 @@ public static class PrivilegeChecker
         {
             id = "gsudo",
             title = "Use gsudo",
-            description = "Install gsudo with: winget install gerardog.gsudo. Then run: gsudo winC2D.exe --cli migrate ...",
+            description = "Install gsudo with: winget install gerardog.gsudo. Then run: gsudo winC2D.Cli.exe migrate ...",
             effort = "medium",
             persistent = true,
             installCommand = "winget install gerardog.gsudo",

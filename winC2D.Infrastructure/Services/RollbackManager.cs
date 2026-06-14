@@ -35,7 +35,9 @@ public class RollbackManager : IRollbackManager
         _symlinkManager = symlinkManager;
         _logger = logger;
 
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var localAppData = Environment.GetEnvironmentVariable("LOCALAPPDATA");
+        if (string.IsNullOrWhiteSpace(localAppData))
+            localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         _storageDirectory = Path.Combine(localAppData, "winC2D", "rollback");
         Directory.CreateDirectory(_storageDirectory);
         _storageFilePath = Path.Combine(_storageDirectory, "rollback_points.json");
@@ -261,6 +263,7 @@ public class RollbackManager : IRollbackManager
 
     private sealed class RollbackStateDocument
     {
+        public int SchemaVersion { get; set; } = 1;
         public List<RollbackPoint> RollbackPoints { get; set; } = new();
     }
 
@@ -304,6 +307,7 @@ public class RollbackManager : IRollbackManager
             Directory.CreateDirectory(_storageDirectory);
             var document = new RollbackStateDocument
             {
+                SchemaVersion = 2,
                 RollbackPoints = _rollbackPoints.Values.OrderBy(p => p.CreatedAt).ToList()
             };
             var json = JsonSerializer.Serialize(document, _jsonOptions);

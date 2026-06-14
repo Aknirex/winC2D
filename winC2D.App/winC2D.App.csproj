@@ -17,7 +17,6 @@
   <ItemGroup>
     <ProjectReference Include="..\winC2D.Core\winC2D.Core.csproj" />
     <ProjectReference Include="..\winC2D.Infrastructure\winC2D.Infrastructure.csproj" />
-    <ProjectReference Include="..\winC2D.Cli\winC2D.Cli.csproj" />
   </ItemGroup>
 
 

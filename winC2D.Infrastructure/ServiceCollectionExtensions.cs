@@ -25,6 +25,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IRollbackManager, RollbackManager>();
         services.AddSingleton<ISizeCacheService, SizeCacheService>();
         services.AddSingleton<ISoftwareScanner, SoftwareScanner>();
+        services.AddSingleton<IMigrationPreflightService, MigrationPreflightService>();
+        services.AddSingleton<IMigrationTaskStore, JsonMigrationTaskStore>();
         services.AddSingleton<IMigrationEngine, MigrationEngine>();
         services.AddSingleton<IFileSystemBrowser, FileSystemBrowser>();
         

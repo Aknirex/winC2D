@@ -2,7 +2,6 @@ using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using winC2D.Cli;
 using winC2D.Core.Services;
 using winC2D.Infrastructure;
 using winC2D.Infrastructure.Localization;
@@ -33,17 +32,6 @@ public partial class App : Application
     
     protected override void OnStartup(StartupEventArgs e)
     {
-        // Agent CLI mode: no windows, stdout is machine-readable JSON.
-        if (e.Args.Any(a => string.Equals(a, "--cli", StringComparison.OrdinalIgnoreCase)))
-        {
-            var previousContext = SynchronizationContext.Current;
-            SynchronizationContext.SetSynchronizationContext(null);
-            var exitCode = RunCliAsync(e.Args).GetAwaiter().GetResult();
-            SynchronizationContext.SetSynchronizationContext(previousContext);
-            Shutdown(exitCode);
-            return;
-        }
-
         base.OnStartup(e);
 
         _serviceProvider = BuildGuiServices();
@@ -92,14 +80,12 @@ public partial class App : Application
 
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<SoftwareMigrationViewModel>();
-        services.AddSingleton<AppDataMigrationViewModel>();
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<LogViewModel>();
         services.AddSingleton<FileSystemBrowserViewModel>();
 
         services.AddSingleton<MainWindow>();
         services.AddSingleton<SoftwareMigrationView>();
-        services.AddSingleton<AppDataMigrationView>();
         services.AddSingleton<SettingsView>();
         services.AddSingleton<LogView>();
         services.AddSingleton<AboutView>();
@@ -108,36 +94,6 @@ public partial class App : Application
         return services.BuildServiceProvider();
     }
 
-    private static ServiceProvider BuildCliServices()
-    {
-        var services = new ServiceCollection();
-
-        services.AddLogging(builder =>
-        {
-            builder.ClearProviders();
-            builder.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
-            builder.SetMinimumLevel(LogLevel.Warning);
-        });
-
-        services.AddWinC2DServices();
-
-        return services.BuildServiceProvider();
-    }
-
-    private static async Task<int> RunCliAsync(string[] args)
-    {
-        using var services = BuildCliServices();
-        var executablePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
-
-        return await CliApplication.RunAsync(
-            args,
-            services,
-            Console.Out,
-            Console.Error,
-            BuildCliServices,
-            executablePath);
-    }
-    
     protected override void OnExit(ExitEventArgs e)
     {
         _logger?.LogInformation("Application exiting...");

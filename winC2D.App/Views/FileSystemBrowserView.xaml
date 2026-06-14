@@ -286,19 +286,39 @@
                       SelectionUnit="FullRow"
                       GridLinesVisibility="Horizontal"
                       HeadersVisibility="Column"
+                      RowHeight="32"
+                      ColumnHeaderHeight="32"
                       MouseDoubleClick="DataGrid_MouseDoubleClick"
                       Background="{DynamicResource CardBackgroundBrush}">
 
                 <DataGrid.Resources>
+                    <Style x:Key="ExplorerCellTextStyle" TargetType="TextBlock">
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                    </Style>
                     <Style TargetType="DataGridColumnHeader">
                         <Setter Property="Background" Value="{DynamicResource CardStrokeColorDefaultBrush}"/>
                         <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
                         <Setter Property="FontWeight" Value="SemiBold"/>
                         <Setter Property="Padding" Value="8,4"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    </Style>
+                    <Style TargetType="DataGridRow">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource AccentFillColorSecondaryBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
                     </Style>
                     <Style TargetType="DataGridCell">
                         <Setter Property="BorderThickness" Value="0"/>
                         <Setter Property="Padding" Value="8,4"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=DataGridRow}}"/>
                     </Style>
                 </DataGrid.Resources>
 
@@ -322,7 +342,7 @@
                                             CanUserSort="True" IsReadOnly="True">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate DataType="{x:Type models:FileSystemItem}">
-                                <StackPanel Orientation="Horizontal">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <ui:SymbolIcon FontSize="16" VerticalAlignment="Center" Margin="0,0,6,0"
                                                    Foreground="{DynamicResource AccentFillColorDefaultBrush}">
                                         <ui:SymbolIcon.Style>
@@ -337,7 +357,8 @@
                                         </ui:SymbolIcon.Style>
                                     </ui:SymbolIcon>
                                     <TextBlock Text="{Binding Name}" VerticalAlignment="Center"
-                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                               TextTrimming="CharacterEllipsis"
+                                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=DataGridRow}}"/>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -346,6 +367,7 @@
                     <!-- Size -->
                     <DataGridTextColumn Header="大小" Binding="{Binding SizeText, Mode=OneWay}"
                                         SortMemberPath="SizeBytes" Width="90"
+                                        ElementStyle="{StaticResource ExplorerCellTextStyle}"
                                         IsReadOnly="True"/>
 
                     <!-- Status -->
@@ -355,7 +377,8 @@
                             <DataTemplate DataType="{x:Type models:FileSystemItem}">
                                 <TextBlock Text="{Binding Status,
                                             Converter={StaticResource FileSystemItemStatusConverter}}"
-                                           VerticalAlignment="Center"/>
+                                           VerticalAlignment="Center"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=DataGridRow}}"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -363,11 +386,13 @@
                     <!-- Type -->
                     <DataGridTextColumn Header="类型" Binding="{Binding TypeText}"
                                         SortMemberPath="TypeText" Width="100"
+                                        ElementStyle="{StaticResource ExplorerCellTextStyle}"
                                         IsReadOnly="True"/>
 
                     <!-- Path -->
                     <DataGridTextColumn Header="路径" Binding="{Binding FullPath}"
                                         SortMemberPath="FullPath" Width="280"
+                                        ElementStyle="{StaticResource ExplorerCellTextStyle}"
                                         IsReadOnly="True"/>
                 </DataGrid.Columns>
             </DataGrid>

@@ -49,6 +49,10 @@ public interface IMigrationEngine
     /// </summary>
     /// <returns>List of migration tasks</returns>
     Task<IEnumerable<MigrationTask>> GetAllTasksAsync();
+
+    Task<MigrationPreflightResult> ValidateAsync(MigrationRequest request, CancellationToken cancellationToken = default);
+
+    Task<int> CleanupTasksAsync(TaskCleanupOptions options, CancellationToken cancellationToken = default);
     
     #endregion
     
@@ -92,6 +96,12 @@ public interface IMigrationEngine
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Migration result</returns>
     Task<MigrationResult> CancelAsync(string taskId, bool rollback = true, CancellationToken cancellationToken = default);
+
+    Task RequestPauseAsync(string taskId, CancellationToken cancellationToken = default);
+
+    Task RequestResumeAsync(string taskId, CancellationToken cancellationToken = default);
+
+    Task RequestCancelAsync(string taskId, bool rollback = true, CancellationToken cancellationToken = default);
     
     #endregion
     
