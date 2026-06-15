@@ -13,6 +13,32 @@ namespace winC2D.Tests.Cli;
 public class CliApplicationTests
 {
     [Fact]
+    public async Task EmptyArgs_ShouldReturnUsageJson()
+    {
+        var result = await RunCliAsync([]);
+
+        result.ExitCode.Should().Be((int)CliExitCode.Success);
+        result.Lines.Should().HaveCount(1);
+        result.Root.GetProperty("success").GetBoolean().Should().BeTrue();
+        result.Root.GetProperty("tool").GetString().Should().Be("winC2D.Cli");
+        result.Root.GetProperty("version").GetString().Should().NotBeNullOrWhiteSpace();
+        result.Root.GetProperty("commands").GetArrayLength().Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task Version_ShouldReturnVersionJson()
+    {
+        var result = await RunCliAsync(["--version"]);
+
+        result.ExitCode.Should().Be((int)CliExitCode.Success);
+        result.Lines.Should().HaveCount(1);
+        result.Root.GetProperty("success").GetBoolean().Should().BeTrue();
+        result.Root.GetProperty("tool").GetString().Should().Be("winC2D.Cli");
+        result.Root.GetProperty("product").GetString().Should().Be("winC2D");
+        result.Root.GetProperty("version").GetString().Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
     public async Task PrivilegeStatus_ShouldWriteSingleJsonObject()
     {
         var result = await RunCliAsync(["privilege-status"]);

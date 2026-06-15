@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,7 +33,7 @@ public static class CliApplication
         {
             var normalized = NormalizeArgs(args);
             if (normalized.Count == 0)
-                return await WriteAsync(stdout, CliExitCode.ArgumentError, Error("MISSING_COMMAND", "A CLI command is required."));
+                return await WriteAsync(stdout, CliExitCode.Success, BuildUsage());
 
             var command = normalized[0].ToLowerInvariant();
             var commandArgs = normalized.Skip(1).ToArray();
@@ -52,6 +53,7 @@ public static class CliApplication
                 "list" => await ListAsync(commandArgs, services, stdout),
                 "cleanup" => await CleanupAsync(commandArgs, services, stdout, cancellationToken),
                 "help" or "--help" or "-h" => await WriteAsync(stdout, CliExitCode.Success, BuildUsage()),
+                "version" or "--version" or "-v" => await WriteAsync(stdout, CliExitCode.Success, BuildVersion()),
                 InternalRunTaskCommand => await RunTaskAsync(commandArgs, services, stdout, cancellationToken),
                 _ => await WriteAsync(stdout, CliExitCode.ArgumentError, Error("UNKNOWN_COMMAND", $"Unknown CLI command: {command}"))
             };
@@ -699,6 +701,8 @@ public static class CliApplication
     private static object BuildUsage() => new
     {
         success = true,
+        tool = "winC2D.Cli",
+        version = GetVersion(),
         agentInstructions = new
         {
             intent = "Use this CLI when a user asks to move a Windows software folder to another drive.",
@@ -752,6 +756,36 @@ public static class CliApplication
             "cleanup --state stale|terminal [--older-than-days 30] --yes"
         }
     };
+
+    private static object BuildVersion() => new
+    {
+        success = true,
+        tool = "winC2D.Cli",
+        product = "winC2D",
+        version = GetVersion(),
+        informationalVersion = GetInformationalVersion(),
+        framework = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
+        os = System.Runtime.InteropServices.RuntimeInformation.OSDescription
+    };
+
+    private static string GetVersion()
+    {
+        var assembly = typeof(CliApplication).Assembly;
+        var version = assembly.GetName().Version;
+        if (version is null)
+            return "unknown";
+
+        return version.Revision == 0
+            ? version.ToString(3)
+            : version.ToString();
+    }
+
+    private static string? GetInformationalVersion()
+    {
+        return typeof(CliApplication).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion;
+    }
 
     private static async Task<WorkerStartResult> StartWorkerProcessAsync(
         string? executablePath,
