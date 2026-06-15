@@ -148,7 +148,7 @@ public class CliApplicationTests
     }
 
     [Fact]
-    public async Task Status_WhenTaskWasCancelled_ShouldNotReportTaskSuccess()
+    public async Task Status_WhenTaskWasCancelled_ShouldReportCommandSuccessAndTaskFailure()
     {
         var engine = new Mock<IMigrationEngine>();
         engine.Setup(e => e.GetTaskAsync("cancelled")).ReturnsAsync(new MigrationTask
@@ -168,8 +168,11 @@ public class CliApplicationTests
         var result = await RunCliAsync(["status", "--task-id", "cancelled"], services);
 
         result.ExitCode.Should().Be((int)CliExitCode.Success);
-        result.Root.GetProperty("success").GetBoolean().Should().BeFalse();
+        result.Root.GetProperty("success").GetBoolean().Should().BeTrue();
         result.Root.GetProperty("state").GetString().Should().Be(nameof(MigrationState.Cancelled));
+        result.Root.GetProperty("isTerminal").GetBoolean().Should().BeTrue();
+        result.Root.GetProperty("taskSucceeded").GetBoolean().Should().BeFalse();
+        result.Root.GetProperty("taskFailed").GetBoolean().Should().BeTrue();
     }
 
     [Fact]
@@ -239,6 +242,42 @@ public class CliApplicationTests
         listed.GetProperty("taskId").GetString().Should().Be("stale");
         listed.GetProperty("isStale").GetBoolean().Should().BeTrue();
         listed.GetProperty("staleReason").GetString().Should().Be("No worker process was recorded.");
+    }
+
+    [Fact]
+    public async Task ListFailed_ShouldIncludeCancelledTasks()
+    {
+        var engine = new Mock<IMigrationEngine>();
+        engine.Setup(e => e.GetAllTasksAsync()).ReturnsAsync([
+            new MigrationTask
+            {
+                Id = "cancelled",
+                Name = "Cancelled",
+                State = MigrationState.Cancelled,
+                SourcePath = @"C:\A",
+                TargetPath = @"D:\Program Files\A",
+                CreatedAt = DateTime.UtcNow
+            },
+            new MigrationTask
+            {
+                Id = "completed",
+                Name = "Completed",
+                State = MigrationState.Completed,
+                SourcePath = @"C:\B",
+                TargetPath = @"D:\Program Files\B",
+                CreatedAt = DateTime.UtcNow
+            }
+        ]);
+
+        var services = new ServiceCollection()
+            .AddSingleton(engine.Object)
+            .BuildServiceProvider();
+
+        var result = await RunCliAsync(["list", "--state", "failed"], services);
+
+        result.ExitCode.Should().Be((int)CliExitCode.Success);
+        result.Root.GetProperty("count").GetInt32().Should().Be(1);
+        result.Root.GetProperty("tasks")[0].GetProperty("taskId").GetString().Should().Be("cancelled");
     }
 
     [Fact]

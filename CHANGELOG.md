@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Improved Agent CLI task observability by reporting stale task reasons and writing worker start/final result entries to task logs.
 - Fixed task status JSON so cancelled or rolled-back migrations are not reported as successful task outcomes.
+- Clarified Agent CLI status semantics: `success` now represents command/query success, while task outcome is exposed through `taskSucceeded`, `taskFailed`, `isTerminal`, and `state`.
 
 ---
 

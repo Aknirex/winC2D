@@ -250,7 +250,7 @@ public static class CliApplication
             sourcePath = request.SourcePath,
             targetPath = task.TargetPath,
             sizeMb = Math.Round(validation.SourceSizeBytes / 1_048_576.0, 1),
-            message = "Migration started. Call status with this taskId until state is Completed, Failed, RolledBack, or PartialRollback."
+            message = "Migration started. Call status with this taskId until state is Completed, Failed, RolledBack, PartialRollback, or Cancelled."
         });
     }
 
@@ -381,7 +381,7 @@ public static class CliApplication
         var filtered = stateFilter switch
         {
             "completed" => all.Where(t => t.State == MigrationState.Completed),
-            "failed" => all.Where(t => t.State is MigrationState.Failed or MigrationState.RolledBack or MigrationState.PartialRollback),
+            "failed" => all.Where(t => t.State is MigrationState.Failed or MigrationState.RolledBack or MigrationState.PartialRollback or MigrationState.Cancelled),
             "running" => all.Where(t => IsRunningState(t) && (store is null || !store.IsStale(t, now))),
             "stale" => all.Where(t => store is not null && store.IsStale(t, now)),
             _ => all
@@ -548,7 +548,19 @@ public static class CliApplication
                 return await WriteAsync(stdout, CliExitCode.TaskNotFound, Error("TASK_NOT_FOUND", $"Task not found: {taskId}", new { taskId }));
 
             if (IsTerminalState(task.State))
-                return await WriteAsync(stdout, task.State == MigrationState.Completed ? CliExitCode.Success : CliExitCode.BusinessFailure, BuildTaskStatus(task));
+            {
+                var status = BuildTaskStatus(task);
+                if (task.State == MigrationState.Completed)
+                    return await WriteAsync(stdout, CliExitCode.Success, status);
+
+                return await WriteAsync(stdout, CliExitCode.BusinessFailure, new
+                {
+                    success = false,
+                    error = "TASK_FAILED",
+                    message = $"Task {taskId} reached terminal state {task.State}.",
+                    task = status
+                });
+            }
 
             if (task.State == MigrationState.Pending &&
                 (DateTime.UtcNow - task.CreatedAt).TotalSeconds >= 60 &&
@@ -663,19 +675,19 @@ public static class CliApplication
 
     private static object BuildTaskStatus(MigrationTask task, IMigrationTaskStore? store = null)
     {
-        var success = task.State is not (
-            MigrationState.Failed or
-            MigrationState.RolledBack or
-            MigrationState.PartialRollback or
-            MigrationState.Cancelled);
         var now = DateTime.UtcNow;
         var isStale = store?.IsStale(task, now);
+        var isTerminal = IsTerminalState(task.State);
+        var taskSucceeded = task.State == MigrationState.Completed;
         return new
         {
-            success,
+            success = true,
             taskId = task.Id,
             name = task.Name,
             state = task.State.ToString(),
+            isTerminal,
+            taskSucceeded,
+            taskFailed = isTerminal && !taskSucceeded,
             progressPercent = task.ProgressPercent,
             copiedBytes = task.CopiedBytes,
             totalBytes = task.TotalBytes,
@@ -742,6 +754,8 @@ public static class CliApplication
         },
         commands = new[]
         {
+            "version | --version",
+            "help | --help",
             "privilege-status",
             "disk-info",
             "scan [--directories <comma-separated-paths>]",

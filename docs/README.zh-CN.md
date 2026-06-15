@@ -77,7 +77,9 @@ winC2D 提供两个明确入口：普通用户使用 `winC2D.App.exe` 打开 GUI
 .\winC2D.Cli.exe rollback --task-id "<taskId>" --yes
 ```
 
-`migrate` 默认启动隐藏 worker 并立即返回 `taskId`，之后使用 `status` 轮询。需要命令等待时可加 `--wait`。
+`migrate` 默认启动隐藏 worker 并立即返回 `taskId`，之后使用 `status` 轮询，直到状态变为 `Completed`、`Failed`、`RolledBack`、`PartialRollback` 或 `Cancelled`。需要命令等待时可加 `--wait`。
+
+对 `status` 而言，`success=true` 表示查询命令执行成功；迁移任务自身的结果请读取 `taskSucceeded`、`taskFailed`、`isTerminal` 和 `state`。
 
 ### 权限要求
 

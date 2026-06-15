@@ -84,7 +84,9 @@ winC2D ships two explicit entry points: `winC2D.App.exe` for the GUI and `winC2D
 .\winC2D.Cli.exe rollback --task-id "<taskId>" --yes
 ```
 
-`migrate` starts a hidden worker process and returns a `taskId` immediately. Use `status` until the state is `Completed`, `Failed`, `RolledBack`, or `PartialRollback`. Add `--wait` if you want the command to poll before returning.
+`migrate` starts a hidden worker process and returns a `taskId` immediately. Use `status` until the state is `Completed`, `Failed`, `RolledBack`, `PartialRollback`, or `Cancelled`. Add `--wait` if you want the command to poll before returning.
+
+For `status`, `success=true` means the query itself succeeded. Check `taskSucceeded`, `taskFailed`, `isTerminal`, and `state` to decide what happened to the migration task.
 
 ### Privilege Requirements
 
