@@ -34,32 +34,55 @@ jobs:
       run: dotnet test winC2D.sln --configuration Release --no-build --verbosity normal
 
     # 便携版：单文件 exe，依赖系统已安装的 .NET 8 运行时
-    - name: Publish Framework-Dependent
+    - name: Publish Framework-Dependent App
       run: |
         dotnet publish winC2D.App/winC2D.App.csproj `
           --configuration Release `
           --runtime win-x64 `
           --self-contained false `
-          --output ./publish-framework-dependent `
+          --output ./publish-framework-dependent-app `
+          /p:PublishSingleFile=true `
+          /p:SelfContained=false `
+          /p:IncludeNativeLibrariesForSelfExtract=false
+
+    - name: Publish Framework-Dependent CLI
+      run: |
+        dotnet publish winC2D.Cli/winC2D.Cli.csproj `
+          --configuration Release `
+          --runtime win-x64 `
+          --self-contained false `
+          --output ./publish-framework-dependent-cli `
           /p:PublishSingleFile=true `
           /p:SelfContained=false `
           /p:IncludeNativeLibrariesForSelfExtract=false
 
     # 自包含版：单文件 exe，内含 .NET 运行时，无需额外安装
-    - name: Publish Self-Contained
+    - name: Publish Self-Contained App
       run: |
         dotnet publish winC2D.App/winC2D.App.csproj `
           --configuration Release `
           --runtime win-x64 `
           --self-contained true `
-          --output ./publish-selfcontained `
+          --output ./publish-selfcontained-app `
           /p:PublishSingleFile=true `
           /p:SelfContained=true `
           /p:IncludeNativeLibrariesForSelfExtract=true `
           /p:EnableCompressionInSingleFile=true
 
-    # 重命名产物，区分两个版本
-    - name: Extract version and rename executables
+    - name: Publish Self-Contained CLI
+      run: |
+        dotnet publish winC2D.Cli/winC2D.Cli.csproj `
+          --configuration Release `
+          --runtime win-x64 `
+          --self-contained true `
+          --output ./publish-selfcontained-cli `
+          /p:PublishSingleFile=true `
+          /p:SelfContained=true `
+          /p:IncludeNativeLibrariesForSelfExtract=true `
+          /p:EnableCompressionInSingleFile=true
+
+    # 打包双入口产物，区分两个版本
+    - name: Extract version and package bundles
       id: version_rename
       run: |
         # Get version from git tag if exists, otherwise from csproj
@@ -69,17 +92,25 @@ jobs:
           $version = "dev"
         }
         
-        $standaloneFile = "winC2D-$version-standalone.exe"
-        $frameworkFile = "winC2D-$version-framework-dependent.exe"
+        $standaloneFile = "winC2D-$version-standalone.zip"
+        $frameworkFile = "winC2D-$version-framework-dependent.zip"
         
-        Copy-Item ./publish-selfcontained/winC2D.App.exe $standaloneFile
-        Copy-Item ./publish-framework-dependent/winC2D.App.exe $frameworkFile
+        New-Item -ItemType Directory -Force ./package-standalone | Out-Null
+        New-Item -ItemType Directory -Force ./package-framework-dependent | Out-Null
+
+        Copy-Item ./publish-selfcontained-app/winC2D.App.exe ./package-standalone/winC2D.App.exe
+        Copy-Item ./publish-selfcontained-cli/winC2D.Cli.exe ./package-standalone/winC2D.Cli.exe
+        Copy-Item ./publish-framework-dependent-app/winC2D.App.exe ./package-framework-dependent/winC2D.App.exe
+        Copy-Item ./publish-framework-dependent-cli/winC2D.Cli.exe ./package-framework-dependent/winC2D.Cli.exe
+
+        Compress-Archive -Path ./package-standalone/* -DestinationPath $standaloneFile -Force
+        Compress-Archive -Path ./package-framework-dependent/* -DestinationPath $frameworkFile -Force
         
         echo "standalone=$standaloneFile" >> $env:GITHUB_OUTPUT
         echo "framework=$frameworkFile" >> $env:GITHUB_OUTPUT
         
-        Write-Output "✓ Standalone:   $standaloneFile"
-        Write-Output "✓ Framework:    $frameworkFile"
+        Write-Output "✓ Standalone bundle:   $standaloneFile"
+        Write-Output "✓ Framework bundle:    $frameworkFile"
 
     - name: Compute SHA-256 and verify
       run: |
@@ -88,12 +119,12 @@ jobs:
         
         Write-Output ""
         Write-Output "========== Build Artifacts =========="
-        Write-Output "Standalone (with .NET 8 runtime):"
+        Write-Output "Standalone bundle (with .NET 8 runtime):"
         Write-Output "  File: ${{ steps.version_rename.outputs.standalone }}"
         Write-Output "  SHA256: $($standalone.Hash)"
         Write-Output "  Size: $(([math]::Round($(Get-Item "${{ steps.version_rename.outputs.standalone }}").Length / 1MB, 2))) MB"
         Write-Output ""
-        Write-Output "Framework-Dependent (requires .NET 8 runtime):"
+        Write-Output "Framework-Dependent bundle (requires .NET 8 runtime):"
         Write-Output "  File: ${{ steps.version_rename.outputs.framework }}"
         Write-Output "  SHA256: $($framework.Hash)"
         Write-Output "  Size: $(([math]::Round($(Get-Item "${{ steps.version_rename.outputs.framework }}").Length / 1MB, 2))) MB"
@@ -105,7 +136,7 @@ jobs:
         }
         
         if ($(Get-Item "${{ steps.version_rename.outputs.standalone }}").Length -le $(Get-Item "${{ steps.version_rename.outputs.framework }}").Length) {
-          Write-Error "❌ ERROR: Standalone should be larger than framework-dependent!"
+          Write-Error "❌ ERROR: Standalone bundle should be larger than framework-dependent bundle!"
           exit 1
         }
         
@@ -212,14 +243,14 @@ jobs:
         body: |
           ## winC2D v${{ steps.version.outputs.VERSION }}
 
-          Windows disk migration assistant — move installed software and user folders from C drive to any disk, with symlinks keeping original paths intact. The same executable also supports Agent CLI mode with `--cli` for AI agents and scripts.
+          Windows disk migration assistant — move installed software and user folders from C drive to any disk, with symlinks keeping original paths intact. The GUI and Agent CLI are separate entry points: `winC2D.App.exe` for users and `winC2D.Cli.exe` for AI agents and scripts.
 
           ### 📦 Downloads
 
           | File | Size | Description |
           |------|------|-------------|
-          | `winC2D-v${{ steps.version.outputs.VERSION }}-standalone.exe` | ~70–80 MB | ⭐ **Recommended** — includes .NET 8 runtime, no installation needed |
-          | `winC2D-v${{ steps.version.outputs.VERSION }}-framework-dependent.exe` | ~10–15 MB | Lightweight — requires [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) installed |
+          | `winC2D-v${{ steps.version.outputs.VERSION }}-standalone.zip` | ~70–90 MB | ⭐ **Recommended** — includes .NET 8 runtime, no installation needed |
+          | `winC2D-v${{ steps.version.outputs.VERSION }}-framework-dependent.zip` | ~10–20 MB | Lightweight — requires [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) installed |
 
           ### 🚀 Quick Start
           1. Download **standalone** version (recommended for most users)
@@ -228,11 +259,12 @@ jobs:
 
           ### 🤖 Agent CLI
           ```powershell
-          .\winC2D.exe --cli privilege-status
-          .\winC2D.exe --cli scan
-          .\winC2D.exe --cli migrate --source "C:\Program Files\App" --target-drive D: --dry-run
-          .\winC2D.exe --cli migrate --source "C:\Program Files\App" --target-drive D: --yes
-          .\winC2D.exe --cli status --task-id "<taskId>"
+          .\winC2D.Cli.exe privilege-status
+          .\winC2D.Cli.exe scan
+          .\winC2D.Cli.exe preflight --source "C:\Program Files\App" --target "D:\Program Files"
+          .\winC2D.Cli.exe migrate --source "C:\Program Files\App" --target "D:\Program Files" --dry-run
+          .\winC2D.Cli.exe migrate --source "C:\Program Files\App" --target "D:\Program Files" --yes
+          .\winC2D.Cli.exe status --task-id "<taskId>"
           ```
 
           ### 🌏 Languages Supported
@@ -245,8 +277,8 @@ jobs:
           ---
           [📖 Documentation](https://github.com/Aknirex/winC2D#readme) · [🐛 Report Issue](https://github.com/Aknirex/winC2D/issues)
         files: |
-          ./artifacts/winC2D-v${{ steps.version.outputs.VERSION }}-standalone.exe
-          ./artifacts/winC2D-v${{ steps.version.outputs.VERSION }}-framework-dependent.exe
+          ./artifacts/winC2D-v${{ steps.version.outputs.VERSION }}-standalone.zip
+          ./artifacts/winC2D-v${{ steps.version.outputs.VERSION }}-framework-dependent.zip
         draft: false
         prerelease: false
       env:

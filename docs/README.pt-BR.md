@@ -38,8 +38,8 @@ Após migrar softwares, o winC2D cria **links simbólicos (symlinks)** nos camin
 
    | Versão | Tamanho | Caso de Uso |
    | --- | --- | --- |
-   | **Autossuficiente**（`-standalone.exe`） | ~70–80 MB | ⭐ Recomendado — inclui .NET 8 runtime, pronto para usar |
-   | **Dependente de Framework**（`-framework-dependent.exe`） | ~10–15 MB | Para usuários que já têm .NET 8 runtime instalado |
+   | **Autossuficiente**（`-standalone.zip`） | ~70–90 MB | ⭐ Recomendado — inclui .NET 8 runtime, pronto para usar |
+   | **Dependente de Framework**（`-framework-dependent.zip`） | ~10–20 MB | Para usuários que já têm .NET 8 runtime instalado |
 
 2. Execute como **Administrador** (o app solicitará elevação automaticamente)
 3. Requer Windows 10 / 11

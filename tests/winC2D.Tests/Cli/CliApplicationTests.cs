@@ -92,6 +92,61 @@ public class CliApplicationTests
     }
 
     [Fact]
+    public async Task Status_WhenTaskIsStale_ShouldIncludeStaleReason()
+    {
+        var task = new MigrationTask
+        {
+            Id = "stale",
+            Name = "Old Pending",
+            State = MigrationState.Pending,
+            SourcePath = @"C:\A",
+            TargetPath = @"D:\Program Files\A",
+            CreatedAt = DateTime.UtcNow.AddMinutes(-5)
+        };
+        var engine = new Mock<IMigrationEngine>();
+        engine.Setup(e => e.GetTaskAsync("stale")).ReturnsAsync(task);
+        var store = new Mock<IMigrationTaskStore>();
+        store.Setup(s => s.IsStale(task, It.IsAny<DateTime>())).Returns(true);
+        store.Setup(s => s.GetStaleReason(task, It.IsAny<DateTime>())).Returns("No worker process was recorded.");
+
+        var services = new ServiceCollection()
+            .AddSingleton(engine.Object)
+            .AddSingleton(store.Object)
+            .BuildServiceProvider();
+
+        var result = await RunCliAsync(["status", "--task-id", "stale"], services);
+
+        result.ExitCode.Should().Be((int)CliExitCode.Success);
+        result.Root.GetProperty("isStale").GetBoolean().Should().BeTrue();
+        result.Root.GetProperty("staleReason").GetString().Should().Be("No worker process was recorded.");
+    }
+
+    [Fact]
+    public async Task Status_WhenTaskWasCancelled_ShouldNotReportTaskSuccess()
+    {
+        var engine = new Mock<IMigrationEngine>();
+        engine.Setup(e => e.GetTaskAsync("cancelled")).ReturnsAsync(new MigrationTask
+        {
+            Id = "cancelled",
+            Name = "Cancelled",
+            State = MigrationState.Cancelled,
+            SourcePath = @"C:\A",
+            TargetPath = @"D:\Program Files\A",
+            CreatedAt = DateTime.UtcNow
+        });
+
+        var services = new ServiceCollection()
+            .AddSingleton(engine.Object)
+            .BuildServiceProvider();
+
+        var result = await RunCliAsync(["status", "--task-id", "cancelled"], services);
+
+        result.ExitCode.Should().Be((int)CliExitCode.Success);
+        result.Root.GetProperty("success").GetBoolean().Should().BeFalse();
+        result.Root.GetProperty("state").GetString().Should().Be(nameof(MigrationState.Cancelled));
+    }
+
+    [Fact]
     public async Task List_ShouldFilterCompletedTasks()
     {
         var engine = new Mock<IMigrationEngine>();
@@ -125,6 +180,39 @@ public class CliApplicationTests
         result.ExitCode.Should().Be((int)CliExitCode.Success);
         result.Root.GetProperty("count").GetInt32().Should().Be(1);
         result.Root.GetProperty("tasks")[0].GetProperty("taskId").GetString().Should().Be("completed");
+    }
+
+    [Fact]
+    public async Task ListStale_ShouldIncludeStaleReason()
+    {
+        var task = new MigrationTask
+        {
+            Id = "stale",
+            Name = "Old Pending",
+            State = MigrationState.Pending,
+            SourcePath = @"C:\A",
+            TargetPath = @"D:\Program Files\A",
+            CreatedAt = DateTime.UtcNow.AddMinutes(-5)
+        };
+        var engine = new Mock<IMigrationEngine>();
+        engine.Setup(e => e.GetAllTasksAsync()).ReturnsAsync([task]);
+        var store = new Mock<IMigrationTaskStore>();
+        store.Setup(s => s.IsStale(task, It.IsAny<DateTime>())).Returns(true);
+        store.Setup(s => s.GetStaleReason(task, It.IsAny<DateTime>())).Returns("No worker process was recorded.");
+
+        var services = new ServiceCollection()
+            .AddSingleton(engine.Object)
+            .AddSingleton(store.Object)
+            .BuildServiceProvider();
+
+        var result = await RunCliAsync(["list", "--state", "stale"], services);
+
+        result.ExitCode.Should().Be((int)CliExitCode.Success);
+        result.Root.GetProperty("count").GetInt32().Should().Be(1);
+        var listed = result.Root.GetProperty("tasks")[0];
+        listed.GetProperty("taskId").GetString().Should().Be("stale");
+        listed.GetProperty("isStale").GetBoolean().Should().BeTrue();
+        listed.GetProperty("staleReason").GetString().Should().Be("No worker process was recorded.");
     }
 
     [Fact]

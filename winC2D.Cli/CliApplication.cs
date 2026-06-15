@@ -474,6 +474,7 @@ public static class CliApplication
         task.WorkerLogPath = logPath;
         if (services.GetService<IMigrationTaskStore>() is { } store)
             await store.UpsertAsync(task, immediate: true, cancellationToken);
+        await AppendWorkerLogAsync(logPath, $"Worker started. taskId={task.Id}; pid={Environment.ProcessId}; source=\"{task.SourcePath}\"; target=\"{task.TargetPath}\".");
 
         MigrationResult result;
         try
@@ -492,6 +493,9 @@ public static class CliApplication
         }
 
         var updated = await engine.GetTaskAsync(taskId);
+        await AppendWorkerLogAsync(logPath, result.Success
+            ? $"Worker completed. taskId={taskId}; state={updated?.State.ToString() ?? result.FinalState.ToString()}."
+            : $"Worker failed. taskId={taskId}; state={updated?.State.ToString() ?? result.FinalState.ToString()}; error=\"{result.ErrorMessage ?? "Migration failed."}\".");
 
         if (quiet)
             return result.Success ? (int)CliExitCode.Success : (int)CliExitCode.BusinessFailure;
@@ -657,7 +661,11 @@ public static class CliApplication
 
     private static object BuildTaskStatus(MigrationTask task, IMigrationTaskStore? store = null)
     {
-        var success = task.State is not (MigrationState.Failed or MigrationState.PartialRollback);
+        var success = task.State is not (
+            MigrationState.Failed or
+            MigrationState.RolledBack or
+            MigrationState.PartialRollback or
+            MigrationState.Cancelled);
         var now = DateTime.UtcNow;
         var isStale = store?.IsStale(task, now);
         return new
@@ -801,7 +809,9 @@ public static class CliApplication
         if (!string.IsNullOrWhiteSpace(task.WorkerLogPath))
             return task.WorkerLogPath;
 
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var localAppData = Environment.GetEnvironmentVariable("LOCALAPPDATA");
+        if (string.IsNullOrWhiteSpace(localAppData))
+            localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         var logDir = Path.Combine(localAppData, "winC2D", "logs", "tasks");
         Directory.CreateDirectory(logDir);
         return Path.Combine(logDir, $"{task.Id}.log");

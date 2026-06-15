@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Release artifacts are now zip bundles containing both `winC2D.App.exe` and `winC2D.Cli.exe`.
+
+### Fixed
+- Improved Agent CLI task observability by reporting stale task reasons and writing worker start/final result entries to task logs.
+- Fixed task status JSON so cancelled or rolled-back migrations are not reported as successful task outcomes.
+
 ---
 
 ## [4.2.0] - 2026-05-31

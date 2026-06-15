@@ -46,11 +46,12 @@ After migrating software, winC2D creates **symbolic links (symlinks)** at the or
 
    | Version | Size | Use Case |
    | --- | --- | --- |
-   | **Standalone** (`-standalone.exe`) | ~70–80 MB | ⭐ Recommended — includes .NET 8 runtime, works immediately |
-   | **Framework-Dependent** (`-framework-dependent.exe`) | ~10–15 MB | Requires .NET 8 Runtime pre-installed |
+   | **Standalone** (`-standalone.zip`) | ~70–90 MB | ⭐ Recommended — includes .NET 8 runtime, works immediately |
+   | **Framework-Dependent** (`-framework-dependent.zip`) | ~10–20 MB | Requires .NET 8 Runtime pre-installed |
 
-2. Run as **Administrator** (the app will prompt for elevation automatically)
-3. Requires Windows 10 / 11
+2. Extract the zip, then run `winC2D.App.exe` for the GUI or `winC2D.Cli.exe` for automation
+3. Run migrations as **Administrator** when required
+4. Requires Windows 10 / 11
 
 ## Agent CLI Mode
 
