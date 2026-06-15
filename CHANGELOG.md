@@ -7,29 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [4.2.0] - 2026-06-15
+
+### Added
+- Added a dedicated `winC2D.Cli.exe` Agent CLI with strict single-object JSON output for privilege checks, disk info, scanning, preflight validation, migration, task status, pause/resume/cancel, rollback, listing, cleanup, version, and help.
+- Added asynchronous CLI migrations that return a `taskId` immediately and execute through a hidden `winC2D.Cli.exe __run-task` worker process.
+- Added natural target path support through `--target "D:\Program Files"`; the source folder name is appended automatically.
+- Added shared migration preflight validation used by CLI dry-run, GUI task creation, and the migration engine.
+- Added persistent cross-process task control, worker pid/log metadata, heartbeat tracking, stale task detection, and cleanup support.
+- Added Agent CLI tests for JSON output, argument validation, task queries, stale task reporting, status semantics, and redirected process execution.
+
 ### Changed
+- `winC2D.App.exe` is now GUI-only; the previous WPF `--cli` path is no longer supported.
 - Release artifacts are now zip bundles containing both `winC2D.App.exe` and `winC2D.Cli.exe`.
+- `status` now separates command success from task outcome: `success` represents query success, while `taskSucceeded`, `taskFailed`, `isTerminal`, and `state` represent migration task outcome.
+- Progress persistence is throttled for copy progress while terminal and control-request state changes still save immediately.
 
 ### Fixed
 - Improved Agent CLI task observability by reporting stale task reasons and writing worker start/final result entries to task logs.
 - Fixed task status JSON so cancelled or rolled-back migrations are not reported as successful task outcomes.
-- Clarified Agent CLI status semantics: `success` now represents command/query success, while task outcome is exposed through `taskSucceeded`, `taskFailed`, `isTerminal`, and `state`.
-
----
-
-## [4.2.0] - 2026-05-31
-
-### Added
-- Added Agent CLI mode via `winC2D.exe --cli` with JSON output for privilege checks, disk info, scanning, migration, task status, rollback, and task listing.
-- Added asynchronous CLI migrations that return a `taskId` immediately and execute through a hidden worker process.
-- Added CLI tests for argument validation, JSON output, task queries, and redirected process execution.
-
-### Changed
-- The same published executable now supports both the GUI and the agent-facing CLI mode.
-- Release documentation now describes `--cli` usage for AI agents and scripts.
+- Fixed worker start failures and worker exceptions so task state is persisted as failed with structured diagnostics instead of leaving stale pending tasks.
 
 ### Removed
 - Removed MCP server mode, `--mcp`, `--mcp-poc`, and the ModelContextProtocol dependency.
+- Removed the WPF `winC2D.App.exe --cli` mode.
 
 ---
 
