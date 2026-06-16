@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Security.Principal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using winC2D.Core.Services;
@@ -173,8 +174,61 @@ public class MigrationEngine : IMigrationEngine
             var backupPath = task.SourcePath + "_migrating_" + Guid.NewGuid().ToString("N");
             task.BackupPath = backupPath;
             await SaveTaskAsync(task);
-            
-            _fileSystem.MoveDirectory(task.SourcePath, backupPath);
+
+            // Diagnostic: check for locked files before attempting the rename
+            var lockedFiles = DetectLockedFiles(task.SourcePath);
+            if (lockedFiles.Count > 0)
+            {
+                _logger.LogWarning(
+                    "[DIAG] {Count} file(s) in '{SourcePath}' appear to be locked by running processes: {LockedFiles}",
+                    lockedFiles.Count, task.SourcePath, string.Join(", ", lockedFiles));
+
+                // If we found locked files, fail early with a clear message instead of
+                // attempting a MoveDirectory that will certainly fail with access-denied.
+                var fileLockMessage = $"Cannot migrate '{task.Name}' because {lockedFiles.Count} file(s) "
+                    + "are locked by running processes. Please close the application "
+                    + $"(including any background services/tray icons) and retry. "
+                    + $"Locked files: {string.Join(", ", lockedFiles.Take(10))}";
+                return await FailTaskAsync(task, fileLockMessage, null, System.Diagnostics.Stopwatch.StartNew().Elapsed);
+            }
+
+            try
+            {
+                _logger.LogInformation(
+                    "[DIAG] Attempting MoveDirectory: '{SourcePath}' -\u003E '{BackupPath}'. Admin={IsAdmin}",
+                    task.SourcePath, backupPath,
+                    System.Security.Principal.WindowsIdentity.GetCurrent().Name is { } n
+                        && new System.Security.Principal.WindowsPrincipal(
+                            System.Security.Principal.WindowsIdentity.GetCurrent())
+                           .IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator));
+
+                _fileSystem.MoveDirectory(task.SourcePath, backupPath);
+
+                _logger.LogInformation("[DIAG] MoveDirectory succeeded.");
+            }
+            catch (UnauthorizedAccessException uaEx)
+            {
+                _logger.LogError(uaEx,
+                    "[DIAG] MoveDirectory FAILED with UnauthorizedAccessException: {Message}. HRESULT=0x{HResult:X8}. "
+                    + "This typically means: (a) process is not running as admin, or (b) files are locked by running processes.",
+                    uaEx.Message, uaEx.HResult);
+                throw;
+            }
+            catch (IOException ioEx)
+            {
+                _logger.LogError(ioEx,
+                    "[DIAG] MoveDirectory FAILED with IOException: {Message}. HRESULT=0x{HResult:X8}. "
+                    + "This typically means files are in use by another process.",
+                    ioEx.Message, ioEx.HResult);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "[DIAG] MoveDirectory FAILED with {ExceptionType}: {Message}. HRESULT=0x{HResult:X8}.",
+                    ex.GetType().Name, ex.Message, ex.HResult);
+                throw;
+            }
             await _rollbackManager.RecordStepAsync(task.RollbackPoint.Id, CompletedStep.SourceRenamed);
             
             // Persist the backup path on the rollback point so that RollbackSourceRenamedAsync
@@ -475,6 +529,84 @@ public class MigrationEngine : IMigrationEngine
                 Blockers = result.Blockers
             });
         }
+    }
+
+    /// <summary>
+    /// Diagnostic helper: detects files in a directory that are locked by running processes,
+    /// AND checks whether the directory itself can be renamed (write access to the parent).
+    /// This helps distinguish file-lock errors from permission-denied errors.
+    /// </summary>
+    private static List<string> DetectLockedFiles(string directoryPath)
+    {
+        var lockedFiles = new List<string>();
+
+        if (!Directory.Exists(directoryPath))
+        {
+            lockedFiles.Add("[DirectoryNotFound]");
+            return lockedFiles;
+        }
+
+        // Check directory-level write access: try creating and deleting a temp file
+        // in the source directory to verify the parent allows rename operations.
+        try
+        {
+            var parentDir = Path.GetDirectoryName(directoryPath);
+            if (!string.IsNullOrEmpty(parentDir))
+            {
+                var testFile = Path.Combine(parentDir, $"_winC2D_test_{Guid.NewGuid():N}.tmp");
+                try
+                {
+                    File.WriteAllText(testFile, "winC2D access test");
+                    File.Delete(testFile);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    lockedFiles.Add($"[ParentDirAccessDenied] Cannot write to '{parentDir}'. "
+                        + "This directory is protected and requires administrator privileges to modify.");
+                }
+            }
+        }
+        catch
+        {
+            // Best-effort
+        }
+
+        // Check individual files for process locks
+        try
+        {
+            var files = Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories);
+            const int maxFilesToCheck = 200; // limit scan to avoid excessive runtime
+            var checkedCount = 0;
+
+            foreach (var file in files)
+            {
+                if (checkedCount++ >= maxFilesToCheck)
+                    break;
+
+                try
+                {
+                    // Try to open the file with exclusive read to detect locks
+                    using var fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.None);
+                }
+                catch (IOException)
+                {
+                    // File is locked by another process
+                    lockedFiles.Add(Path.GetFileName(file));
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    // Access denied - note this separately as it is a different root cause
+                    lockedFiles.Add($"{Path.GetFileName(file)} [AccessDenied]");
+                }
+                // Other exceptions (FileNotFound etc.) are not lock-related
+            }
+        }
+        catch
+        {
+            // Best-effort; if enumeration itself fails, return what we have
+        }
+
+        return lockedFiles;
     }
 
     private Task SaveTaskAsync(MigrationTask task)

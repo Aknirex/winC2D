@@ -163,8 +163,12 @@ public partial class LogViewModel : ObservableObject
         return SelectedEntry?.CanRollback == true;
     }
 
-    partial void OnSelectedEntryChanged(MigrationLogEntry? value)
+    partial void OnSelectedEntryChanged(MigrationLogEntry? oldValue, MigrationLogEntry? newValue)
     {
+        if (oldValue is not null)
+            oldValue.IsSelected = false;
+        if (newValue is not null)
+            newValue.IsSelected = true;
         RollbackCommand.NotifyCanExecuteChanged();
     }
 
@@ -268,6 +272,9 @@ public partial class MigrationLogEntry : ObservableObject
     public bool CanRollback { get; set; }
     public MigrationLogCategory Category { get; set; }
     public string? WorkerLogPath { get; set; }
+
+    [ObservableProperty]
+    private bool _isSelected;
 
     [ObservableProperty]
     private string _message = string.Empty;

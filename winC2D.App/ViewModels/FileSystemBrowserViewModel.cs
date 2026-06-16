@@ -116,6 +116,10 @@ public partial class FileSystemBrowserViewModel : ObservableObject
     [ObservableProperty]
     private MigrationTask? _currentTask;
 
+    /// <summary>The item the user right-clicked on; set by the view's PreviewMouseRightButtonDown handler.</summary>
+    [ObservableProperty]
+    private FileSystemItem? _rightClickedItem;
+
     // ═════════════════════════════════════════════════════════════════════
     // Constructor
     // ═════════════════════════════════════════════════════════════════════
@@ -442,6 +446,32 @@ public partial class FileSystemBrowserViewModel : ObservableObject
         _scanCts?.Cancel();
     }
 
+    // ── Context menu commands ──────────────────────────────────────────
+
+    [RelayCommand]
+    private void OpenInExplorer(FileSystemItem? item)
+    {
+        if (item is null) return;
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName        = "explorer.exe",
+                Arguments       = $"\"{item.FullPath}\"",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex) { _logger.LogError(ex, "Failed to open Explorer for {Path}", item.FullPath); }
+    }
+
+    [RelayCommand]
+    private void CopyPath(FileSystemItem? item)
+    {
+        if (item is null) return;
+        try { System.Windows.Clipboard.SetText(item.FullPath); }
+        catch (Exception ex) { _logger.LogError(ex, "Failed to copy path to clipboard"); }
+    }
+
     // ═════════════════════════════════════════════════════════════════════
     // Migration
     // ═════════════════════════════════════════════════════════════════════
@@ -491,7 +521,7 @@ public partial class FileSystemBrowserViewModel : ObservableObject
                 var task = await _migrationEngine.CreateTaskAsync(request);
                 CurrentTask = task;
 
-                var result = await _migrationEngine.ExecuteAsync(task);
+                var result = await Task.Run(() => _migrationEngine.ExecuteAsync(task));
 
                 if (result.Success)
                 {
@@ -566,37 +596,6 @@ public partial class FileSystemBrowserViewModel : ObservableObject
     private void DeselectAll()
     {
         ClearSelection();
-    }
-
-    // ═════════════════════════════════════════════════════════════════════
-    // Context menu
-    // ═════════════════════════════════════════════════════════════════════
-
-    [RelayCommand]
-    private void OpenInExplorer(FileSystemItem? item)
-    {
-        if (item is null) return;
-        try
-        {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-            {
-                FileName = "explorer.exe",
-                Arguments = $"\"{item.FullPath}\"",
-                UseShellExecute = true,
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to open Explorer for {Path}", item.FullPath);
-        }
-    }
-
-    [RelayCommand]
-    private void CopyPath(FileSystemItem? item)
-    {
-        if (item is null) return;
-        try { System.Windows.Clipboard.SetText(item.FullPath); }
-        catch (Exception ex) { _logger.LogError(ex, "Clipboard failed"); }
     }
 
     [RelayCommand]

@@ -1,4 +1,6 @@
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using winC2D.App.ViewModels;
 
 namespace winC2D.App.Views;
@@ -18,11 +20,28 @@ public partial class LogView : UserControl
         Loaded += LogView_Loaded;
     }
 
-    private async void LogView_Loaded(object sender, System.Windows.RoutedEventArgs e)
+    private async void LogView_Loaded(object sender, RoutedEventArgs e)
     {
         if (_viewModel.LoadLogsCommand.IsRunning)
             return;
 
         await _viewModel.LoadLogsCommand.ExecuteAsync(null);
+    }
+
+    /// <summary>
+    /// When the user clicks a row (including the checkbox), select that entry.
+    /// </summary>
+    private void LogDataGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not DataGrid grid) return;
+
+        var dep = e.OriginalSource as DependencyObject;
+        while (dep != null && dep is not DataGridRow)
+            dep = System.Windows.Media.VisualTreeHelper.GetParent(dep);
+
+        if (dep is DataGridRow row && row.Item is MigrationLogEntry entry)
+        {
+            _viewModel.SelectedEntry = entry;
+        }
     }
 }

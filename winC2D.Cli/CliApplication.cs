@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Reflection;
+using System.Security.Principal;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
@@ -199,7 +200,33 @@ public static class CliApplication
             return await WriteAsync(stdout, CliExitCode.ArgumentError, Error("CONFIRMATION_REQUIRED", "Real migrations require --yes. Use --dry-run first to validate."));
 
         if (!dryRun && !PrivilegeChecker.CanMigrate())
+        {
+            var level = PrivilegeChecker.GetLevel();
+            // Diagnostic: log the exact reason for privilege failure
+            await stderr.WriteLineAsync(
+                $"[DIAG] Privilege check FAILED: level={level}, isAdmin={level == PrivilegeChecker.Level.Administrator}, "
+                + $"developerMode={level == PrivilegeChecker.Level.DeveloperMode}, "
+                + $"process={Environment.ProcessPath}, pid={Environment.ProcessId}");
+
+            // Attempt automatic elevation (mirrors App.xaml.cs RequestElevation logic)
+            if (level == PrivilegeChecker.Level.Restricted && !System.Diagnostics.Debugger.IsAttached)
+            {
+                var elevated = await TryElevateAsync(executablePath, args, stderr);
+                if (elevated)
+                {
+                    // The elevated child process will handle the migration.
+                    // Return success so the caller knows the request was forwarded.
+                    return await WriteAsync(stdout, CliExitCode.Success, new
+                    {
+                        success = true,
+                        message = "Request forwarded to elevated process. The elevated instance will execute the migration.",
+                        forwarded = true
+                    });
+                }
+            }
+
             return await WriteAsync(stdout, CliExitCode.InsufficientPrivileges, PrivilegeChecker.BuildInsufficientPrivilegesError());
+        }
 
         var engine = services.GetRequiredService<IMigrationEngine>();
         var validation = await engine.ValidateAsync(request, cancellationToken);
@@ -814,6 +841,18 @@ public static class CliApplication
             if (string.IsNullOrWhiteSpace(executablePath) || !File.Exists(executablePath))
                 return new WorkerStartResult(false, null, "CLI executable path was not found.");
 
+            // Diagnostic: log worker start context
+            var isAdmin = false;
+            try
+            {
+                using var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
+                var principal = new System.Security.Principal.WindowsPrincipal(identity);
+                isAdmin = principal.IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
+            }
+            catch { /* best-effort */ }
+            await stderr.WriteLineAsync(
+                $"[DIAG] Starting worker process: exe={executablePath}, isAdmin={isAdmin}, pid={Environment.ProcessId}");
+
             var engine = services.GetRequiredService<IMigrationEngine>();
             var task = await engine.GetTaskAsync(taskId);
             if (task is null)
@@ -850,6 +889,70 @@ public static class CliApplication
             stderr.WriteLine(ex.ToString());
             return new WorkerStartResult(false, null, ex.Message);
         }
+    }
+
+    private static async Task<bool> TryElevateAsync(string? executablePath, string[] args, TextWriter stderr)
+    {
+        try
+        {
+            executablePath ??= Environment.ProcessPath;
+            if (string.IsNullOrWhiteSpace(executablePath) || !File.Exists(executablePath))
+            {
+                await stderr.WriteLineAsync("[DIAG] TryElevateAsync: executable path not found.");
+                return false;
+            }
+
+            await stderr.WriteLineAsync($"[DIAG] Attempting elevation via runas: {executablePath}");
+
+            var psi = new ProcessStartInfo
+            {
+                FileName = executablePath,
+                UseShellExecute = true,
+                Verb = "runas"
+            };
+
+            // Forward the original arguments to the elevated process
+            foreach (var arg in BuildForwardedArgs(args))
+                psi.ArgumentList.Add(arg);
+
+            Process.Start(psi);
+            return true;
+        }
+        catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
+        {
+            // Error 1223: user clicked "No" on the UAC prompt
+            await stderr.WriteLineAsync("[DIAG] User declined UAC elevation prompt.");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            await stderr.WriteLineAsync($"[DIAG] TryElevateAsync failed: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Build the argument list to forward to the elevated child process,
+    /// stripping any --json markers and ensuring --yes is present.
+    /// </summary>
+    private static List<string> BuildForwardedArgs(string[] args)
+    {
+        var result = new List<string>();
+        var hasYes = false;
+
+        foreach (var arg in args)
+        {
+            if (string.Equals(arg, "--json", StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (string.Equals(arg, "--yes", StringComparison.OrdinalIgnoreCase))
+                hasYes = true;
+            result.Add(arg);
+        }
+
+        if (!hasYes)
+            result.Add("--yes");
+
+        return result;
     }
 
     private static string EnsureWorkerLogPath(MigrationTask task)

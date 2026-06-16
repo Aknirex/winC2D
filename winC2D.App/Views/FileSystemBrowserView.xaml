@@ -289,7 +289,32 @@
                       RowHeight="32"
                       ColumnHeaderHeight="32"
                       MouseDoubleClick="DataGrid_MouseDoubleClick"
+                      PreviewMouseRightButtonDown="DataGrid_PreviewMouseRightButtonDown"
                       Background="{DynamicResource CardBackgroundBrush}">
+
+                <!-- Row right-click context menu -->
+                <DataGrid.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="在资源管理器中打开"
+                                  Command="{Binding PlacementTarget.DataContext.OpenInExplorerCommand,
+                                                    RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding PlacementTarget.DataContext.RightClickedItem,
+                                                             RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                            <MenuItem.Icon>
+                                <ui:SymbolIcon Symbol="FolderOpen24" FontSize="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="复制路径"
+                                  Command="{Binding PlacementTarget.DataContext.CopyPathCommand,
+                                                    RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding PlacementTarget.DataContext.RightClickedItem,
+                                                             RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                            <MenuItem.Icon>
+                                <ui:SymbolIcon Symbol="Copy24" FontSize="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </ContextMenu>
+                </DataGrid.ContextMenu>
 
                 <DataGrid.Resources>
                     <Style x:Key="ExplorerCellTextStyle" TargetType="TextBlock">

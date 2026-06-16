@@ -48,7 +48,8 @@
                     GridLinesVisibility="Horizontal"
                     RowHeight="32"
                     ColumnHeaderHeight="32"
-                    Background="{DynamicResource CardBackgroundBrush}">
+                    Background="{DynamicResource CardBackgroundBrush}"
+                    PreviewMouseLeftButtonDown="LogDataGrid_PreviewMouseLeftButtonDown">
             <DataGrid.Resources>
                 <Style x:Key="LogCellTextStyle" TargetType="TextBlock">
                     <Setter Property="VerticalAlignment" Value="Center"/>
@@ -80,6 +81,20 @@
                 </Style>
             </DataGrid.Resources>
             <DataGrid.Columns>
+                <!-- Checkbox column for visible row selection (display-only, selection via row click) -->
+                <DataGridTemplateColumn Width="36" MinWidth="36" MaxWidth="36"
+                                        CanUserResize="False" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      IsHitTestVisible="False"
+                                      Focusable="False"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
                 <DataGridTextColumn Binding="{Binding Time, StringFormat='yyyy-MM-dd HH:mm:ss'}" Width="150" ElementStyle="{StaticResource LogCellTextStyle}">
                     <DataGridTextColumn.Header>
                         <TextBlock Text="{Binding DataContext.L_ColTime, RelativeSource={RelativeSource AncestorType=UserControl}}"/>

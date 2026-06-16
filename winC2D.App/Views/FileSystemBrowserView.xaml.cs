@@ -76,6 +76,23 @@ public partial class FileSystemBrowserView : UserControl
     }
 
     /// <summary>
+    /// Detect which row was right-clicked and store it in the ViewModel so the
+    /// DataGrid.ContextMenu can reach it via PlacementTarget.DataContext.RightClickedItem.
+    /// </summary>
+    private void DataGrid_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (DataContext is not FileSystemBrowserViewModel vm) return;
+
+        var dep = e.OriginalSource as System.Windows.DependencyObject;
+        while (dep != null && dep is not DataGridRow)
+            dep = System.Windows.Media.VisualTreeHelper.GetParent(dep);
+
+        vm.RightClickedItem = dep is DataGridRow row
+            ? row.Item as FileSystemItem
+            : null;
+    }
+
+    /// <summary>
     /// When the ViewModel signals that navigation content has changed
     /// (CurrentPath is updated), auto-fit the DataGrid columns.
     /// </summary>

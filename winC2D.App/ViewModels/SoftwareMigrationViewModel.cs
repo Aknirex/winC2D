@@ -421,7 +421,7 @@ public partial class SoftwareMigrationViewModel : ObservableObject
                 var task   = await _migrationEngine.CreateTaskAsync(request);
                 CurrentTask = task;
 
-                var result = await _migrationEngine.ExecuteAsync(task);
+                var result = await Task.Run(() => _migrationEngine.ExecuteAsync(task));
 
                 if (result.Success)
                 {
