@@ -34,16 +34,12 @@ winC2D is a Windows disk migration assistant that helps you move installed appli
 
 ## Download & Run
 
-1. Download the latest release from [Releases](https://github.com/Aknirex/winC2D/releases)
-
-   | Version | Use Case |
-   | --- | --- |
-   | **Framework-Dependent** (`-framework-dependent.zip`) | ⭐ **Recommended** — smallest download; requires .NET 8 Runtime. The app will detect missing runtime and guide you to the download page. |
-   | **Standalone** (`-standalone.zip`) | Self-contained — includes .NET 8 runtime, no extra install needed |
-
-2. Extract the zip, then run `winC2D.App.exe` for the GUI or `winC2D.Cli.exe` for automation
-3. Administrator privileges are required for migration (the app auto-elevates)
-4. Requires Windows 10 / 11
+1. Download the latest installer from [Releases](https://github.com/Aknirex/winC2D/releases) (`winC2D-Setup-vX.Y.Z.exe`)
+2. Run the installer — defaults to `D:\Program Files\winC2D` (not C drive)
+3. The installer bundles everything: GUI, CLI, gsudo elevation, and AI agent skill
+4. Administrator privileges are required for migration (the app auto-elevates)
+5. Uninstall via Control Panel → Programs and Features
+6. Requires Windows 10 / 11
 
 ## How It Works
 

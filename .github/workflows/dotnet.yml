@@ -33,127 +33,77 @@ jobs:
     - name: Run Tests
       run: dotnet test winC2D.sln --configuration Release --no-build --verbosity normal
 
-    # 便携版：单文件 exe，依赖系统已安装的 .NET 8 运行时
-    - name: Publish Framework-Dependent App
-      run: |
-        dotnet publish winC2D.App/winC2D.App.csproj `
-          --configuration Release `
-          --runtime win-x64 `
-          --self-contained false `
-          --output ./publish-framework-dependent-app `
-          /p:PublishSingleFile=true `
-          /p:SelfContained=false `
-          /p:IncludeNativeLibrariesForSelfExtract=false
-
-    - name: Publish Framework-Dependent CLI
-      run: |
-        dotnet publish winC2D.Cli/winC2D.Cli.csproj `
-          --configuration Release `
-          --runtime win-x64 `
-          --self-contained false `
-          --output ./publish-framework-dependent-cli `
-          /p:PublishSingleFile=true `
-          /p:SelfContained=false `
-          /p:IncludeNativeLibrariesForSelfExtract=false
-
-    # 自包含版：单文件 exe，内含 .NET 运行时，无需额外安装
-    - name: Publish Self-Contained App
+    # Publish for installer (self-contained, multi-file — Inno Setup needs individual files)
+    - name: Publish App (self-contained)
       run: |
         dotnet publish winC2D.App/winC2D.App.csproj `
           --configuration Release `
           --runtime win-x64 `
           --self-contained true `
-          --output ./publish-selfcontained-app `
-          /p:PublishSingleFile=true `
-          /p:SelfContained=true `
-          /p:IncludeNativeLibrariesForSelfExtract=true `
-          /p:EnableCompressionInSingleFile=true
+          --output ./publish/app
 
-    - name: Publish Self-Contained CLI
+    - name: Publish CLI (self-contained)
       run: |
         dotnet publish winC2D.Cli/winC2D.Cli.csproj `
           --configuration Release `
           --runtime win-x64 `
           --self-contained true `
-          --output ./publish-selfcontained-cli `
-          /p:PublishSingleFile=true `
-          /p:SelfContained=true `
-          /p:IncludeNativeLibrariesForSelfExtract=true `
-          /p:EnableCompressionInSingleFile=true
+          --output ./publish/cli
 
-    # 打包双入口产物，区分两个版本
-    - name: Extract version and package bundles
-      id: version_rename
+    # Copy auxiliary files
+    - name: Copy auxiliary files
       run: |
-        # Get version from git tag if exists, otherwise from csproj
+        Copy-Item winC2D.Cli/run-elevated.ps1 ./publish/cli/
+        Copy-Item AGENTS.md ./publish/
+        Copy-Item README.md ./publish/
+        Copy-Item LICENSE ./publish/
+        Copy-Item CHANGELOG.md ./publish/
+        # Kilo Code skill
+        New-Item -ItemType Directory -Force ./publish/winc2d-skill | Out-Null
+        Copy-Item installer/winc2d-skill/SKILL.md ./publish/winc2d-skill/SKILL.md
+
+    # Download gsudo for bundling (MIT licensed)
+    - name: Download gsudo
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/gerardog/gsudo/releases/latest/download/gsudo.exe" -OutFile ./publish/gsudo.exe
+
+    # Install Inno Setup 6
+    - name: Install Inno Setup
+      run: |
+        winget install --id=JRSoftware.InnoSetup --accept-package-agreements --accept-source-agreements --silent
+        # Refresh PATH
+        refreshenv
+        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+
+    - name: Extract version
+      id: version
+      run: |
         if ("${{ github.ref }}".StartsWith("refs/tags/v")) {
-          $version = "${{ github.ref }}".Replace("refs/tags/v", "v")
+          $v = "${{ github.ref }}".Replace("refs/tags/v", "")
         } else {
-          $version = "dev"
+          $v = (Select-String -Path winC2D.App/winC2D.App.csproj -Pattern '<Version>(.*)</Version>' | % { $_.Matches.Groups[1].Value })
         }
-        
-        $standaloneFile = "winC2D-$version-standalone.zip"
-        $frameworkFile = "winC2D-$version-framework-dependent.zip"
-        
-        New-Item -ItemType Directory -Force ./package-standalone | Out-Null
-        New-Item -ItemType Directory -Force ./package-framework-dependent | Out-Null
+        echo "version=$v" >> $env:GITHUB_OUTPUT
 
-        Copy-Item ./publish-selfcontained-app/winC2D.App.exe ./package-standalone/winC2D.App.exe
-        Copy-Item ./publish-selfcontained-cli/winC2D.Cli.exe ./package-standalone/winC2D.Cli.exe
-        Copy-Item ./publish-framework-dependent-app/winC2D.App.exe ./package-framework-dependent/winC2D.App.exe
-        Copy-Item ./publish-framework-dependent-cli/winC2D.Cli.exe ./package-framework-dependent/winC2D.Cli.exe
-
-        Compress-Archive -Path ./package-standalone/* -DestinationPath $standaloneFile -Force
-        Compress-Archive -Path ./package-framework-dependent/* -DestinationPath $frameworkFile -Force
-        
-        echo "standalone=$standaloneFile" >> $env:GITHUB_OUTPUT
-        echo "framework=$frameworkFile" >> $env:GITHUB_OUTPUT
-        
-        Write-Output "✓ Standalone bundle:   $standaloneFile"
-        Write-Output "✓ Framework bundle:    $frameworkFile"
-
-    - name: Compute SHA-256 and verify
+    # Build installer
+    - name: Build Installer
+      id: installer
       run: |
-        $standalone = Get-FileHash "${{ steps.version_rename.outputs.standalone }}" -Algorithm SHA256
-        $framework = Get-FileHash "${{ steps.version_rename.outputs.framework }}" -Algorithm SHA256
-        
-        Write-Output ""
-        Write-Output "========== Build Artifacts =========="
-        Write-Output "Standalone bundle (with .NET 8 runtime):"
-        Write-Output "  File: ${{ steps.version_rename.outputs.standalone }}"
-        Write-Output "  SHA256: $($standalone.Hash)"
-        Write-Output "  Size: $(([math]::Round($(Get-Item "${{ steps.version_rename.outputs.standalone }}").Length / 1MB, 2))) MB"
-        Write-Output ""
-        Write-Output "Framework-Dependent bundle (requires .NET 8 runtime):"
-        Write-Output "  File: ${{ steps.version_rename.outputs.framework }}"
-        Write-Output "  SHA256: $($framework.Hash)"
-        Write-Output "  Size: $(([math]::Round($(Get-Item "${{ steps.version_rename.outputs.framework }}").Length / 1MB, 2))) MB"
-        Write-Output "======================================"
-        
-        if ($standalone.Hash -eq $framework.Hash) {
-          Write-Error "❌ ERROR: Both files have identical SHA-256 — build configuration is wrong!"
-          exit 1
-        }
-        
-        if ($(Get-Item "${{ steps.version_rename.outputs.standalone }}").Length -le $(Get-Item "${{ steps.version_rename.outputs.framework }}").Length) {
-          Write-Error "❌ ERROR: Standalone bundle should be larger than framework-dependent bundle!"
-          exit 1
-        }
-        
-        Write-Output "✓ Both files are correctly built with different configurations"
+        iscc /DAppVersion=${{ steps.version.outputs.version }} installer/setup.iss
+        $installerFile = Get-ChildItem installer/Output/winC2D-Setup-*.exe | Select-Object -First 1
+        $sha = Get-FileHash $installerFile.FullName -Algorithm SHA256
+        $sizeMB = [math]::Round($installerFile.Length / 1MB, 1)
+        echo "file=$($installerFile.Name)" >> $env:GITHUB_OUTPUT
+        echo "sha256=$($sha.Hash)" >> $env:GITHUB_OUTPUT
+        echo "size=$sizeMB" >> $env:GITHUB_OUTPUT
+        Write-Output "Installer: $($installerFile.Name) ($sizeMB MB)"
+        Write-Output "SHA256: $($sha.Hash)"
 
-    - name: Upload Standalone Artifact
+    - name: Upload Installer Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: winC2D-standalone
-        path: ${{ steps.version_rename.outputs.standalone }}
-        retention-days: 7
-
-    - name: Upload Framework-Dependent Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: winC2D-framework-dependent
-        path: ${{ steps.version_rename.outputs.framework }}
+        name: winC2D-Installer
+        path: installer/Output/winC2D-Setup-*.exe
         retention-days: 7
 
   release:
@@ -188,10 +138,9 @@ jobs:
         $startIdx = -1
         $endIdx = -1
         
-        # Find the version section
         for ($i = 0; $i -lt $lines.Count; $i++) {
           if ($lines[$i] -match "## \[$version\]") {
-            $startIdx = $i + 2  # Skip header and empty line
+            $startIdx = $i + 2
             break
           }
         }
@@ -202,7 +151,6 @@ jobs:
           exit 0
         }
         
-        # Find the end of this section (next ## [ or EOF)
         for ($i = $startIdx; $i -lt $lines.Count; $i++) {
           if ($lines[$i] -match "^## \[" -or $lines[$i] -match "^---") {
             $endIdx = $i - 1
@@ -214,26 +162,16 @@ jobs:
           $endIdx = $lines.Count - 1
         }
         
-        # Extract and clean up
         $changelog = ($lines[$startIdx..$endIdx] -join "`n").Trim()
         
-        # Use GitHub's EOF method for multiline output
         "changelog<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
         $changelog | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
         "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-        
-        Write-Output "✓ Successfully extracted changelog for version $version"
     
-    - name: Download Standalone Artifact
+    - name: Download Installer Artifact
       uses: actions/download-artifact@v4
       with:
-        name: winC2D-standalone
-        path: ./artifacts
-
-    - name: Download Framework-Dependent Artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: winC2D-framework-dependent
+        name: winC2D-Installer
         path: ./artifacts
     
     - name: Create Release
@@ -243,31 +181,26 @@ jobs:
         body: |
           ## winC2D v${{ steps.version.outputs.VERSION }}
 
-          Windows disk migration assistant — move installed software and user folders from C drive to any disk, with symlinks keeping original paths intact. The GUI and Agent CLI are separate entry points: `winC2D.App.exe` for users and `winC2D.Cli.exe` for AI agents and scripts.
+          Windows 磁盘迁移助手 — 将已安装软件和文件夹从 C 盘迁移到其他磁盘，通过符号链接保持原始路径不变。
 
-          ### 📦 Downloads
+          ### 📦 下载
 
-          | File | Size | Description |
-          |------|------|-------------|
-          | `winC2D-v${{ steps.version.outputs.VERSION }}-standalone.zip` | ~70–90 MB | ⭐ **Recommended** — includes .NET 8 runtime, no installation needed |
-          | `winC2D-v${{ steps.version.outputs.VERSION }}-framework-dependent.zip` | ~10–20 MB | Lightweight — requires [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) installed |
+          **⭐ 推荐：安装程序** — 一键安装到 D 盘，自动配置 gsudo 提权和 AI agent skill。
 
-          ### 🚀 Quick Start
-          1. Download **standalone** version (recommended for most users)
-          2. Run as **Administrator**
-          3. Scan → Select software → Migrate
+          下载并运行 `winC2D-Setup-v${{ steps.version.outputs.VERSION }}.exe`：
+          - 默认安装到 D 盘（不占用 C 盘空间）
+          - 自动安装 gsudo 提权工具
+          - 自动安装 Kilo Code AI agent skill
+          - 干净的卸载支持（控制面板 → 程序和功能）
 
           ### 🤖 Agent CLI
+
+          安装后，AI agent 可以通过 CLI 执行迁移：
           ```powershell
-          .\winC2D.Cli.exe privilege-status
-          .\winC2D.Cli.exe scan
-          .\winC2D.Cli.exe preflight --source "C:\Program Files\App" --target "D:\Program Files"
-          .\winC2D.Cli.exe migrate --source "C:\Program Files\App" --target "D:\Program Files" --dry-run
-          .\winC2D.Cli.exe migrate --source "C:\Program Files\App" --target "D:\Program Files" --yes
-          .\winC2D.Cli.exe status --task-id "<taskId>"
+          pwsh -File "C:\Program Files\winC2D\run-elevated.ps1" migrate --source "C:\Program Files\App" --target "D:\MigratedApps" --yes
           ```
 
-          ### 🌏 Languages Supported
+          ### 🌏 语言支持
           简体中文 · 繁體中文 · English · 日本語 · 한국어 · Русский · Português (Brasil)
 
           ### 📝 Changes in v${{ steps.version.outputs.VERSION }}
@@ -275,10 +208,9 @@ jobs:
           ${{ steps.changelog.outputs.changelog }}
 
           ---
-          [📖 Documentation](https://github.com/Aknirex/winC2D#readme) · [🐛 Report Issue](https://github.com/Aknirex/winC2D/issues)
+          [📖 文档](https://github.com/Aknirex/winC2D#readme) · [🐛 报告问题](https://github.com/Aknirex/winC2D/issues)
         files: |
-          ./artifacts/winC2D-v${{ steps.version.outputs.VERSION }}-standalone.zip
-          ./artifacts/winC2D-v${{ steps.version.outputs.VERSION }}-framework-dependent.zip
+          ./artifacts/winC2D-Setup-*.exe
         draft: false
         prerelease: false
       env:

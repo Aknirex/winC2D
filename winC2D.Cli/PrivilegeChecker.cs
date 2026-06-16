@@ -41,13 +41,16 @@ public static class PrivilegeChecker
             ["resolutionOptions"] = ResolutionOptions
         };
 
-        result["installGsudo"] = "winget install gerardog.gsudo";
-        result["installHint"] = "Run this command once to install gsudo (a lightweight sudo for Windows). Required for elevated CLI operations.";
+        // Primary: use the bundled run-elevated.ps1 wrapper.
+        result["runElevated"] = "pwsh -File run-elevated.ps1";
+        result["runElevatedHint"] = "Execute this command to run the CLI with administrator privileges. "
+            + "The wrapper uses gsudo (bundled in the release package) for inline elevation. "
+            + "Execute: pwsh -File run-elevated.ps1 migrate --source \"...\" --target \"...\" --yes";
 
         if (!string.IsNullOrWhiteSpace(runWithGsudo))
         {
-            result["runWith"] = runWithGsudo;
-            result["runWithHint"] = "After gsudo is installed, execute this command to run the migration as administrator.";
+            result["runWithGsudo"] = runWithGsudo;
+            result["runWithGsudoHint"] = "Alternative: manually install gsudo (winget install gerardog.gsudo) then run this command.";
         }
 
         return result;
