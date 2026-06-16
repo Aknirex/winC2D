@@ -144,8 +144,8 @@ internal static class Translations
             ["About.Repository"]                     = "GitHub Repository",
             ["About.Documentation"]                  = "Documentation",
             ["About.IssueTracker"]                   = "Report an Issue",
-            ["About.DisclaimerTitle"]                = "⚠️ Disclaimer",
-            ["About.DisclaimerText"]                 = "This tool modifies system files and creates symbolic links. Always backup your important data before using this tool. The author is not responsible for any data loss or system issues.",
+            ["About.DisclaimerTitle"]                = "ℹ️ Disclaimer",
+            ["About.DisclaimerText"]                 = "This tool uses standard Windows symbolic links and file-copy operations to relocate applications. It does not modify application binaries or the Windows registry (except the optional install-path setting). As with any disk operation, backing up important data is recommended.",
         },
 
         ["zh-CN"] = new(StringComparer.Ordinal)
@@ -274,16 +274,16 @@ internal static class Translations
 
             ["About.Header"]                         = "ℹ️ 关于 winC2D",
             ["About.Title"]                          = "winC2D - Windows 存储迁移助手",
-            ["About.Version"]                        = "版本：2.0.0",
+            ["About.Version"]                        = "版本：4.2.0",
             ["About.License"]                        = "许可证：MIT",
             ["About.Author"]                         = "作者：Aknirex",
-            ["About.Description"]                    = "一个帮助用户将已安装软件和常见文件夹从 C 盘迁移到其他磁盘的工具，支持修改系统默认安装位置和用户文件夹路径。",
+            ["About.Description"]                    = "通过标准 Windows 符号链接和文件复制操作，将应用程序从 C 盘迁移到其他磁盘。不修改应用程序二进制文件或注册表（可选安装路径设置除外）。",
             ["About.LinksHeader"]                    = "链接",
             ["About.Repository"]                     = "GitHub 仓库",
             ["About.Documentation"]                  = "文档",
             ["About.IssueTracker"]                   = "报告问题",
-            ["About.DisclaimerTitle"]                = "⚠️ 免责声明",
-            ["About.DisclaimerText"]                 = "此工具会修改系统文件并创建符号链接。使用此工具前，请务必备份重要数据。作者对任何数据丢失或系统问题不承担责任。",
+            ["About.DisclaimerTitle"]                = "ℹ️ 免责声明",
+            ["About.DisclaimerText"]                 = "本工具使用 Windows 标准符号链接和文件复制操作来重定位应用程序，不修改程序二进制文件或注册表（可选安装路径设置除外）。与任何磁盘操作一样，建议提前备份重要数据。",
         },
 
         ["zh-Hant"] = new(StringComparer.Ordinal)

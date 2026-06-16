@@ -81,12 +81,13 @@
                 </Style>
             </DataGrid.Resources>
             <DataGrid.Columns>
-                <!-- Checkbox column for visible row selection (display-only, selection via row click) -->
+                <!-- Checkbox column for visible row selection (only Completed entries can be selected) -->
                 <DataGridTemplateColumn Width="36" MinWidth="36" MaxWidth="36"
                                         CanUserResize="False" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <CheckBox IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                      IsEnabled="{Binding CanRollback}"
                                       HorizontalAlignment="Center"
                                       VerticalAlignment="Center"
                                       IsHitTestVisible="False"

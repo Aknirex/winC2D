@@ -72,61 +72,6 @@
                 </Grid>
             </ui:Card>
 
-            <!-- Expert Mode toggle — flat card -->
-            <ui:Card Margin="0,0,0,10">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <ui:SymbolIcon Grid.Column="0" Symbol="ShieldKeyhole24" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding L_ExpertMode}"
-                                   FontSize="14"
-                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                        <TextBlock Text="{Binding L_ExpertModeDesc}"
-                                   FontSize="11"
-                                   TextWrapping="Wrap"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                   Margin="0,2,0,0"/>
-                    </StackPanel>
-                    <ui:ToggleSwitch Grid.Column="2" IsChecked="{Binding ShowExpertSettings}"/>
-                </Grid>
-            </ui:Card>
-
-            <!-- Program Files Paths — only visible in expert mode -->
-            <ui:CardExpander Header="{Binding L_ProgramFiles}"
-                             Icon="{ui:SymbolIcon Folder24}"
-                             Margin="0,0,0,10"
-                             Visibility="{Binding ShowExpertSettings, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <StackPanel Margin="20">
-                    <Grid Margin="0,0,0,15">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="{Binding L_ProgramFilesLabel}" VerticalAlignment="Center" Width="150"/>
-                        <ui:TextBox Grid.Column="1" Text="{Binding ProgramFilesPath}" Margin="5,0"/>
-                        <ui:Button Grid.Column="2" Command="{Binding BrowseProgramFilesCommand}" Content="{Binding L_Browse}" Margin="5,0,0,0"/>
-                    </Grid>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="{Binding L_ProgramFilesX86Label}" VerticalAlignment="Center" Width="150"/>
-                        <ui:TextBox Grid.Column="1" Text="{Binding ProgramFilesX86Path}" Margin="5,0" IsEnabled="{Binding UseCustomX86Path}"/>
-                        <ui:Button Grid.Column="2" Command="{Binding BrowseProgramFilesX86Command}" Content="{Binding L_Browse}" Margin="5,0,0,0" IsEnabled="{Binding UseCustomX86Path}"/>
-                    </Grid>
-                    <CheckBox Content="{Binding L_UseCustomX86}"
-                              IsChecked="{Binding UseCustomX86Path}"
-                              Margin="0,15,0,0"/>
-                </StackPanel>
-            </ui:CardExpander>
-
             <!-- Reset -->
             <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                 <ui:Button Command="{Binding ResetSettingsCommand}"

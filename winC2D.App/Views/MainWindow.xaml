@@ -40,9 +40,9 @@
                                        Content="{Binding L_NavSettings}"
                                        TargetPageType="{x:Type views:SettingsView}"/>
                 <ui:NavigationViewItem x:Name="NavLogs"
-                                       Icon="{ui:SymbolIcon History24}"
-                                       Content="{Binding L_NavLogs}"
-                                       TargetPageType="{x:Type views:LogView}"/>
+                                        Icon="{ui:SymbolIcon History24}"
+                                        Content="{Binding L_NavLogs}"
+                                        TargetPageType="{x:Type views:LogView}"/>
             </ui:NavigationView.MenuItems>
 
             <ui:NavigationView.FooterMenuItems>

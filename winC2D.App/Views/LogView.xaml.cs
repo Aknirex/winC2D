@@ -39,7 +39,8 @@ public partial class LogView : UserControl
         while (dep != null && dep is not DataGridRow)
             dep = System.Windows.Media.VisualTreeHelper.GetParent(dep);
 
-        if (dep is DataGridRow row && row.Item is MigrationLogEntry entry)
+        if (dep is DataGridRow row && row.Item is MigrationLogEntry entry
+            && entry.CanRollback)
         {
             _viewModel.SelectedEntry = entry;
         }

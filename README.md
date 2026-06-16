@@ -13,63 +13,62 @@
 
 ## About
 
-winC2D is a Windows disk migration assistant that helps you move installed software and common user folders from your C drive to another disk. It also lets you change the system default installation path and user folder locations — freeing up C drive space without reinstalling anything.
-
-## ⚠️ Important Notes
-
-After migrating software, winC2D creates **symbolic links (symlinks)** at the original paths so they remain accessible. Most migrated software will continue to work from its new location without modifying the application or its shortcuts. **Standard migration does not touch the registry.**
-
-> The "Change default install location" option in Settings **does modify the system registry** to redirect where new apps are installed. If issues arise, restore the default value in Settings or roll back via a system restore point / backup.
+winC2D is a Windows disk migration assistant that helps you move installed applications and folders from your C drive to another disk. It uses standard Windows **symbolic links** and file-copy operations — no modification to application binaries or registry entries.
 
 ## Features
 
-- 📦 Scan installed software on C drive with size and status columns; select multiple entries for batch migration
-- 📁 Scan and migrate common user folders (Documents, Pictures, Downloads, etc.)
-- 🖱️ Graphical target path picker with auto-populated drive drop-down
-- 🔗 Symlinks created automatically after migration to preserve original paths
-- ↩️ Rollback support with full migration log
-- 🌏 In-app language switching — 7 languages supported
-- 🌙 Dark / Light theme follows system, switchable manually
-- 🛡️ Automatically requests administrator elevation on launch
-- 🤖 **Agent CLI mode** — expose migration capabilities to AI agents and scripts through `winC2D.Cli.exe`
+- 🗂️ **Unified file browser** — navigate your drives in a familiar Explorer-like interface with breadcrumb navigation and quick-access sidebar
+- 📏 **Size scanning** — calculate directory sizes with cache support for fast subsequent scans
+- 🔗 **Symbolic link migration** — move folders to another drive, then create a symlink at the original path so everything keeps working
+- ↩️ **Rollback support** — full migration history with one-click rollback for completed tasks
+- 🌏 **7 languages** — English, 简体中文, 繁體中文, 日本語, 한국어, Русский, Português (Brasil)
+- 🌙 **Dark / Light theme** — follows system preference, manually switchable
+- 🛡️ **Auto-elevation** — requests administrator privileges on launch (required for symlink creation and Program Files access)
+- 🤖 **Agent CLI** — `winC2D.Cli.exe` exposes all migration capabilities as machine-readable JSON for AI agents and scripts
 
 ## Tech Stack
 
 - C# · .NET 8.0 · WPF
 - [WPF-UI](https://github.com/lepoco/wpfui) (Fluent Design)
 - CommunityToolkit.Mvvm · Microsoft.Extensions.DependencyInjection
-- Machine-readable Agent CLI built on the same Core / Infrastructure services as the GUI
 
 ## Download & Run
 
 1. Download the latest release from [Releases](https://github.com/Aknirex/winC2D/releases)
 
-   | Version | Size | Use Case |
-   | --- | --- | --- |
-   | **Standalone** (`-standalone.zip`) | ~70–90 MB | ⭐ Recommended — includes .NET 8 runtime, works immediately |
-   | **Framework-Dependent** (`-framework-dependent.zip`) | ~10–20 MB | Requires .NET 8 Runtime pre-installed |
+   | Version | Use Case |
+   | --- | --- |
+   | **Framework-Dependent** (`-framework-dependent.zip`) | ⭐ **Recommended** — smallest download; requires .NET 8 Runtime. The app will detect missing runtime and guide you to the download page. |
+   | **Standalone** (`-standalone.zip`) | Self-contained — includes .NET 8 runtime, no extra install needed |
 
 2. Extract the zip, then run `winC2D.App.exe` for the GUI or `winC2D.Cli.exe` for automation
-3. Run migrations as **Administrator** when required
+3. Administrator privileges are required for migration (the app auto-elevates)
 4. Requires Windows 10 / 11
+
+## How It Works
+
+1. **Scan** — browse to a folder and click "Scan Sizes" to measure directory sizes
+2. **Select** — check the folders you want to migrate
+3. **Migrate** — winC2D copies the folder to the target drive, then replaces the original path with a symbolic link pointing to the new location
+4. **Rollback** — from the Logs page, select a completed task and click Rollback to restore the original state
 
 ## Agent CLI Mode
 
-winC2D ships two explicit entry points: `winC2D.App.exe` for the GUI and `winC2D.Cli.exe` for AI agents, scripts, and terminal automation. The CLI writes one machine-readable JSON object to stdout.
+winC2D ships two entry points: `winC2D.App.exe` (GUI) and `winC2D.Cli.exe` (CLI). The CLI writes one JSON object per command to stdout.
 
 ### Commands
 
 | Command | Description | Requires Elevation |
 |---|---|---|
-| `privilege-status` | Check current privilege level and available operations | No |
-| `disk-info` | List all fixed drives with free/total space | No |
-| `scan` | Scan installed software with size and migration status | No |
-| `preflight` | Validate a migration before starting it | No |
-| `migrate` | Move software to another drive with symlink + optional dry-run | Yes |
+| `privilege-status` | Check current privilege level | No |
+| `disk-info` | List fixed drives with free/total space | No |
+| `scan` | Scan installed software with size and status | No |
+| `preflight` | Validate a migration before starting | No |
+| `migrate` | Move software to another drive with symlink | Yes |
 | `status` | Poll migration progress by taskId | No |
 | `pause` / `resume` / `cancel` | Control a running worker task | No |
 | `rollback` | Restore software to original path | Yes |
-| `list` / `cleanup` | Inspect or clean persisted migration tasks | No |
+| `list` / `cleanup` | Inspect or clean persisted tasks | No |
 
 ### Agent Workflow
 
@@ -84,23 +83,19 @@ winC2D ships two explicit entry points: `winC2D.App.exe` for the GUI and `winC2D
 .\winC2D.Cli.exe rollback --task-id "<taskId>" --yes
 ```
 
-`migrate` starts a hidden worker process and returns a `taskId` immediately. Use `status` until the state is `Completed`, `Failed`, `RolledBack`, `PartialRollback`, or `Cancelled`. Add `--wait` if you want the command to poll before returning.
-
-For `status`, `success=true` means the query itself succeeded. Check `taskSucceeded`, `taskFailed`, `isTerminal`, and `state` to decide what happened to the migration task.
-
 ### Privilege Requirements
 
-Creating symbolic links requires either **Administrator** rights or **Windows Developer Mode**.
+Creating symbolic links requires **Administrator** rights or **Windows Developer Mode**.
 
 | Privilege Level | Scan | Migrate |
 |---|---|---|
 | Administrator | ✅ | ✅ |
 | Developer Mode | ✅ | ✅ |
-| Restricted | ✅ | ❌ (returns structured error with fix instructions) |
+| Restricted | ✅ | ❌ |
 
 Enable Developer Mode: **Settings → System → Developer Options → Developer Mode**
 
-For elevated agent runs, start the shell / agent host as Administrator, enable Developer Mode, or use [gsudo](https://github.com/gerardog/gsudo):
+For elevated agent runs, use [gsudo](https://github.com/gerardog/gsudo):
 
 ```powershell
 gsudo .\winC2D.Cli.exe migrate --source "C:\Program Files\App" --target "D:\Program Files" --yes
