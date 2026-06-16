@@ -114,6 +114,33 @@ public sealed class MigrationPreflightService : IMigrationPreflightService
         if (_fileSystem.DirectoryExists(result.TargetPath) || _fileSystem.FileExists(result.TargetPath))
             result.Blockers.Add($"Target path already exists: {result.TargetPath}");
 
+        // Verify write access to the source directory's parent.
+        // Moving a directory requires write/delete permission on the parent.
+        if (sourceExists && result.Blockers.Count == 0)
+        {
+            try
+            {
+                var parentDir = Path.GetDirectoryName(request.SourcePath);
+                if (!string.IsNullOrEmpty(parentDir))
+                {
+                    var testFile = Path.Combine(parentDir, $"_winC2D_preflight_{Guid.NewGuid():N}.tmp");
+                    File.WriteAllText(testFile, "winC2D preflight write test");
+                    File.Delete(testFile);
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                result.Blockers.Add(
+                    $"Cannot write to '{Path.GetDirectoryName(request.SourcePath)}'. "
+                    + "Administrator privileges are required to modify files in this directory. "
+                    + "Run the CLI as Administrator (right-click → Run as administrator) or use gsudo.");
+            }
+            catch (Exception ex)
+            {
+                result.Warnings.Add($"Write-access check failed: {ex.Message}");
+            }
+        }
+
         return Task.FromResult(result);
     }
 

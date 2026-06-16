@@ -29,15 +29,29 @@ public static class PrivilegeChecker
 
     public static bool CanMigrate() => GetLevel() != Level.Restricted;
 
-    public static object BuildInsufficientPrivilegesError() => new
+    public static object BuildInsufficientPrivilegesError(string? runWithGsudo = null)
     {
-        success = false,
-        error = "INSUFFICIENT_PRIVILEGES",
-        message = "Migration and rollback require administrator rights or Windows Developer Mode.",
-        canMigrate = false,
-        canScan = true,
-        resolutionOptions = ResolutionOptions
-    };
+        var result = new Dictionary<string, object?>
+        {
+            ["success"] = false,
+            ["error"] = "INSUFFICIENT_PRIVILEGES",
+            ["message"] = "Migration requires administrator rights to write to protected directories like C:\\Program Files.",
+            ["canMigrate"] = false,
+            ["canScan"] = true,
+            ["resolutionOptions"] = ResolutionOptions
+        };
+
+        result["installGsudo"] = "winget install gerardog.gsudo";
+        result["installHint"] = "Run this command once to install gsudo (a lightweight sudo for Windows). Required for elevated CLI operations.";
+
+        if (!string.IsNullOrWhiteSpace(runWithGsudo))
+        {
+            result["runWith"] = runWithGsudo;
+            result["runWithHint"] = "After gsudo is installed, execute this command to run the migration as administrator.";
+        }
+
+        return result;
+    }
 
     public static object[] ResolutionOptions =>
     [

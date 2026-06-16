@@ -202,30 +202,15 @@ public static class CliApplication
         if (!dryRun && !PrivilegeChecker.CanMigrate())
         {
             var level = PrivilegeChecker.GetLevel();
-            // Diagnostic: log the exact reason for privilege failure
             await stderr.WriteLineAsync(
                 $"[DIAG] Privilege check FAILED: level={level}, isAdmin={level == PrivilegeChecker.Level.Administrator}, "
                 + $"developerMode={level == PrivilegeChecker.Level.DeveloperMode}, "
                 + $"process={Environment.ProcessPath}, pid={Environment.ProcessId}");
 
-            // Attempt automatic elevation (mirrors App.xaml.cs RequestElevation logic)
-            if (level == PrivilegeChecker.Level.Restricted && !System.Diagnostics.Debugger.IsAttached)
-            {
-                var elevated = await TryElevateAsync(executablePath, args, stderr);
-                if (elevated)
-                {
-                    // The elevated child process will handle the migration.
-                    // Return success so the caller knows the request was forwarded.
-                    return await WriteAsync(stdout, CliExitCode.Success, new
-                    {
-                        success = true,
-                        message = "Request forwarded to elevated process. The elevated instance will execute the migration.",
-                        forwarded = true
-                    });
-                }
-            }
-
-            return await WriteAsync(stdout, CliExitCode.InsufficientPrivileges, PrivilegeChecker.BuildInsufficientPrivilegesError());
+            // Return actionable error with gsudo install + run instructions.
+            var runWithGsudo = BuildGsudoCommand(executablePath, args);
+            return await WriteAsync(stdout, CliExitCode.InsufficientPrivileges,
+                PrivilegeChecker.BuildInsufficientPrivilegesError(runWithGsudo));
         }
 
         var engine = services.GetRequiredService<IMigrationEngine>();
@@ -635,20 +620,30 @@ public static class CliApplication
     private static object BuildPrivilegeStatus()
     {
         var level = PrivilegeChecker.GetLevel();
-        var canMigrate = level != PrivilegeChecker.Level.Restricted;
+        var isAdmin = level == PrivilegeChecker.Level.Administrator;
+        var isDeveloperMode = level == PrivilegeChecker.Level.DeveloperMode;
+        // Developer Mode allows symlink creation, but writing to C:\Program Files
+        // still requires Administrator. Only report canMigrate=true when admin.
+        var canMigrate = isAdmin;
 
         return new
         {
             success = true,
             privilegeLevel = level.ToString(),
+            isAdmin,
+            isDeveloperMode,
             canMigrate,
+            canCreateSymlink = !isDeveloperMode ? canMigrate : true,
             canScan = true,
             details = level switch
             {
-                PrivilegeChecker.Level.Administrator => "Running as administrator. All operations are available.",
-                PrivilegeChecker.Level.DeveloperMode => "Windows Developer Mode is enabled. Symlink creation does not require elevation.",
-                _ => "Running without elevated privileges and Developer Mode is not enabled. Scan and disk info are available; migration requires elevated privileges."
+                PrivilegeChecker.Level.Administrator => "Running as administrator. Full migration capability including C:\\Program Files access.",
+                PrivilegeChecker.Level.DeveloperMode => "Windows Developer Mode is enabled (symlink creation allowed), but Administrator rights are still required to write to C:\\Program Files and other protected directories.",
+                _ => "Running without elevated privileges. Symlink creation and protected-directory access require Administrator rights or Developer Mode + Administrator."
             },
+            importantNote = isDeveloperMode
+                ? "WARNING: Developer Mode allows symlink creation but NOT writing to C:\\Program Files. Migrations from system-protected directories still require Administrator."
+                : null,
             resolutionOptions = canMigrate ? null : PrivilegeChecker.ResolutionOptions
         };
     }
@@ -929,6 +924,29 @@ public static class CliApplication
             await stderr.WriteLineAsync($"[DIAG] TryElevateAsync failed: {ex.Message}");
             return false;
         }
+    }
+
+    /// <summary>
+    /// Build a PowerShell command that elevates via Start-Process -Verb RunAs.
+    /// No extra install required — Windows built-in.
+    /// </summary>
+    private static string BuildPwshElevationCommand(string? executablePath, string[] args)
+    {
+        var exe = executablePath ?? "winC2D.Cli.exe";
+        var forwarded = BuildForwardedArgs(args);
+        var argString = string.Join(" ", forwarded.Select(a => a.Contains(' ') ? $"`\"{a}`\"" : a));
+        return $"Start-Process -Verb RunAs -FilePath '{exe}' -ArgumentList '{argString}'";
+    }
+
+    /// <summary>
+    /// Build a ready-to-execute command string using gsudo for elevation.
+    /// The agent can copy-paste this to retry the migration as admin.
+    /// </summary>
+    private static string BuildGsudoCommand(string? executablePath, string[] args)
+    {
+        var exe = executablePath ?? "winC2D.Cli.exe";
+        var forwarded = BuildForwardedArgs(args);
+        return $"gsudo {exe} {string.Join(" ", forwarded.Select(a => a.Contains(' ') ? $"\"{a}\"" : a))}";
     }
 
     /// <summary>
