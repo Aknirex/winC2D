@@ -69,11 +69,15 @@ jobs:
 
     # Install Inno Setup 6
     - name: Install Inno Setup
+      shell: pwsh
       run: |
-        winget install --id=JRSoftware.InnoSetup --accept-package-agreements --accept-source-agreements --silent
-        # Refresh PATH
-        refreshenv
-        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+        $isccUrl = "https://files.jrsoftware.org/is/6/innosetup-6.4.1.exe"
+        $isccInstaller = "$env:TEMP\innosetup.exe"
+        Invoke-WebRequest -Uri $isccUrl -OutFile $isccInstaller
+        Start-Process -FilePath $isccInstaller -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART" -Wait
+        # Add to PATH
+        $isccPath = "${env:ProgramFiles(x86)}\Inno Setup 6"
+        echo "$isccPath" >> $env:GITHUB_PATH
 
     - name: Extract version
       id: version

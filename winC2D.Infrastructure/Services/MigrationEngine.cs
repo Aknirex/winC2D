@@ -194,6 +194,7 @@ public class MigrationEngine : IMigrationEngine
 
             try
             {
+#pragma warning disable CA1416
                 _logger.LogInformation(
                     "[DIAG] Attempting MoveDirectory: '{SourcePath}' -\u003E '{BackupPath}'. Admin={IsAdmin}",
                     task.SourcePath, backupPath,
@@ -201,6 +202,7 @@ public class MigrationEngine : IMigrationEngine
                         && new System.Security.Principal.WindowsPrincipal(
                             System.Security.Principal.WindowsIdentity.GetCurrent())
                            .IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator));
+#pragma warning restore CA1416
 
                 _fileSystem.MoveDirectory(task.SourcePath, backupPath);
 
