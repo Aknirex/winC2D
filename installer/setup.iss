@@ -117,7 +117,7 @@ end;
 
 function GetSkillDir(Param: string): string;
 begin
-  Result := ExpandConstant('{userprofile}\.kilocode\skills\winc2d');
+  Result := GetEnv('USERPROFILE') + '\.kilocode\skills\winc2d';
 end;
 
 // ── Warn if installing to C: ────────────────────────────────────────────────
@@ -176,7 +176,7 @@ var
 begin
   if CurUninstallStep = usPostUninstall then
   begin
-    SkillDir := ExpandConstant('{userprofile}\.kilocode\skills\winc2d');
+    SkillDir := GetEnv('USERPROFILE') + '\.kilocode\skills\winc2d';
     if DirExists(SkillDir) then
       DelTree(SkillDir, True, True, True);
   end;
