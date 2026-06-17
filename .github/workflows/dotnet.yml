@@ -73,15 +73,11 @@ jobs:
           Write-Host "gsudo download failed, will use winget fallback in run-elevated.ps1"
         }
 
-    # Install Inno Setup 6
+    # Install Inno Setup 6 via Chocolatey (most reliable on GitHub runners)
     - name: Install Inno Setup
       shell: pwsh
       run: |
-        $isccUrl = "https://files.jrsoftware.org/is/6/innosetup-6.4.1.exe"
-        $isccInstaller = "$env:TEMP\innosetup.exe"
-        Invoke-WebRequest -Uri $isccUrl -OutFile $isccInstaller
-        Start-Process -FilePath $isccInstaller -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART" -Wait
-        # Add to PATH
+        choco install innosetup --no-progress -y
         $isccPath = "${env:ProgramFiles(x86)}\Inno Setup 6"
         echo "$isccPath" >> $env:GITHUB_PATH
 
