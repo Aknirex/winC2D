@@ -48,6 +48,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a desktop shortcut(&D)"; GroupDescription: "Shortcuts:"
+Name: "agentskill"; Description: "Install AI agent skill (for Kilo Code / Claude Code)"; GroupDescription: "AI Integration:"; Flags: checkedonce
 
 [Files]
 ; Main executables (CI publishes to ../publish/app and ../publish/cli)
@@ -63,8 +64,8 @@ Source: "..\publish\README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme
 Source: "..\publish\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\publish\CHANGELOG.md"; DestDir: "{app}"; Flags: ignoreversion
 
-; Kilo Code skill — installs to user's skill directory
-Source: "..\publish\winc2d-skill\SKILL.md"; DestDir: "{code:GetSkillDir}"; Flags: ignoreversion uninsneveruninstall
+; AI agent skill — installs to %USERPROFILE%\.agents\skills\winc2d\
+Source: "..\publish\winc2d-skill\SKILL.md"; DestDir: "{code:GetSkillDir}"; Flags: ignoreversion uninsneveruninstall; Tasks: agentskill
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"
@@ -110,11 +111,11 @@ begin
     Result := 'C:\Program Files\winC2D';
 end;
 
-// ── Kilo Code skill installation ───────────────────────────────────────────
+// ── AI Agent skill installation ────────────────────────────────────────────
 
 function GetSkillDir(Param: string): string;
 begin
-  Result := GetEnv('USERPROFILE') + '\.kilocode\skills\winc2d';
+  Result := GetEnv('USERPROFILE') + '\.agents\skills\winc2d';
 end;
 
 // ── Warn if installing to C: ────────────────────────────────────────────────
@@ -165,7 +166,7 @@ begin
   end;
 end;
 
-// ── Uninstall cleanup: remove skill directory ──────────────────────────────
+// ── Uninstall cleanup: remove skill directories ────────────────────────────
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
@@ -173,7 +174,7 @@ var
 begin
   if CurUninstallStep = usPostUninstall then
   begin
-    SkillDir := GetEnv('USERPROFILE') + '\.kilocode\skills\winc2d';
+    SkillDir := GetEnv('USERPROFILE') + '\.agents\skills\winc2d';
     if DirExists(SkillDir) then
       DelTree(SkillDir, True, True, True);
   end;
