@@ -100,7 +100,7 @@ jobs:
         }
         Write-Host "Building installer for version: $v"
         iscc /DAppVersion=$v installer/setup.iss
-        $installerFile = Get-ChildItem installer/Output/winC2D-Setup-*.exe | Select-Object -First 1
+        $installerFile = Get-ChildItem installer/Output/winC2D-Setup.exe | Select-Object -First 1
         $sha = Get-FileHash $installerFile.FullName -Algorithm SHA256
         $sizeMB = [math]::Round($installerFile.Length / 1MB, 1)
         echo "file=$($installerFile.Name)" >> $env:GITHUB_OUTPUT
@@ -220,7 +220,7 @@ jobs:
           ---
           [Documentation](https://github.com/Aknirex/winC2D#readme) | [Report Issue](https://github.com/Aknirex/winC2D/issues)
         files: |
-          ./artifacts/winC2D-Setup-*.exe
+          ./artifacts/winC2D-Setup.exe
         draft: false
         prerelease: false
       env:
