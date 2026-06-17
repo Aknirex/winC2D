@@ -89,21 +89,17 @@ jobs:
         $isccPath = "${env:ProgramFiles(x86)}\Inno Setup 6"
         echo "$isccPath" >> $env:GITHUB_PATH
 
-    - name: Extract version
-      id: version
+    - name: Extract version and build installer
+      id: installer
+      shell: pwsh
       run: |
         if ("${{ github.ref }}".StartsWith("refs/tags/v")) {
           $v = "${{ github.ref }}".Replace("refs/tags/v", "")
         } else {
           $v = (Select-String -Path winC2D.App/winC2D.App.csproj -Pattern '<Version>(.*)</Version>' | % { $_.Matches.Groups[1].Value })
         }
-        echo "version=$v" >> $env:GITHUB_OUTPUT
-
-    # Build installer
-    - name: Build Installer
-      id: installer
-      run: |
-        iscc /DAppVersion=${{ steps.version.outputs.version }} installer/setup.iss
+        Write-Host "Building installer for version: $v"
+        iscc /DAppVersion=$v installer/setup.iss
         $installerFile = Get-ChildItem installer/Output/winC2D-Setup-*.exe | Select-Object -First 1
         $sha = Get-FileHash $installerFile.FullName -Algorithm SHA256
         $sizeMB = [math]::Round($installerFile.Length / 1MB, 1)

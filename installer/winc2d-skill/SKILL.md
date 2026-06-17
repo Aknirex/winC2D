@@ -7,42 +7,40 @@ description: "Windows disk migration tool that moves installed applications and 
 
 Moves installed applications and folders from one drive to another on Windows. Copies files, then replaces the original path with a symbolic link. Applications continue to work.
 
-## How to use
+## CLI Location
 
-Two entry points in the release package:
-- `winC2D.App.exe` — GUI
-- `winC2D.Cli.exe` — CLI for automation
-
-### Agent CLI workflow
-
+After installation, the CLI is at:
 ```
-1. privilege-status          — check admin + developer mode
-2. disk-info                 — list available drives
-3. preflight --source "C:\Path\To\App" --target "D:\TargetDrive"   — validate
-4. migrate --source "C:\Path\To\App" --target "D:\TargetDrive" --dry-run  — dry run
-5. migrate --source "C:\Path\To\App" --target "D:\TargetDrive" --yes     — real migration
-6. status --task-id "<id>"  — poll until Completed
+D:\Program Files\winC2D\winC2D.Cli.exe
 ```
 
-### Elevation
+All JSON output goes to stdout. Run `winC2D.Cli.exe help` for the full agent workflow.
 
-The CLI requires administrator rights for `C:\Program Files` operations. Use the bundled `run-elevated.ps1`:
-
-```
-pwsh -File run-elevated.ps1 migrate --source "C:\Program Files\Tencent\WeMeet" --target "D:\MigratedApps" --yes
-```
-
-If `run-elevated.ps1` is not available, install gsudo (`winget install gerardog.gsudo`) and run:
+## Required Workflow
 
 ```
-gsudo winC2D.Cli.exe migrate --source "C:\Program Files\Tencent\WeMeet" --target "D:\MigratedApps" --yes
+1. winC2D.Cli.exe privilege-status     — check if admin
+2. winC2D.Cli.exe disk-info            — list drives
+3. winC2D.Cli.exe preflight --source "C:\Program Files\App" --target "D:\MigratedApps"
+4. winC2D.Cli.exe migrate --source "..." --target "..." --dry-run   — validate first
+5. winC2D.Cli.exe migrate --source "..." --target "..." --yes         — dry-run ok → real
+6. winC2D.Cli.exe status --task-id "<id>"   — poll until Completed
 ```
 
-### Key behaviors
+## Elevation
 
-- Source folder name is automatically appended to target path
-- `--dry-run` validates without making changes (use before every real migration)
-- `--yes` is required for real migrations
-- `status` returns `taskSucceeded: true/false` — only `Completed` state means success
-- All output is JSON, one object per command to stdout
-- If you get `INSUFFICIENT_PRIVILEGES`, use `run-elevated.ps1` or gsudo
+The CLI requires admin for `C:\Program Files`. Use gsudo (bundled) or install via winget:
+
+```powershell
+winget install gerardog.gsudo
+gsudo "D:\Program Files\winC2D\winC2D.Cli.exe" migrate --source "C:\Program Files\WeMeet" --target "D:\MigratedApps" --yes
+```
+
+## Key Rules
+
+- NEVER skip `--dry-run`
+- Source folder name is auto-appended to target path
+- `--yes` is always required for real migrations
+- `status.taskSucceeded` (not `status.success`) indicates migration result
+- If CLI returns `INSUFFICIENT_PRIVILEGES`, use gsudo
+- If `blockers` is non-empty, do NOT proceed with `--yes`
