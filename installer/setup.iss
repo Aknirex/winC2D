@@ -28,7 +28,7 @@ DirExistsWarning=no
 WizardStyle=modern
 
 ; Compression
-Compression=lzma2/ultra64
+Compression=lzma2/fast
 SolidCompression=yes
 
 ; Output
