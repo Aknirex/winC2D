@@ -165,16 +165,27 @@ begin
   end;
 end;
 
-// ── Uninstall cleanup: remove skill directories ────────────────────────────
+// ── Uninstall cleanup: remove app data + skill directory ───────────────────
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
-  SkillDir: string;
+  CleanDir: string;
 begin
   if CurUninstallStep = usPostUninstall then
   begin
-    SkillDir := GetEnv('USERPROFILE') + '\.agents\skills\winc2d';
-    if DirExists(SkillDir) then
-      DelTree(SkillDir, True, True, True);
+    // AI agent skill
+    CleanDir := GetEnv('USERPROFILE') + '\.agents\skills\winc2d';
+    if DirExists(CleanDir) then
+      DelTree(CleanDir, True, True, True);
+
+    // App runtime data (tasks, rollback, size cache)
+    CleanDir := GetEnv('APPDATA') + '\winC2D';
+    if DirExists(CleanDir) then
+      DelTree(CleanDir, True, True, True);
+
+    // App local data (logs)
+    CleanDir := GetEnv('LOCALAPPDATA') + '\winC2D';
+    if DirExists(CleanDir) then
+      DelTree(CleanDir, True, True, True);
   end;
 end;
