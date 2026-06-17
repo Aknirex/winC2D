@@ -53,7 +53,6 @@ jobs:
     # Copy auxiliary files
     - name: Copy auxiliary files
       run: |
-        Copy-Item winC2D.Cli/run-elevated.ps1 ./publish/cli/
         Copy-Item AGENTS.md ./publish/
         Copy-Item README.md ./publish/
         Copy-Item LICENSE ./publish/

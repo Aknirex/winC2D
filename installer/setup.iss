@@ -54,9 +54,6 @@ Name: "desktopicon"; Description: "Create a desktop shortcut(&D)"; GroupDescript
 Source: "..\publish\app\winC2D.App.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\publish\cli\winC2D.Cli.exe"; DestDir: "{app}"; Flags: ignoreversion
 
-; Elevation wrapper (copied to publish/cli by CI; also at source for local build)
-Source: "..\publish\cli\run-elevated.ps1"; DestDir: "{app}"; Flags: ignoreversion
-
 ; gsudo (bundled for inline elevation — MIT licensed, may be missing if CI download failed)
 Source: "..\publish\gsudo.exe"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 
