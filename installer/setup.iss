@@ -58,8 +58,8 @@ Source: "..\publish\cli\winC2D.Cli.exe"; DestDir: "{app}"; Flags: ignoreversion
 ; Elevation wrapper (copied to publish/cli by CI; also at source for local build)
 Source: "..\publish\cli\run-elevated.ps1"; DestDir: "{app}"; Flags: ignoreversion
 
-; gsudo (bundled for inline elevation — MIT licensed, downloaded to publish/ by CI)
-Source: "..\publish\gsudo.exe"; DestDir: "{app}"; Flags: ignoreversion
+; gsudo (bundled for inline elevation — MIT licensed, may be missing if CI download failed)
+Source: "..\publish\gsudo.exe"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 
 ; Documentation (copied to publish/ by CI)
 Source: "..\publish\AGENTS.md"; DestDir: "{app}"; Flags: ignoreversion

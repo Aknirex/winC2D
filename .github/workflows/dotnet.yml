@@ -65,7 +65,13 @@ jobs:
     # Download gsudo for bundling (MIT licensed)
     - name: Download gsudo
       run: |
-        Invoke-WebRequest -Uri "https://github.com/gerardog/gsudo/releases/latest/download/gsudo.exe" -OutFile ./publish/gsudo.exe
+        # Use specific version URL since /latest/download/ redirect doesn't work in CI
+        $gsudoUrl = "https://github.com/gerardog/gsudo/releases/download/v2.5.1/gsudo.exe"
+        try {
+          Invoke-WebRequest -Uri $gsudoUrl -OutFile ./publish/gsudo.exe -UseBasicParsing
+        } catch {
+          Write-Host "gsudo download failed, will use winget fallback in run-elevated.ps1"
+        }
 
     # Install Inno Setup 6
     - name: Install Inno Setup
