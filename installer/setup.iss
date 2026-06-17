@@ -86,39 +86,31 @@ Filename: "{cmd}"; Parameters: "/c rd /s /q ""{app}"""; Flags: runhidden; RunOnc
 
 function GetDefaultDir(Param: string): string;
 var
-  D: string;
-  LargestDrive: string;
-  LargestFree: Int64;
   Drive: Integer;
-  Free: Int64;
+  Found: string;
 begin
-  // Default install directory: D:\Program Files\winC2D
-  D := 'D:\Program Files\winC2D';
-
-  // If D: doesn't exist, find the largest non-C drive
-  if not DirExists('D:\') then
+  // Default: D:\Program Files\winC2D
+  if DirExists('D:\') then
   begin
-    LargestDrive := '';
-    LargestFree := 0;
-    for Drive := Ord('D') to Ord('Z') do
-    begin
-      if GetSpaceOnDisk(Chr(Drive) + ':\', Free) then
-      begin
-        if Free > LargestFree then
-        begin
-          LargestFree := Free;
-          LargestDrive := Chr(Drive) + ':\';
-        end;
-      end;
-    end;
+    Result := 'D:\Program Files\winC2D';
+    Exit;
+  end;
 
-    if LargestDrive <> '' then
-      Result := LargestDrive + 'Program Files\winC2D'
-    else
-      Result := 'D:\Program Files\winC2D';
-  end
+  // D: not found, try E: through Z:
+  Found := '';
+  for Drive := Ord('E') to Ord('Z') do
+  begin
+    if DirExists(Chr(Drive) + ':\') then
+    begin
+      Found := Chr(Drive) + ':\';
+      Break;
+    end;
+  end;
+
+  if Found <> '' then
+    Result := Found + 'Program Files\winC2D'
   else
-    Result := D;
+    Result := 'C:\Program Files\winC2D';
 end;
 
 // ── Kilo Code skill installation ───────────────────────────────────────────
@@ -132,9 +124,8 @@ end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
 var
-  DriveCount: Integer;
+  HasOtherDrive: Boolean;
   D: Integer;
-  Free: Int64;
 begin
   Result := True;
   
@@ -143,8 +134,8 @@ begin
     // Warn if user chose C drive
     if Pos('C:\', Uppercase(ExpandConstant('{app}'))) = 1 then
     begin
-      if MsgBox('不建议安装到 C 盘。winC2D 的目的就是释放 C 盘空间。' + #13#10 +
-                '确定要继续安装到 C 盘吗？',
+      if MsgBox('Not recommended to install on C drive. winC2D is designed to free up C drive space.' + #13#10 +
+                'Continue installing to C drive anyway?',
                 mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDNO then
       begin
         Result := False;
@@ -152,24 +143,23 @@ begin
       end;
     end;
 
-    // Warn if only one fixed drive exists (only C:)
-    DriveCount := 0;
-    for D := Ord('C') to Ord('Z') do
+    // Warn if only C: drive exists (no other drives to migrate to)
+    HasOtherDrive := False;
+    for D := Ord('D') to Ord('Z') do
     begin
-      if GetSpaceOnDisk(Chr(D) + ':\', Free) and (Free > 0) then
+      if DirExists(Chr(D) + ':\') then
       begin
-        DriveCount := DriveCount + 1;
-        if DriveCount >= 2 then
-          Break;
+        HasOtherDrive := True;
+        Break;
       end;
     end;
 
-    if DriveCount < 2 then
+    if not HasOtherDrive then
     begin
-      if MsgBox('⚠️  警告：您的系统只有一个磁盘卷（C 盘）。' + #13#10#13#10 +
-                'winC2D 需要另一个磁盘作为迁移目标，否则无法释放 C 盘空间。' + #13#10 +
-                '这个软件很可能帮不了您。' + #13#10#13#10 +
-                '是否仍然继续安装？',
+      if MsgBox('WARNING: Your system only has a C: drive.' + #13#10#13#10 +
+                'winC2D needs another drive as a migration target to free up C drive space.' + #13#10 +
+                'This software may not be useful for you.' + #13#10#13#10 +
+                'Continue installation anyway?',
                 mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDNO then
       begin
         Result := False;
