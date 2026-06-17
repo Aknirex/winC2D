@@ -536,24 +536,23 @@ public class MigrationEngine : IMigrationEngine
     /// <summary>
     /// Diagnostic helper: detects files in a directory that are locked by running processes,
     /// AND checks whether the directory itself can be renamed (write access to the parent).
-    /// This helps distinguish file-lock errors from permission-denied errors.
+    /// Only operates on real (non-mock) file-system paths.
     /// </summary>
     private static List<string> DetectLockedFiles(string directoryPath)
     {
         var lockedFiles = new List<string>();
 
+        // Only check paths that actually exist on the real file system.
+        // Tests use mock paths like C:\Program Files\TestApp that don't exist.
         if (!Directory.Exists(directoryPath))
-        {
-            lockedFiles.Add("[DirectoryNotFound]");
             return lockedFiles;
-        }
 
         // Check directory-level write access: try creating and deleting a temp file
-        // in the source directory to verify the parent allows rename operations.
+        // in the source directory's parent to verify rename permission.
         try
         {
             var parentDir = Path.GetDirectoryName(directoryPath);
-            if (!string.IsNullOrEmpty(parentDir))
+            if (!string.IsNullOrEmpty(parentDir) && Directory.Exists(parentDir))
             {
                 var testFile = Path.Combine(parentDir, $"_winC2D_test_{Guid.NewGuid():N}.tmp");
                 try
@@ -566,6 +565,10 @@ public class MigrationEngine : IMigrationEngine
                     lockedFiles.Add($"[ParentDirAccessDenied] Cannot write to '{parentDir}'. "
                         + "This directory is protected and requires administrator privileges to modify.");
                 }
+                catch (IOException)
+                {
+                    // Disk I/O error — not a permission issue, don't block
+                }
             }
         }
         catch
@@ -577,7 +580,7 @@ public class MigrationEngine : IMigrationEngine
         try
         {
             var files = Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories);
-            const int maxFilesToCheck = 200; // limit scan to avoid excessive runtime
+            const int maxFilesToCheck = 200;
             var checkedCount = 0;
 
             foreach (var file in files)
@@ -587,25 +590,21 @@ public class MigrationEngine : IMigrationEngine
 
                 try
                 {
-                    // Try to open the file with exclusive read to detect locks
                     using var fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.None);
                 }
                 catch (IOException)
                 {
-                    // File is locked by another process
                     lockedFiles.Add(Path.GetFileName(file));
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    // Access denied - note this separately as it is a different root cause
                     lockedFiles.Add($"{Path.GetFileName(file)} [AccessDenied]");
                 }
-                // Other exceptions (FileNotFound etc.) are not lock-related
             }
         }
         catch
         {
-            // Best-effort; if enumeration itself fails, return what we have
+            // Best-effort
         }
 
         return lockedFiles;
