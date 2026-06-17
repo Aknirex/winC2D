@@ -205,9 +205,9 @@ jobs:
 
           ### 🤖 Agent CLI
 
-          安装后，AI agent 可以通过 CLI 执行迁移：
+          安装后，AI agent 可以通过 gsudo 提权执行迁移：
           ```powershell
-          pwsh -File "C:\Program Files\winC2D\run-elevated.ps1" migrate --source "C:\Program Files\App" --target "D:\MigratedApps" --yes
+          gsudo "D:\Program Files\winC2D\winC2D.Cli.exe" migrate --source "C:\Program Files\App" --target "D:\MigratedApps" --yes
           ```
 
           ### 🌏 语言支持

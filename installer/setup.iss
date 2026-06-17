@@ -3,7 +3,7 @@
 ; Output: installer\Output\winC2D-Setup.exe
 
 #define AppName "winC2D"
-#define AppVersion "4.2.0"
+#define AppVersion "4.3.0"
 #define AppPublisher "Aknirex"
 #define AppURL "https://github.com/Aknirex/winC2D"
 #define AppExeName "winC2D.App.exe"
@@ -39,9 +39,8 @@ OutputBaseFilename=winC2D-Setup-{#AppVersion}
 SetupIconFile=..\winc2d.ico
 UninstallDisplayIcon={app}\{#AppExeName}
 
-; Privileges
+; Privileges — always require admin (migration needs Program Files access)
 PrivilegesRequired=admin
-PrivilegesRequiredOverridesAllowed=dialog
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
