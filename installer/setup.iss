@@ -33,7 +33,7 @@ SolidCompression=yes
 
 ; Output
 OutputDir=Output
-OutputBaseFilename=winC2D-Setup-{#AppVersion}
+OutputBaseFilename=winC2D-Setup
 
 ; Icons
 SetupIconFile=..\winc2d.ico

@@ -940,13 +940,13 @@ public static class CliApplication
 
     /// <summary>
     /// Build a ready-to-execute command string using gsudo for elevation.
-    /// The agent can copy-paste this to retry the migration as admin.
+    /// Uses --% (PowerShell stop-parsing token) to prevent argument splitting.
     /// </summary>
     private static string BuildGsudoCommand(string? executablePath, string[] args)
     {
         var exe = executablePath ?? "winC2D.Cli.exe";
         var forwarded = BuildForwardedArgs(args);
-        return $"gsudo {exe} {string.Join(" ", forwarded.Select(a => a.Contains(' ') ? $"\"{a}\"" : a))}";
+        return $"gsudo --% {exe} {string.Join(" ", forwarded.Select(a => a.Contains(' ') ? $"\"{a}\"" : a))}";
     }
 
     /// <summary>

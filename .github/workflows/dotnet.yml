@@ -197,7 +197,7 @@ jobs:
 
           **Recommended: Installer** — one-click setup to D drive with gsudo elevation and AI agent skill.
 
-          Download and run `winC2D-Setup-${{ steps.version.outputs.VERSION }}.exe`:
+          Download and run `winC2D-Setup.exe`:
           - Default install to D drive (does not consume C drive space)
           - Bundles gsudo for elevation
           - Optional AI agent skill installation
