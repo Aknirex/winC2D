@@ -45,10 +45,9 @@ PrivilegesRequiredOverridesAllowed=dialog
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
-Name: "chinesesimplified"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "创建桌面快捷方式(&D)"; GroupDescription: "快捷方式:"
+Name: "desktopicon"; Description: "Create a desktop shortcut(&D)"; GroupDescription: "Shortcuts:"
 
 [Files]
 ; Main executables (CI publishes to ../publish/app and ../publish/cli)
