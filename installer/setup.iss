@@ -50,9 +50,9 @@ Name: "desktopicon"; Description: "Create a desktop shortcut(&D)"; GroupDescript
 Name: "agentskill"; Description: "Install AI agent skill (for Kilo Code / Claude Code)"; GroupDescription: "AI Integration:"; Flags: checkedonce
 
 [Files]
-; Main executables + all dependencies
-Source: "..\publish\app\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\publish\cli\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Main executables (single-file self-contained publish)
+Source: "..\publish\app\winC2D.App.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\publish\cli\winC2D.Cli.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 ; gsudo (bundled for inline elevation — MIT licensed)
 Source: "..\publish\gsudo.exe"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist

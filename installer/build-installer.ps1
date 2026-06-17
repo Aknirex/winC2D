@@ -18,18 +18,22 @@ Write-Host "=== Step 1: Publishing .NET projects ==="
 # Clean
 if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
 
-# Publish winC2D.App
+# Publish winC2D.App (single-file)
 dotnet publish "$root\winC2D.App\winC2D.App.csproj" `
     -c Release `
     -r win-x64 `
     --self-contained true `
+    -p:PublishSingleFile=true `
+    -p:IncludeNativeLibrariesForSelfExtract=true `
     -o "$publishDir\app"
 
-# Publish winC2D.Cli
+# Publish winC2D.Cli (single-file)
 dotnet publish "$root\winC2D.Cli\winC2D.Cli.csproj" `
     -c Release `
     -r win-x64 `
     --self-contained true `
+    -p:PublishSingleFile=true `
+    -p:IncludeNativeLibrariesForSelfExtract=true `
     -o "$publishDir\cli"
 
 Write-Host "=== Step 2: Copying auxiliary files ==="

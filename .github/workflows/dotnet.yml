@@ -33,21 +33,25 @@ jobs:
     - name: Run Tests
       run: dotnet test winC2D.sln --configuration Release --no-build --verbosity normal
 
-    # Publish for installer (self-contained, multi-file — Inno Setup needs individual files)
-    - name: Publish App (self-contained)
+    # Publish as single-file self-contained executables for the installer
+    - name: Publish App (single-file, self-contained)
       run: |
         dotnet publish winC2D.App/winC2D.App.csproj `
           --configuration Release `
           --runtime win-x64 `
           --self-contained true `
+          -p:PublishSingleFile=true `
+          -p:IncludeNativeLibrariesForSelfExtract=true `
           --output ./publish/app
 
-    - name: Publish CLI (self-contained)
+    - name: Publish CLI (single-file, self-contained)
       run: |
         dotnet publish winC2D.Cli/winC2D.Cli.csproj `
           --configuration Release `
           --runtime win-x64 `
           --self-contained true `
+          -p:PublishSingleFile=true `
+          -p:IncludeNativeLibrariesForSelfExtract=true `
           --output ./publish/cli
 
     # Copy auxiliary files
@@ -191,34 +195,34 @@ jobs:
         body: |
           ## winC2D v${{ steps.version.outputs.VERSION }}
 
-          Windows 磁盘迁移助手 — 将已安装软件和文件夹从 C 盘迁移到其他磁盘，通过符号链接保持原始路径不变。
+          Windows disk migration assistant — move installed software and user folders from C drive to another disk with symbolic links.
 
-          ### 📦 下载
+          ### Download
 
-          **⭐ 推荐：安装程序** — 一键安装到 D 盘，自动配置 gsudo 提权和 AI agent skill。
+          **Recommended: Installer** — one-click setup to D drive with gsudo elevation and AI agent skill.
 
-          下载并运行 `winC2D-Setup-v${{ steps.version.outputs.VERSION }}.exe`：
-          - 默认安装到 D 盘（不占用 C 盘空间）
-          - 自动安装 gsudo 提权工具
-          - 自动安装 Kilo Code AI agent skill
-          - 干净的卸载支持（控制面板 → 程序和功能）
+          Download and run `winC2D-Setup-${{ steps.version.outputs.VERSION }}.exe`:
+          - Default install to D drive (does not consume C drive space)
+          - Bundles gsudo for elevation
+          - Optional AI agent skill installation
+          - Clean uninstall via Control Panel
 
-          ### 🤖 Agent CLI
+          ### Agent CLI
 
-          安装后，AI agent 可以通过 gsudo 提权执行迁移：
+          After installation, AI agents can run migrations via gsudo:
           ```powershell
           gsudo "D:\Program Files\winC2D\winC2D.Cli.exe" migrate --source "C:\Program Files\App" --target "D:\MigratedApps" --yes
           ```
 
-          ### 🌏 语言支持
-          简体中文 · 繁體中文 · English · 日本語 · 한국어 · Русский · Português (Brasil)
+          ### Languages
+          English, 简体中文, 繁體中文, 日本語, 한국어, Русский, Portugues (Brasil)
 
-          ### 📝 Changes in v${{ steps.version.outputs.VERSION }}
+          ### Changes in v${{ steps.version.outputs.VERSION }}
 
           ${{ steps.changelog.outputs.changelog }}
 
           ---
-          [📖 文档](https://github.com/Aknirex/winC2D#readme) · [🐛 报告问题](https://github.com/Aknirex/winC2D/issues)
+          [Documentation](https://github.com/Aknirex/winC2D#readme) | [Report Issue](https://github.com/Aknirex/winC2D/issues)
         files: |
           ./artifacts/winC2D-Setup-*.exe
         draft: false
