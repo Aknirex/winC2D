@@ -92,10 +92,10 @@ var
   Drive: Integer;
   Free: Int64;
 begin
-  ; Default to D:\Program Files\winC2D
+  // Default install directory: D:\Program Files\winC2D
   D := 'D:\Program Files\winC2D';
 
-  ; If D: doesn't exist or has very low space, find the largest non-C drive
+  // If D: doesn't exist, find the largest non-C drive
   if not DirExists('D:\') then
   begin
     LargestDrive := '';
