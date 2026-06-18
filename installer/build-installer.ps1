@@ -39,7 +39,7 @@ dotnet publish "$root\winC2D.Cli\winC2D.Cli.csproj" `
 Write-Host "=== Step 2: Copying auxiliary files ==="
 
 Copy-Item "$root\winC2D.Cli\run-elevated.ps1" "$publishDir\cli\" -Force
-Copy-Item "$root\AGENTS.md" "$publishDir\" -Force
+Copy-Item "$root\docs\README.ai.md" "$publishDir\" -Force
 Copy-Item "$root\README.md" "$publishDir\" -Force
 Copy-Item "$root\LICENSE" "$publishDir\" -Force
 Copy-Item "$root\CHANGELOG.md" "$publishDir\" -Force

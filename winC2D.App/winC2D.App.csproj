@@ -9,9 +9,6 @@
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>winC2D.App</RootNamespace>
     <ApplicationIcon>..\winc2d.ico</ApplicationIcon>
-    <Version>4.2.0</Version>
-    <AssemblyVersion>4.2.0.0</AssemblyVersion>
-    <FileVersion>4.2.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,9 +28,6 @@
 
   <ItemGroup>
     <Content Include="..\winc2d.ico" Link="winc2d.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\AGENTS.md" Link="AGENTS.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -71,13 +71,20 @@ AboutView 中使用 `string.Format(localizedFormat, VersionDisplay)` 组合。
 
 `setup.iss` 中 `#define AppVersion "4.3.0"` 改为从 `Directory.Build.props` 解析的 CI 参数。当前 CI 已通过 `iscc /DAppVersion=$v` 传入，但 `#define` 硬编码值为回退默认值。
 
-### 5. (可选) Git 标签自动推导
+### 5. (已实施) Git 标签自动推导
 
-如果希望版本号完全由 Git 标签驱动，可引入 [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning)：
+已引入 [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning)：
 
-- 安装 `nbgv` CLI 工具
-- 在项目根生成 `version.json`
-- 版本号从 Git 标签自动计算，无需手动修改任何文件
+- [`version.json`](../../version.json) -- nbgv 配置，基础版本 `4.3`
+- [`Directory.Build.props`](../../Directory.Build.props) -- 添加 nbgv PackageReference，移除硬编码 Version
+- [`.github/workflows/dotnet.yml`](../../.github/workflows/dotnet.yml) -- 添加 `fetch-depth: 0`
+
+发版流程：
+```powershell
+git tag -a v4.4.0 -m "Release v4.4.0"
+git push origin v4.4.0
+# CI 构建时 nbgv 自动读取 tag，注入 Version=4.4.0
+```
 
 ### 改动文件清单
 

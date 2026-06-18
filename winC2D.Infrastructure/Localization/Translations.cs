@@ -136,7 +136,7 @@ internal static class Translations
 
             ["About.Header"]                         = "ℹ️ About winC2D",
             ["About.Title"]                          = "winC2D - Windows Storage Migration Assistant",
-            ["About.Version"]                        = "Version: 2.0.0",
+            ["About.Version"]                        = "Version: {0}",
             ["About.License"]                        = "License: MIT",
             ["About.Author"]                         = "Author: Aknirex",
             ["About.Description"]                    = "A tool to help users migrate installed software and common folders from C drive to other disks, with support for modifying system default installation locations and user folder paths.",
@@ -274,7 +274,7 @@ internal static class Translations
 
             ["About.Header"]                         = "ℹ️ 关于 winC2D",
             ["About.Title"]                          = "winC2D - Windows 存储迁移助手",
-            ["About.Version"]                        = "版本：4.2.0",
+            ["About.Version"]                        = "版本：{0}",
             ["About.License"]                        = "许可证：MIT",
             ["About.Author"]                         = "作者：Aknirex",
             ["About.Description"]                    = "通过标准 Windows 符号链接和文件复制操作，将应用程序从 C 盘迁移到其他磁盘。不修改应用程序二进制文件或注册表（可选安装路径设置除外）。",
@@ -379,7 +379,7 @@ internal static class Translations
 
             ["About.Header"]                         = "ℹ️ 關於 winC2D",
             ["About.Title"]                          = "winC2D - Windows 儲存遷移助手",
-            ["About.Version"]                        = "版本：2.0.0",
+            ["About.Version"]                        = "版本：{0}",
             ["About.License"]                        = "授權：MIT",
             ["About.Author"]                         = "作者：Aknirex",
             ["About.Description"]                    = "幫助用戶將已安裝的軟體和常見資料夾從 C 槽遷移到其他磁碟，支援修改系統預設安裝位置和使用者資料夾路徑。",
@@ -484,7 +484,7 @@ internal static class Translations
 
             ["About.Header"]                         = "ℹ️ winC2D について",
             ["About.Title"]                          = "winC2D - Windows ストレージ移行ツール",
-            ["About.Version"]                        = "バージョン：2.0.0",
+            ["About.Version"]                        = "バージョン：{0}",
             ["About.License"]                        = "ライセンス：MIT",
             ["About.Author"]                         = "作成者：Aknirex",
             ["About.Description"]                    = "C ドライブにインストールされたソフトウェアと一般的なフォルダーを他のディスクに移行するのに役立つツールです。システムデフォルトのインストール場所とユーザーフォルダーパスの変更をサポートします。",
@@ -589,7 +589,7 @@ internal static class Translations
 
             ["About.Header"]                         = "ℹ️ winC2D 정보",
             ["About.Title"]                          = "winC2D - Windows 스토리지 마이그레이션 도우미",
-            ["About.Version"]                        = "버전: 2.0.0",
+            ["About.Version"]                        = "버전: {0}",
             ["About.License"]                        = "라이선스: MIT",
             ["About.Author"]                         = "작성자: Aknirex",
             ["About.Description"]                    = "C 드라이브에 설치된 소프트웨어와 일반적인 폴더를 다른 디스크로 마이그레이션하도록 도와주는 도구이며, 시스템 기본 설치 위치 및 사용자 폴더 경로를 수정할 수 있습니다.",
@@ -694,7 +694,7 @@ internal static class Translations
 
             ["About.Header"]                         = "ℹ️ О программе winC2D",
             ["About.Title"]                          = "winC2D - Помощник миграции хранилища Windows",
-            ["About.Version"]                        = "Версия: 2.0.0",
+            ["About.Version"]                        = "Версия: {0}",
             ["About.License"]                        = "Лицензия: MIT",
             ["About.Author"]                         = "Автор: Aknirex",
             ["About.Description"]                    = "Инструмент для помощи пользователям в миграции установленного программного обеспечения и общих папок с диска C на другие диски с поддержкой изменения системных путей установки по умолчанию и путей пользовательских папок.",
@@ -799,7 +799,7 @@ internal static class Translations
 
             ["About.Header"]                         = "ℹ️ Sobre o winC2D",
             ["About.Title"]                          = "winC2D - Assistente de Migração de Armazenamento Windows",
-            ["About.Version"]                        = "Versão: 2.0.0",
+            ["About.Version"]                        = "Versão: {0}",
             ["About.License"]                        = "Licença: MIT",
             ["About.Author"]                         = "Autor: Aknirex",
             ["About.Description"]                    = "Uma ferramenta para ajudar os usuários a migrar software instalado e pastas comuns da unidade C para outros discos, com suporte para modificar os locais de instalação padrão do sistema e caminhos de pastas do usuário.",

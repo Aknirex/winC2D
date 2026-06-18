@@ -1,5 +1,11 @@
 # winC2D Agent CLI Reference
 
+> Versioning: release versions are driven by Git tags. To prepare a release, run:
+> ```powershell
+> git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push origin vX.Y.Z
+> ```
+> The build system (Nerdbank.GitVersioning) injects the tag version into all assemblies automatically. No manual version bump needed.
+
 This document describes the machine-readable CLI interface for AI agents and automation scripts. For the user-facing GUI, see the main [README](../README.md).
 
 ## Overview
@@ -12,6 +18,15 @@ winC2D ships two entry points:
 | `winC2D.Cli.exe` | AI agents, scripts | JSON over stdout |
 
 The CLI writes exactly one JSON object per command to stdout. All data is structured and machine-parseable.
+
+### When to Invoke winC2D
+
+The user is likely asking for disk migration when they say:
+
+- "move this app from C to D drive" / "move C drive apps to another drive"
+- "C drive is full" / "free up C drive space"
+- "migrate software" / "migrate folder to another disk"
+
 
 ## Commands
 

@@ -27,7 +27,17 @@ public partial class AboutView : UserControl, INotifyPropertyChanged
     // ── Localized properties ──────────────────────────────────────────────
     public string L_Header => _localizationService.GetString("About.Header");
     public string L_Title => _localizationService.GetString("About.Title");
-    public string L_Version => _localizationService.GetString("About.Version");
+    public string VersionDisplay
+    {
+        get
+        {
+            var version = typeof(App).Assembly.GetName().Version;
+            var versionStr = version != null
+                ? $"{version.Major}.{version.Minor}.{version.Build}"
+                : "unknown";
+            return string.Format(_localizationService.GetString("About.Version"), versionStr);
+        }
+    }
     public string L_License => _localizationService.GetString("About.License");
     public string L_Author => _localizationService.GetString("About.Author");
     public string L_Description => _localizationService.GetString("About.Description");
@@ -68,7 +78,7 @@ public partial class AboutView : UserControl, INotifyPropertyChanged
         // Notify all localized properties that their values have changed
         OnPropertyChanged(nameof(L_Header));
         OnPropertyChanged(nameof(L_Title));
-        OnPropertyChanged(nameof(L_Version));
+        OnPropertyChanged(nameof(VersionDisplay));
         OnPropertyChanged(nameof(L_License));
         OnPropertyChanged(nameof(L_Author));
         OnPropertyChanged(nameof(L_Description));

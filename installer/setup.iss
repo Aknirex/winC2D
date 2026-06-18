@@ -3,6 +3,7 @@
 ; Output: installer\Output\winC2D-Setup.exe
 
 #define AppName "winC2D"
+; Fallback default -- CI overrides via /DAppVersion=<version>
 #define AppVersion "4.3.0"
 #define AppPublisher "Aknirex"
 #define AppURL "https://github.com/Aknirex/winC2D"
@@ -58,7 +59,7 @@ Source: "..\publish\cli\winC2D.Cli.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\publish\gsudo.exe"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 
 ; Documentation (copied to publish/ by CI)
-Source: "..\publish\AGENTS.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\publish\README.ai.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\publish\README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme
 Source: "..\publish\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\publish\CHANGELOG.md"; DestDir: "{app}"; Flags: ignoreversion
