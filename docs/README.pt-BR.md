@@ -1,4 +1,4 @@
-# winC2D — Ferramenta de Migração de Disco Windows
+# winC2D -- Ferramenta de Migracao de Disco Windows
 
 [English (README)](../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-Hant.md) · [English](README.en.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Русский](README.ru.md)
 
@@ -6,25 +6,25 @@
 
 ## Sobre
 
-winC2D é uma ferramenta de migração de disco para Windows. Permite mover softwares instalados e pastas de usuário do drive C para outro disco, além de alterar o caminho de instalação padrão do sistema e os locais das pastas do usuário, liberando espaço no disco do sistema.
+winC2D e uma ferramenta de migracao de disco para Windows. Permite mover softwares instalados e pastas de usuario do drive C para outro disco, usando **links simbolicos (symlinks)** padrao do Windows e copia de arquivos -- sem modificar binarios ou o registro.
 
-## ⚠️ Avisos Importantes
+## Avisos Importantes
 
-Após migrar softwares, o winC2D cria **links simbólicos (symlinks)** nos caminhos originais para mantê-los funcionando. A maioria dos programas migrados continua funcionando no novo local sem alterar os aplicativos ou atalhos. **A migração padrão não modifica o registro do Windows.**
+Apos migrar softwares, o winC2D cria **links simbolicos (symlinks)** nos caminhos originais para mante-los funcionando. A maioria dos programas migrados continua funcionando no novo local sem alterar os aplicativos ou atalhos. **A migracao padrao nao modifica o registro do Windows.**
 
-> A função "Alterar caminho de instalação padrão" nas configurações **modifica o registro do sistema** para redirecionar onde novos aplicativos são instalados. Em caso de problemas, restaure o valor padrão nas configurações ou reverta via ponto de restauração do sistema / backup.
+> A funcao "Alterar caminho de instalacao padrao" nas configuracoes **modifica o registro do sistema** para redirecionar onde novos aplicativos sao instalados. Em caso de problemas, restaure o valor padrao nas configuracoes ou reverta via ponto de restauracao do sistema / backup.
 
 ## Funcionalidades
 
-- 📦 Escaneia softwares instalados no drive C com tamanho e status; suporta seleção múltipla para migração em lote
-- 📁 Escaneia e migra pastas de usuário comuns (Documentos, Imagens, Downloads, etc.)
-- 🖱️ Seleção gráfica do caminho de destino com lista de drives preenchida automaticamente
-- 🔗 Criação automática de links simbólicos após migração para preservar os caminhos originais
-- ↩️ Suporte a rollback com log completo de migração
-- 🌏 Troca de idioma dentro do app — 7 idiomas suportados
-- 🌙 Tema escuro / claro segue o sistema, com opção manual
-- 🛡️ Solicita privilégios de administrador automaticamente na inicialização
-- 🤖 Modo Agent CLI via `winC2D.Cli.exe` para agentes de IA e scripts
+- **Escanear softwares instalados** -- exibe softwares do drive C com tamanho e status; selecao multipla para migracao em lote
+- **Migracao de pastas de usuario** -- escaneia e migra pastas comuns (Documentos, Imagens, Downloads, etc.)
+- **Selecao grafica de caminho** -- lista de drives preenchida automaticamente
+- **Links simbolicos** -- criados automaticamente apos migracao para preservar os caminhos originais
+- **Suporte a rollback** -- log completo de migracao com rollback em um clique
+- **7 idiomas** -- troca de idioma dentro do app
+- **Tema escuro / claro** -- segue o sistema, com opcao manual
+- **Elevacao automatica** -- solicita privilegios de administrador na inicializacao
+- **Pronto para agentes** -- inclui CLI para agentes de IA e scripts; veja [README.ai.md](README.ai.md)
 
 ## Tecnologias
 
@@ -32,30 +32,24 @@ Após migrar softwares, o winC2D cria **links simbólicos (symlinks)** nos camin
 - [WPF-UI](https://github.com/lepoco/wpfui) (Fluent Design)
 - CommunityToolkit.Mvvm · Microsoft.Extensions.DependencyInjection
 
-## Download e Execução
+## Download
 
-1. Baixe a versão mais recente em [Releases](https://github.com/Aknirex/winC2D/releases)
+1. Baixe `winC2D-Setup.exe` em [Releases](https://github.com/Aknirex/winC2D/releases)
+2. Execute o instalador -- padrao `D:\Program Files\winC2D` (nao ocupa o drive C)
+3. O instalador inclui GUI, CLI, gsudo, e instala o AI Agent skill em `%USERPROFILE%\.agents\skills\winc2d\`
+4. Privilégios de administrador sao necessarios para migracao (o app eleva automaticamente)
+5. Desinstale via Painel de Controle -> Programas e Recursos
+6. Requer Windows 10 / 11
 
-   | Versão | Tamanho | Caso de Uso |
-   | --- | --- | --- |
-   | **Autossuficiente**（`-standalone.zip`） | ~70–90 MB | ⭐ Recomendado — inclui .NET 8 runtime, pronto para usar |
-   | **Dependente de Framework**（`-framework-dependent.zip`） | ~10–20 MB | Para usuários que já têm .NET 8 runtime instalado |
+## Como Funciona
 
-2. Execute como **Administrador** (o app solicitará elevação automaticamente)
-3. Requer Windows 10 / 11
+1. **Escanear** -- navegue ate uma pasta e clique em "Escanear Tamanhos"
+2. **Selecionar** -- marque as pastas que deseja migrar
+3. **Migrar** -- o winC2D copia a pasta para o drive de destino e cria um symlink no caminho original
+4. **Rollback** -- na pagina de Logs, selecione uma tarefa concluida e clique em Rollback
 
 ## Modo Agent CLI
 
-Use `winC2D.Cli.exe` para saída JSON:
+O winC2D fornece uma CLI para agentes de IA e scripts. Consulte a referencia completa em [README.ai.md](README.ai.md).
 
-```powershell
-.\winC2D.Cli.exe privilege-status
-.\winC2D.Cli.exe disk-info
-.\winC2D.Cli.exe scan
-.\winC2D.Cli.exe preflight --source "C:\Program Files\App" --target "D:\Program Files"
-.\winC2D.Cli.exe migrate --source "C:\Program Files\App" --target "D:\Program Files" --dry-run
-.\winC2D.Cli.exe migrate --source "C:\Program Files\App" --target "D:\Program Files" --yes
-.\winC2D.Cli.exe status --task-id "<taskId>"
-```
-
-Migrações reais exigem privilégios de Administrador ou Windows Developer Mode.
+Criar links simbolicos requer privilegios de **Administrador** ou **Windows Developer Mode**. Para execucao elevada por agentes, use [gsudo](https://github.com/gerardog/gsudo).

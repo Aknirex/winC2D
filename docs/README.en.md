@@ -1,4 +1,4 @@
-# winC2D — Windows Storage Migration Assistant
+# winC2D -- Windows Storage Migration Assistant
 
 [English (README)](../README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Русский](README.ru.md) · [Português](README.pt-BR.md)
 
@@ -6,9 +6,9 @@
 
 ## About
 
-winC2D is a Windows disk migration assistant that helps you move installed software and common user folders from your C drive to another disk. It also lets you change the system's default installation path and user folder locations — freeing up C drive space without reinstalling anything.
+winC2D is a Windows disk migration assistant that helps you move installed software and common user folders from your C drive to another disk. It uses standard Windows **symbolic links** and file-copy operations -- no modification to application binaries or registry entries.
 
-## ⚠️ Important Notes
+## Important Notes
 
 After migrating software, winC2D creates **symbolic links (symlinks)** at the original paths so they remain accessible. Most migrated software will continue to work from its new location without modifying the application or its shortcuts. **Standard migration does not touch the registry.**
 
@@ -16,15 +16,15 @@ After migrating software, winC2D creates **symbolic links (symlinks)** at the or
 
 ## Features
 
-- 📦 Scan installed software on C drive with size and status columns; select multiple entries for batch migration
-- 📁 Scan and migrate common user folders (Documents, Pictures, Downloads, etc.)
-- 🖱️ Graphical target path picker with auto-populated drive drop-down
-- 🔗 Symlinks created automatically after migration to preserve original paths
-- ↩️ Rollback support with full migration log
-- 🌏 In-app language switching — 7 languages supported
-- 🌙 Dark / Light theme follows system, switchable manually
-- 🛡️ Automatically requests administrator elevation on launch
-- 🤖 Agent CLI mode via `winC2D.Cli.exe` for AI agents and scripts
+- **Scan installed software** -- display C drive software with size and status; multi-select batch migration
+- **User folder migration** -- scan and migrate common user folders (Documents, Pictures, Downloads, etc.)
+- **Graphical path picker** -- target drive drop-down auto-populated
+- **Symbolic links** -- created automatically after migration to preserve original paths
+- **Rollback support** -- full migration log with one-click rollback
+- **7 languages** -- in-app language switching
+- **Dark / Light theme** -- follows system, manually switchable
+- **Auto-elevation** -- requests administrator privileges on launch
+- **Agent-ready** -- ships with a machine-readable CLI for AI agents and scripts; see [README.ai.md](README.ai.md)
 
 ## Tech Stack
 
@@ -32,30 +32,24 @@ After migrating software, winC2D creates **symbolic links (symlinks)** at the or
 - [WPF-UI](https://github.com/lepoco/wpfui) (Fluent Design)
 - CommunityToolkit.Mvvm · Microsoft.Extensions.DependencyInjection
 
-## Download & Run
+## Download
 
-1. Download the latest release from [Releases](https://github.com/Aknirex/winC2D/releases)
+1. Download `winC2D-Setup.exe` from [Releases](https://github.com/Aknirex/winC2D/releases)
+2. Run the installer -- defaults to `D:\Program Files\winC2D` (not C drive)
+3. The installer bundles the GUI, CLI, gsudo elevation utility, and installs the AI agent skill to `%USERPROFILE%\.agents\skills\winc2d\`
+4. Administrator privileges are required for migration (the app auto-elevates)
+5. Uninstall via Control Panel -> Programs and Features
+6. Requires Windows 10 / 11
 
-   | Version | Size | Use Case |
-   | --- | --- | --- |
-   | **Standalone** (`-standalone.zip`) | ~70–90 MB | ⭐ Recommended — includes .NET 8 runtime, works immediately |
-   | **Framework-Dependent** (`-framework-dependent.zip`) | ~10–20 MB | Requires .NET 8 Runtime pre-installed |
+## How It Works
 
-2. Run as **Administrator** (the app will prompt for elevation automatically)
-3. Requires Windows 10 / 11
+1. **Scan** -- browse to a folder and click "Scan Sizes" to measure directory sizes
+2. **Select** -- check the folders you want to migrate
+3. **Migrate** -- winC2D copies the folder to the target drive, then creates a symlink at the original path
+4. **Rollback** -- from the Logs page, select a completed task and click Rollback
 
 ## Agent CLI Mode
 
-Use `winC2D.Cli.exe` for JSON output:
+winC2D provides a machine-readable CLI for AI agents and scripts. See the full reference at [README.ai.md](README.ai.md).
 
-```powershell
-.\winC2D.Cli.exe privilege-status
-.\winC2D.Cli.exe disk-info
-.\winC2D.Cli.exe scan
-.\winC2D.Cli.exe preflight --source "C:\Program Files\App" --target "D:\Program Files"
-.\winC2D.Cli.exe migrate --source "C:\Program Files\App" --target "D:\Program Files" --dry-run
-.\winC2D.Cli.exe migrate --source "C:\Program Files\App" --target "D:\Program Files" --yes
-.\winC2D.Cli.exe status --task-id "<taskId>"
-```
-
-Real migrations require Administrator rights or Windows Developer Mode.
+Creating symbolic links requires **Administrator** rights or **Windows Developer Mode**. For elevated agent runs, use [gsudo](https://github.com/gerardog/gsudo).
