@@ -11,6 +11,8 @@
 
 ---
 
+![winC2D Screenshot](docs/screenshot.png)
+
 ## About
 
 winC2D is a Windows disk migration assistant that moves installed applications and folders from your C drive to another disk using standard Windows **symbolic links** and file-copy operations. No modification to application binaries or registry entries is required.

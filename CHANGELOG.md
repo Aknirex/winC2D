@@ -5,7 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [4.4.0] - 2026-06-22
+
+### Added
+- Added main window screenshot to GitHub README for visual project overview.
+- Completed localization coverage for all 7 languages (92 keys each); added missing Log status/message keys and Nav.Explorer for zh-Hant, ja, ko, ru, pt-BR.
+
+### Fixed
+- Fixed incomplete translation coverage: zh-Hant, ja, ko, ru, pt-BR were missing 33 keys (Log status, Log messages, Nav.Explorer, Log columns) causing English fallback text in non-en/zh-CN UIs.
 
 ---
 
@@ -177,6 +184,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[4.4.0]: https://github.com/Aknirex/winC2D/releases/tag/v4.4.0
 [4.2.0]: https://github.com/Aknirex/winC2D/releases/tag/v4.2.0
 [4.1.6]: https://github.com/Aknirex/winC2D/releases/tag/v4.1.6
 [4.1.5]: https://github.com/Aknirex/winC2D/releases/tag/v4.1.5
