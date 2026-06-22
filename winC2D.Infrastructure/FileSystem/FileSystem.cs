@@ -10,17 +10,17 @@ namespace winC2D.Infrastructure.FileSystem;
 public class FileSystem : IFileSystem
 {
     #region Directory Operations
-    
+
     public bool DirectoryExists(string path)
     {
         return Directory.Exists(path);
     }
-    
+
     public void CreateDirectory(string path)
     {
         Directory.CreateDirectory(path);
     }
-    
+
     public void DeleteDirectory(string path, bool recursive = false)
     {
         if (Directory.Exists(path))
@@ -28,12 +28,12 @@ public class FileSystem : IFileSystem
             Directory.Delete(path, recursive);
         }
     }
-    
+
     public void MoveDirectory(string sourcePath, string destinationPath)
     {
         Directory.Move(sourcePath, destinationPath);
     }
-    
+
     public IEnumerable<string> GetDirectories(string path, string searchPattern = "*", bool recursive = false)
     {
         var option = recursive
@@ -41,7 +41,7 @@ public class FileSystem : IFileSystem
             : new EnumerationOptions { RecurseSubdirectories = false, IgnoreInaccessible = true };
         return Directory.GetDirectories(path, searchPattern, option);
     }
-    
+
     public IEnumerable<string> GetFiles(string path, string searchPattern = "*", bool recursive = false)
     {
         var option = recursive
@@ -49,7 +49,7 @@ public class FileSystem : IFileSystem
             : new EnumerationOptions { RecurseSubdirectories = false, IgnoreInaccessible = true };
         return Directory.GetFiles(path, searchPattern, option);
     }
-    
+
     public long GetDirectorySize(string path, CancellationToken cancellationToken = default)
     {
         if (!Directory.Exists(path))
@@ -69,7 +69,7 @@ public class FileSystem : IFileSystem
                 RecurseSubdirectories = true,
                 IgnoreInaccessible = true,
                 // Skip reparse points (symlinks, junctions) to avoid double-counting / infinite loops
-                AttributesToSkip = FileAttributes.ReparsePoint | FileAttributes.System,
+                AttributesToSkip = FileAttributes.ReparsePoint,
             };
 
             int count = 0;
@@ -79,8 +79,8 @@ public class FileSystem : IFileSystem
                 // IsCancellationRequested on CancellationToken involves an interlocked
                 // read and a volatile barrier; doing it per-file for millions of files
                 // adds measurable overhead.
-                if ((++count & 0x1FF) == 0 && cancellationToken.IsCancellationRequested)
-                    break;
+                if ((++count & 0x1FF) == 0)
+                    cancellationToken.ThrowIfCancellationRequested();
 
                 // file.Length uses the cached nFileSizeLow/nFileSizeHigh from the
                 // native FindFirstFile/FindNextFile call – no extra syscall needed.
@@ -98,7 +98,7 @@ public class FileSystem : IFileSystem
 
         return size;
     }
-    
+
     public bool IsSymlink(string path)
     {
         try
@@ -111,17 +111,17 @@ public class FileSystem : IFileSystem
             return false;
         }
     }
-    
+
     public void CreateDirectorySymlink(string linkPath, string targetPath)
     {
         // Remove trailing slashes for consistency
         linkPath = linkPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         targetPath = targetPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        
+
         // Use .NET 6+ API
         Directory.CreateSymbolicLink(linkPath, targetPath);
     }
-    
+
     public string? GetSymlinkTarget(string linkPath)
     {
         try
@@ -129,7 +129,7 @@ public class FileSystem : IFileSystem
             var info = new DirectoryInfo(linkPath);
             if ((info.Attributes & FileAttributes.ReparsePoint) == 0)
                 return null;
-            
+
             var target = info.LinkTarget;
             return target;
         }
@@ -138,16 +138,16 @@ public class FileSystem : IFileSystem
             return null;
         }
     }
-    
+
     #endregion
-    
+
     #region File Operations
-    
+
     public bool FileExists(string path)
     {
         return File.Exists(path);
     }
-    
+
     public void CopyFile(string sourcePath, string destinationPath, bool overwrite = false)
     {
         File.Copy(sourcePath, destinationPath, overwrite);
@@ -170,9 +170,9 @@ public class FileSystem : IFileSystem
             // Strip ReparsePoint / Compressed / Encrypted as those cannot be simply copied.
             const FileAttributes nonCopyable =
                 FileAttributes.ReparsePoint |
-                FileAttributes.Compressed   |
-                FileAttributes.Encrypted    |
-                FileAttributes.Offline      |
+                FileAttributes.Compressed |
+                FileAttributes.Encrypted |
+                FileAttributes.Offline |
                 FileAttributes.SparseFile;
 
             var attrs = src.Attributes & ~nonCopyable;
@@ -193,7 +193,7 @@ public class FileSystem : IFileSystem
         }
         File.Move(sourcePath, destinationPath);
     }
-    
+
     public void DeleteFile(string path)
     {
         if (File.Exists(path))
@@ -201,57 +201,57 @@ public class FileSystem : IFileSystem
             File.Delete(path);
         }
     }
-    
+
     public long GetFileSize(string path)
     {
         var info = new FileInfo(path);
         return info.Exists ? info.Length : 0;
     }
-    
+
     public FileAttributes GetFileAttributes(string path)
     {
         return File.GetAttributes(path);
     }
-    
+
     #endregion
-    
+
     #region Path Operations
-    
+
     public string CombinePath(params string[] paths)
     {
         return Path.Combine(paths);
     }
-    
+
     public string? GetDirectoryName(string path)
     {
         return Path.GetDirectoryName(path);
     }
-    
+
     public string? GetFileName(string path)
     {
         return Path.GetFileName(path);
     }
-    
+
     public string? GetFileNameWithoutExtension(string path)
     {
         return Path.GetFileNameWithoutExtension(path);
     }
-    
+
     public string GetFullPath(string path)
     {
         return Path.GetFullPath(path);
     }
-    
+
     public bool IsValidPath(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
             return false;
-        
+
         try
         {
             // Try to get full path - will throw if invalid
             _ = Path.GetFullPath(path);
-            
+
             // Check for invalid characters
             var invalidChars = Path.GetInvalidPathChars();
             return !path.Any(c => invalidChars.Contains(c));
@@ -261,27 +261,27 @@ public class FileSystem : IFileSystem
             return false;
         }
     }
-    
+
     public char[] GetInvalidPathChars()
     {
         return Path.GetInvalidPathChars();
     }
-    
+
     public char[] GetInvalidFileNameChars()
     {
         return Path.GetInvalidFileNameChars();
     }
-    
+
     #endregion
-    
+
     #region Drive Operations
-    
+
     public IEnumerable<DriveInfo> GetDrives()
     {
         return DriveInfo.GetDrives()
             .Where(d => d.IsReady && d.DriveType == DriveType.Fixed);
     }
-    
+
     public DriveInfo? GetDrive(string driveName)
     {
         try
@@ -294,12 +294,12 @@ public class FileSystem : IFileSystem
             return null;
         }
     }
-    
+
     public long GetAvailableFreeSpace(string driveName)
     {
         var drive = GetDrive(driveName);
         return drive?.AvailableFreeSpace ?? 0;
     }
-    
+
     #endregion
 }

@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.Text.Json;
 using winC2D.Core.FileSystem;
 using winC2D.Core.Models;
 using winC2D.Core.Services;
@@ -18,6 +19,70 @@ public class PersistenceRecoveryTests : IDisposable
         _localAppDataRoot = Path.Combine(Path.GetTempPath(), "winC2D-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_localAppDataRoot);
         Environment.SetEnvironmentVariable("LOCALAPPDATA", _localAppDataRoot);
+    }
+
+    [Fact]
+    public async Task JsonTaskStore_ConcurrentInstances_ShouldMergeUpdatesWithoutLostTasks()
+    {
+        var logger = new Mock<ILogger<JsonMigrationTaskStore>>();
+        var first = new JsonMigrationTaskStore(logger.Object);
+        var second = new JsonMigrationTaskStore(logger.Object);
+        var task1 = new MigrationTask { Id = "task-1", Name = "First", CreatedAt = DateTime.UtcNow };
+        var task2 = new MigrationTask { Id = "task-2", Name = "Second", CreatedAt = DateTime.UtcNow };
+
+        await first.UpsertAsync(task1);
+        await second.UpsertAsync(task2);
+
+        var tasks = await first.GetAllAsync();
+        tasks.Select(t => t.Id).Should().BeEquivalentTo("task-1", "task-2");
+    }
+
+    [Fact]
+    public async Task JsonTaskStore_CorruptRefresh_ShouldKeepLastGoodStateAndRefuseOverwrite()
+    {
+        var logger = new Mock<ILogger<JsonMigrationTaskStore>>();
+        var store = new JsonMigrationTaskStore(logger.Object);
+        var original = new MigrationTask { Id = "original", Name = "Original", CreatedAt = DateTime.UtcNow };
+        await store.UpsertAsync(original);
+        var statePath = Path.Combine(_localAppDataRoot, "winC2D", "tasks", "migration_tasks.json");
+        await File.WriteAllTextAsync(statePath, "{broken-json");
+
+        (await store.GetAsync(original.Id)).Should().NotBeNull();
+        var act = () => store.UpsertAsync(new MigrationTask
+        {
+            Id = "new-task",
+            Name = "Must not overwrite",
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await act.Should().ThrowAsync<JsonException>();
+        (await File.ReadAllTextAsync(statePath)).Should().Be("{broken-json");
+    }
+
+    [Fact]
+    public async Task RollbackManagers_ConcurrentInstances_ShouldMergePointsWithoutLostUpdates()
+    {
+        var fileSystem = new Mock<IFileSystem>();
+        var symlinkManager = new Mock<ISymlinkManager>();
+        var logger = new Mock<ILogger<RollbackManager>>();
+        var first = new RollbackManager(fileSystem.Object, symlinkManager.Object, logger.Object);
+        var second = new RollbackManager(fileSystem.Object, symlinkManager.Object, logger.Object);
+
+        var point1 = await first.CreateRollbackPointAsync(new MigrationTask
+        {
+            Id = "task-1",
+            SourcePath = @"C:\One",
+            TargetPath = @"D:\One"
+        });
+        var point2 = await second.CreateRollbackPointAsync(new MigrationTask
+        {
+            Id = "task-2",
+            SourcePath = @"C:\Two",
+            TargetPath = @"D:\Two"
+        });
+
+        var points = await first.GetAllRollbackPointsAsync();
+        points.Select(p => p.Id).Should().BeEquivalentTo(point1.Id, point2.Id);
     }
 
     [Fact]
@@ -141,6 +206,45 @@ public class PersistenceRecoveryTests : IDisposable
             false), Times.Once);
         fileSystem.Verify(f => f.MoveDirectory(It.Is<string>(p => p.Contains("_rollback_")), source), Times.Once);
         fileSystem.Verify(f => f.DeleteDirectory(target, true), Times.Once);
+    }
+
+    [Fact]
+    public async Task RollbackManager_ShouldStopRestoreCopyWhenCancellationIsRequested()
+    {
+        var fileSystem = new Mock<IFileSystem>();
+        var symlinkManager = new Mock<ISymlinkManager>();
+        var logger = new Mock<ILogger<RollbackManager>>();
+        using var cts = new CancellationTokenSource();
+        var source = @"C:\Program Files\CancelledRestore";
+        var target = @"D:\MigratedApps\CancelledRestore";
+        var files = new[] { target + @"\one.bin", target + @"\two.bin" };
+
+        fileSystem.Setup(f => f.DirectoryExists(source)).Returns(false);
+        fileSystem.Setup(f => f.DirectoryExists(target)).Returns(true);
+        fileSystem.Setup(f => f.GetFiles(target, "*", false)).Returns(files);
+        fileSystem.Setup(f => f.GetDirectories(target, "*", false)).Returns(Array.Empty<string>());
+        fileSystem.Setup(f => f.GetFileName(It.IsAny<string>())).Returns((string path) => Path.GetFileName(path));
+        fileSystem.Setup(f => f.CombinePath(It.IsAny<string[]>())).Returns((string[] paths) => Path.Combine(paths));
+        fileSystem.Setup(f => f.CopyFilePreserveMetadata(files[0], It.IsAny<string>(), false))
+            .Callback(() => cts.Cancel());
+
+        var manager = new RollbackManager(fileSystem.Object, symlinkManager.Object, logger.Object);
+        var point = await manager.CreateRollbackPointAsync(new MigrationTask
+        {
+            Id = "cancelled-restore",
+            SourcePath = source,
+            TargetPath = target
+        });
+        await manager.RecordStepAsync(point.Id, CompletedStep.SourceRenamed);
+        await manager.RecordStepAsync(point.Id, CompletedStep.TargetFinalized);
+        await manager.RecordStepAsync(point.Id, CompletedStep.BackupDeleted);
+
+        var result = await manager.RollbackAsync(point.Id, cts.Token);
+
+        result.Success.Should().BeFalse();
+        result.IsPartial.Should().BeTrue();
+        fileSystem.Verify(f => f.CopyFilePreserveMetadata(
+            It.IsAny<string>(), It.IsAny<string>(), false), Times.Once);
     }
 
     public void Dispose()

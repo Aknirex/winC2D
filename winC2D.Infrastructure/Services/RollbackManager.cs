@@ -12,20 +12,22 @@ namespace winC2D.Infrastructure.Services;
 /// </summary>
 public class RollbackManager : IRollbackManager
 {
+    private const int SchemaVersion = 2;
     private readonly IFileSystem _fileSystem;
     private readonly ISymlinkManager _symlinkManager;
     private readonly ILogger<RollbackManager> _logger;
     private readonly string _storageDirectory;
     private readonly string _storageFilePath;
+    private readonly object _stateGate = new();
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
         WriteIndented = false
     };
-    
+
     // In-memory storage for rollback points (could be persisted to disk in production)
     private readonly ConcurrentDictionary<string, RollbackPoint> _rollbackPoints = new();
     private readonly ConcurrentDictionary<string, RollbackPoint> _taskRollbackPoints = new();
-    
+
     public RollbackManager(
         IFileSystem fileSystem,
         ISymlinkManager symlinkManager,
@@ -35,16 +37,12 @@ public class RollbackManager : IRollbackManager
         _symlinkManager = symlinkManager;
         _logger = logger;
 
-        var localAppData = Environment.GetEnvironmentVariable("LOCALAPPDATA");
-        if (string.IsNullOrWhiteSpace(localAppData))
-            localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        _storageDirectory = Path.Combine(localAppData, "winC2D", "rollback");
-        Directory.CreateDirectory(_storageDirectory);
+        _storageDirectory = PersistentStateFile.CreateStorageDirectory(logger, "rollback");
         _storageFilePath = Path.Combine(_storageDirectory, "rollback_points.json");
 
         LoadPersistedState();
     }
-    
+
     /// <inheritdoc/>
     public Task<RollbackPoint> CreateRollbackPointAsync(MigrationTask task)
     {
@@ -58,70 +56,90 @@ public class RollbackManager : IRollbackManager
             TargetPath = task.TargetPath,
             TempTargetPath = task.TempTargetPath
         };
-        
-        _rollbackPoints[rollbackPoint.Id] = rollbackPoint;
-        _taskRollbackPoints[task.Id] = rollbackPoint;
 
-        SaveState();
-        
-        _logger.LogInformation("Created rollback point {Id} for task {TaskId}", 
+        MutateState(() =>
+        {
+            _rollbackPoints[rollbackPoint.Id] = rollbackPoint;
+            _taskRollbackPoints[task.Id] = rollbackPoint;
+        });
+
+        _logger.LogInformation("Created rollback point {Id} for task {TaskId}",
             rollbackPoint.Id, task.Id);
-        
+
         return Task.FromResult(rollbackPoint);
     }
-    
+
     /// <inheritdoc/>
     public Task RecordStepAsync(string rollbackPointId, CompletedStep step)
     {
-        if (!_rollbackPoints.TryGetValue(rollbackPointId, out var rollbackPoint))
+        var found = false;
+        MutateState(() =>
+        {
+            if (_rollbackPoints.TryGetValue(rollbackPointId, out var rollbackPoint))
+            {
+                rollbackPoint.AddStep(step);
+                found = true;
+            }
+        });
+        if (!found)
         {
             _logger.LogWarning("Rollback point not found: {Id}", rollbackPointId);
             return Task.CompletedTask;
         }
-        
-        rollbackPoint.AddStep(step);
-        SaveState();
         _logger.LogDebug("Recorded step {Step} for rollback point {Id}", step, rollbackPointId);
-        
+
         return Task.CompletedTask;
     }
-    
+
     /// <inheritdoc/>
     public Task SetBackupPathAsync(string rollbackPointId, string backupPath)
     {
-        if (!_rollbackPoints.TryGetValue(rollbackPointId, out var rollbackPoint))
+        var found = false;
+        MutateState(() =>
+        {
+            if (_rollbackPoints.TryGetValue(rollbackPointId, out var rollbackPoint))
+            {
+                rollbackPoint.BackupPath = backupPath;
+                found = true;
+            }
+        });
+        if (!found)
         {
             _logger.LogWarning("Rollback point not found when setting backup path: {Id}", rollbackPointId);
             return Task.CompletedTask;
         }
-        
-        rollbackPoint.BackupPath = backupPath;
-        SaveState();
         _logger.LogDebug("Set backup path '{BackupPath}' on rollback point {Id}", backupPath, rollbackPointId);
-        
+
         return Task.CompletedTask;
     }
 
     /// <inheritdoc/>
     public Task SetTempTargetPathAsync(string rollbackPointId, string tempTargetPath)
     {
-        if (!_rollbackPoints.TryGetValue(rollbackPointId, out var rollbackPoint))
+        var found = false;
+        MutateState(() =>
+        {
+            if (_rollbackPoints.TryGetValue(rollbackPointId, out var rollbackPoint))
+            {
+                rollbackPoint.TempTargetPath = tempTargetPath;
+                found = true;
+            }
+        });
+        if (!found)
         {
             _logger.LogWarning("Rollback point not found when setting temp target path: {Id}", rollbackPointId);
             return Task.CompletedTask;
         }
-
-        rollbackPoint.TempTargetPath = tempTargetPath;
-        SaveState();
         _logger.LogDebug("Set temp target path '{TempTargetPath}' on rollback point {Id}",
             tempTargetPath, rollbackPointId);
 
         return Task.CompletedTask;
     }
-    
+
     /// <inheritdoc/>
     public async Task<RollbackResult> RollbackAsync(string rollbackPointId, CancellationToken cancellationToken = default)
     {
+        RefreshStateForRead();
         if (!_rollbackPoints.TryGetValue(rollbackPointId, out var rollbackPoint))
         {
             return new RollbackResult
@@ -130,12 +148,12 @@ public class RollbackManager : IRollbackManager
                 ErrorMessage = "Rollback point not found"
             };
         }
-        
+
         _logger.LogInformation("Starting rollback for point {Id} with {Count} step(s) to reverse",
             rollbackPointId, rollbackPoint.CompletedSteps.Count);
-        
+
         var result = new RollbackResult();
-        
+
         try
         {
             // Rollback in reverse order of steps.
@@ -143,7 +161,7 @@ public class RollbackManager : IRollbackManager
             var steps = rollbackPoint.CompletedSteps.ToList();
             var originalSteps = steps.ToHashSet();
             steps.Reverse();
-            
+
             foreach (var step in steps)
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -153,9 +171,10 @@ public class RollbackManager : IRollbackManager
                         rollbackPointId, result.RolledBackSteps.Count);
                     break;
                 }
-                
-                var stepResult = await RollbackStepAsync(rollbackPoint, step, originalSteps);
-                
+
+                var stepResult = await RollbackStepAsync(
+                    rollbackPoint, step, originalSteps, cancellationToken);
+
                 if (!stepResult)
                 {
                     result.IsPartial = true;
@@ -169,16 +188,20 @@ public class RollbackManager : IRollbackManager
                         string.Join(", ", rollbackPoint.CompletedSteps));
                     break;
                 }
-                
+
                 // Step succeeded: remove it from the persisted rollback point so that
                 // a crash / restart won't re-execute this rollback step.
+                MutateState(() =>
+                {
+                    if (_rollbackPoints.TryGetValue(rollbackPointId, out var persisted))
+                        persisted.CompletedSteps.Remove(step);
+                });
                 rollbackPoint.CompletedSteps.Remove(step);
-                SaveState();
                 result.RolledBackSteps.Add(step);
             }
-            
+
             result.Success = !result.IsPartial;
-            
+
             if (result.Success)
             {
                 _logger.LogInformation("Rollback completed successfully for point {Id}", rollbackPointId);
@@ -195,70 +218,81 @@ public class RollbackManager : IRollbackManager
             result.ErrorMessage = ex.Message;
             result.Exception = ex;
             result.IsPartial = true;
-            
+
             _logger.LogError(ex, "Rollback failed for point {Id}", rollbackPointId);
         }
-        
+
         return result;
     }
-    
+
     /// <inheritdoc/>
     public Task<RollbackPoint?> GetRollbackPointAsync(string rollbackPointId)
     {
+        RefreshStateForRead();
         _rollbackPoints.TryGetValue(rollbackPointId, out var point);
         return Task.FromResult(point);
     }
-    
+
     /// <inheritdoc/>
     public Task<IEnumerable<RollbackPoint>> GetRollbackPointsForTaskAsync(string taskId)
     {
+        RefreshStateForRead();
         var points = _rollbackPoints.Values.Where(p => p.TaskId == taskId);
         return Task.FromResult(points);
     }
-    
+
     /// <inheritdoc/>
     public Task<IEnumerable<RollbackPoint>> GetAllRollbackPointsAsync()
     {
+        RefreshStateForRead();
         return Task.FromResult(_rollbackPoints.Values.AsEnumerable());
     }
-    
+
     /// <inheritdoc/>
     public Task DeleteRollbackPointAsync(string rollbackPointId)
     {
-        if (_rollbackPoints.TryRemove(rollbackPointId, out var point))
+        RollbackPoint? removed = null;
+        MutateState(() =>
         {
-            _taskRollbackPoints.TryRemove(point.TaskId, out _);
-            SaveState();
+            if (_rollbackPoints.TryRemove(rollbackPointId, out var point))
+            {
+                _taskRollbackPoints.TryRemove(point.TaskId, out _);
+                removed = point;
+            }
+        });
+        if (removed is not null)
+        {
             _logger.LogDebug("Deleted rollback point {Id}", rollbackPointId);
         }
-        
+
         return Task.CompletedTask;
     }
-    
+
     /// <inheritdoc/>
     public Task CleanupOldRollbackPointsAsync(DateTime olderThan)
     {
-        var toRemove = _rollbackPoints.Values
-            .Where(p => p.CreatedAt < olderThan)
-            .ToList();
-        
-        foreach (var point in toRemove)
+        var removedCount = 0;
+        MutateState(() =>
         {
-            _rollbackPoints.TryRemove(point.Id, out _);
-            _taskRollbackPoints.TryRemove(point.TaskId, out _);
+            var toRemove = _rollbackPoints.Values
+                .Where(p => p.CreatedAt < olderThan)
+                .ToList();
+            foreach (var point in toRemove)
+            {
+                _rollbackPoints.TryRemove(point.Id, out _);
+                _taskRollbackPoints.TryRemove(point.TaskId, out _);
+            }
+            removedCount = toRemove.Count;
+        });
+
+        if (removedCount > 0)
+        {
+            _logger.LogInformation("Cleaned up {Count} old rollback points", removedCount);
         }
 
-        if (toRemove.Any())
-            SaveState();
-        
-        if (toRemove.Any())
-        {
-            _logger.LogInformation("Cleaned up {Count} old rollback points", toRemove.Count);
-        }
-        
         return Task.CompletedTask;
     }
-    
+
     #region Private Methods
 
     private sealed class RollbackStateDocument
@@ -269,79 +303,96 @@ public class RollbackManager : IRollbackManager
 
     private void LoadPersistedState()
     {
-        try
+        RefreshStateForRead();
+    }
+
+    private void RefreshStateForRead()
+    {
+        lock (_stateGate)
         {
-            if (!File.Exists(_storageFilePath))
-                return;
-
-            var json = File.ReadAllText(_storageFilePath);
-            var document = JsonSerializer.Deserialize<RollbackStateDocument>(json, _jsonOptions);
-            if (document?.RollbackPoints is null)
-                return;
-
-            foreach (var point in document.RollbackPoints)
+            using var processLock = PersistentStateFile.AcquireProcessLock(_storageFilePath);
+            try
             {
-                _rollbackPoints[point.Id] = point;
-                if (!string.IsNullOrWhiteSpace(point.TaskId))
-                    _taskRollbackPoints[point.TaskId] = point;
+                LoadStateCore();
             }
-
-            if (document.RollbackPoints.Count > 0)
+            catch (Exception ex)
             {
-                _logger.LogInformation(
-                    "Loaded {Count} persisted rollback point(s) from {Path}",
-                    document.RollbackPoints.Count,
+                _logger.LogWarning(ex,
+                    "Failed to refresh rollback points from {Path}; using last known-good state",
                     _storageFilePath);
             }
         }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to load rollback points from {Path}", _storageFilePath);
-        }
     }
 
-    private void SaveState()
+    private void MutateState(Action mutation)
     {
-        try
+        lock (_stateGate)
         {
-            Directory.CreateDirectory(_storageDirectory);
-            var document = new RollbackStateDocument
-            {
-                SchemaVersion = 2,
-                RollbackPoints = _rollbackPoints.Values.OrderBy(p => p.CreatedAt).ToList()
-            };
-            var json = JsonSerializer.Serialize(document, _jsonOptions);
-
-            // Atomic write to prevent corruption on crash mid-write.
-            var tmpPath = _storageFilePath + ".tmp";
-            File.WriteAllText(tmpPath, json);
-            File.Move(tmpPath, _storageFilePath, overwrite: true);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to persist rollback points to {Path}", _storageFilePath);
+            using var processLock = PersistentStateFile.AcquireProcessLock(_storageFilePath);
+            LoadStateCore();
+            mutation();
+            SaveStateCore();
         }
     }
-    
+
+    private void LoadStateCore()
+    {
+        if (!File.Exists(_storageFilePath))
+        {
+            _rollbackPoints.Clear();
+            _taskRollbackPoints.Clear();
+            return;
+        }
+
+        var json = File.ReadAllText(_storageFilePath);
+        var document = JsonSerializer.Deserialize<RollbackStateDocument>(json, _jsonOptions)
+            ?? throw new InvalidDataException($"Rollback state file '{_storageFilePath}' is empty or invalid.");
+        var points = new Dictionary<string, RollbackPoint>(StringComparer.OrdinalIgnoreCase);
+        foreach (var point in document.RollbackPoints)
+            points[point.Id] = point;
+
+        _rollbackPoints.Clear();
+        _taskRollbackPoints.Clear();
+        foreach (var point in points.Values)
+        {
+            _rollbackPoints[point.Id] = point;
+            if (!string.IsNullOrWhiteSpace(point.TaskId))
+                _taskRollbackPoints[point.TaskId] = point;
+        }
+    }
+
+    private void SaveStateCore()
+    {
+        Directory.CreateDirectory(_storageDirectory);
+        var document = new RollbackStateDocument
+        {
+            SchemaVersion = SchemaVersion,
+            RollbackPoints = _rollbackPoints.Values.OrderBy(p => p.CreatedAt).ToList()
+        };
+        var json = JsonSerializer.Serialize(document, _jsonOptions);
+        PersistentStateFile.AtomicWriteAllText(_storageFilePath, json);
+    }
+
     private async Task<bool> RollbackStepAsync(
         RollbackPoint point,
         CompletedStep step,
-        IReadOnlySet<CompletedStep> originalSteps)
+        IReadOnlySet<CompletedStep> originalSteps,
+        CancellationToken cancellationToken)
     {
         return step switch
         {
             CompletedStep.BackupDeleted => await RollbackBackupDeletedAsync(point),
             CompletedStep.SymlinkCreated => await RollbackSymlinkCreatedAsync(point),
             CompletedStep.TargetFinalized => await RollbackTargetFinalizedAsync(
-                point, originalSteps.Contains(CompletedStep.BackupDeleted)),
+                point, originalSteps.Contains(CompletedStep.BackupDeleted), cancellationToken),
             CompletedStep.TempFilesCopied => await RollbackTempFilesCopiedAsync(point),
             CompletedStep.FilesCopied => await RollbackFilesCopiedAsync(
-                point, originalSteps.Contains(CompletedStep.BackupDeleted)),
+                point, originalSteps.Contains(CompletedStep.BackupDeleted), cancellationToken),
             CompletedStep.SourceRenamed => await RollbackSourceRenamedAsync(point),
             _ => true
         };
     }
-    
+
     private Task<bool> RollbackBackupDeletedAsync(RollbackPoint point)
     {
         // Backup deletion is not directly reversible. Completed migrations are
@@ -350,7 +401,7 @@ public class RollbackManager : IRollbackManager
             point.Id);
         return Task.FromResult(true);
     }
-    
+
     private async Task<bool> RollbackSymlinkCreatedAsync(RollbackPoint point)
     {
         // Delete the symlink
@@ -366,17 +417,20 @@ public class RollbackManager : IRollbackManager
                 }
             }
         }
-        
+
         return true;
     }
-    
-    private async Task<bool> RollbackTargetFinalizedAsync(RollbackPoint point, bool backupWasDeleted)
+
+    private async Task<bool> RollbackTargetFinalizedAsync(
+        RollbackPoint point,
+        bool backupWasDeleted,
+        CancellationToken cancellationToken)
     {
         if (!_fileSystem.DirectoryExists(point.TargetPath))
             return true;
 
         if (backupWasDeleted)
-            return await RestoreSourceFromTargetAsync(point);
+            return await RestoreSourceFromTargetAsync(point, cancellationToken);
 
         try
         {
@@ -410,7 +464,10 @@ public class RollbackManager : IRollbackManager
         }
     }
 
-    private async Task<bool> RollbackFilesCopiedAsync(RollbackPoint point, bool backupWasDeleted)
+    private async Task<bool> RollbackFilesCopiedAsync(
+        RollbackPoint point,
+        bool backupWasDeleted,
+        CancellationToken cancellationToken)
     {
         // Legacy compatibility: older versions copied directly to TargetPath
         // and recorded FilesCopied instead of TempFilesCopied/TargetFinalized.
@@ -418,7 +475,7 @@ public class RollbackManager : IRollbackManager
             return true;
 
         if (backupWasDeleted)
-            return await RestoreSourceFromTargetAsync(point);
+            return await RestoreSourceFromTargetAsync(point, cancellationToken);
 
         try
         {
@@ -432,7 +489,7 @@ public class RollbackManager : IRollbackManager
             return false;
         }
     }
-    
+
     private async Task<bool> RollbackSourceRenamedAsync(RollbackPoint point)
     {
         // Restore the source directory from backup
@@ -461,7 +518,7 @@ public class RollbackManager : IRollbackManager
                         return false;
                     }
                 }
-                
+
                 // Move backup back to source
                 _fileSystem.MoveDirectory(point.BackupPath, point.SourcePath);
                 _logger.LogDebug("Restored source directory from backup: {Backup} -> {Source}",
@@ -473,11 +530,13 @@ public class RollbackManager : IRollbackManager
                 return false;
             }
         }
-        
+
         return true;
     }
 
-    private async Task<bool> RestoreSourceFromTargetAsync(RollbackPoint point)
+    private async Task<bool> RestoreSourceFromTargetAsync(
+        RollbackPoint point,
+        CancellationToken cancellationToken)
     {
         var restoreTempPath = point.SourcePath + "_rollback_" + Guid.NewGuid().ToString("N");
 
@@ -501,7 +560,7 @@ public class RollbackManager : IRollbackManager
                 }
             }
 
-            CopyDirectory(point.TargetPath, restoreTempPath);
+            CopyDirectory(point.TargetPath, restoreTempPath, cancellationToken);
             _fileSystem.MoveDirectory(restoreTempPath, point.SourcePath);
             _fileSystem.DeleteDirectory(point.TargetPath, true);
 
@@ -523,18 +582,23 @@ public class RollbackManager : IRollbackManager
         }
     }
 
-    private void CopyDirectory(string sourceDir, string targetDir)
+    private void CopyDirectory(
+        string sourceDir,
+        string targetDir,
+        CancellationToken cancellationToken)
     {
         var stack = new Stack<(string Source, string Target)>();
         stack.Push((sourceDir, targetDir));
 
         while (stack.Count > 0)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var (src, dst) = stack.Pop();
             _fileSystem.CreateDirectory(dst);
 
             foreach (var file in _fileSystem.GetFiles(src, "*", false))
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var fileName = _fileSystem.GetFileName(file)
                     ?? throw new IOException($"Cannot determine file name for '{file}'.");
                 _fileSystem.CopyFilePreserveMetadata(file, _fileSystem.CombinePath(dst, fileName), false);
@@ -542,6 +606,7 @@ public class RollbackManager : IRollbackManager
 
             foreach (var directory in _fileSystem.GetDirectories(src, "*", false))
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var dirName = _fileSystem.GetFileName(directory)
                     ?? throw new IOException($"Cannot determine directory name for '{directory}'.");
                 stack.Push((directory, _fileSystem.CombinePath(dst, dirName)));
@@ -558,6 +623,6 @@ public class RollbackManager : IRollbackManager
             catch { }
         }
     }
-    
+
     #endregion
 }

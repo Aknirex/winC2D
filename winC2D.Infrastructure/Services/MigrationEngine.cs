@@ -25,14 +25,14 @@ public class MigrationEngine : IMigrationEngine
 
     private readonly ConcurrentDictionary<string, MigrationTask> _tasks = new();
     private readonly ConcurrentDictionary<string, CancellationTokenSource> _cancellationTokens = new();
-    
+
     // Per-task pause gates: Set = running, Reset = paused.
     private readonly ConcurrentDictionary<string, ManualResetEventSlim> _pauseGates = new();
-    
+
     public event EventHandler<MigrationProgressEventArgs>? ProgressChanged;
     public event EventHandler<MigrationErrorEventArgs>? ErrorOccurred;
     public event EventHandler<MigrationTask>? StateChanged;
-    
+
     public MigrationEngine(
         IFileSystem fileSystem,
         ISymlinkManager symlinkManager,
@@ -63,7 +63,7 @@ public class MigrationEngine : IMigrationEngine
         _taskStore = taskStore;
         _logger = logger;
     }
-    
+
     /// <inheritdoc/>
     public async Task<MigrationTask> CreateTaskAsync(MigrationRequest request, CancellationToken cancellationToken = default)
     {
@@ -80,32 +80,42 @@ public class MigrationEngine : IMigrationEngine
             State = MigrationState.Pending,
             CreatedAt = DateTime.UtcNow
         };
-        
+
         // Calculate total size
         task.TotalBytes = validation.SourceSizeBytes > 0
             ? validation.SourceSizeBytes
             : await Task.Run(() => _fileSystem.GetDirectorySize(request.SourcePath, cancellationToken), cancellationToken);
-        task.TotalFiles = await Task.Run(() => _fileSystem.GetFiles(request.SourcePath, "*", true).Count(), cancellationToken);
-        
+        task.TotalFiles = await Task.Run(() =>
+        {
+            var count = 0;
+            foreach (var _ in _fileSystem.GetFiles(request.SourcePath, "*", true))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                count++;
+            }
+            return count;
+        }, cancellationToken);
+
         _tasks[task.Id] = task;
         await SaveTaskAsync(task);
-        
-        _logger.LogInformation("Created migration task {TaskId} for {Name}: {SourcePath} -> {TargetPath}", 
+
+        _logger.LogInformation("Created migration task {TaskId} for {Name}: {SourcePath} -> {TargetPath}",
             task.Id, task.Name, task.SourcePath, task.TargetPath);
-        
+
         return task;
     }
-    
+
     /// <inheritdoc/>
     public Task<MigrationTask?> GetTaskAsync(string taskId)
     {
         return _taskStore.GetAsync(taskId);
     }
-    
+
     /// <inheritdoc/>
-    public Task<IEnumerable<MigrationTask>> GetAllTasksAsync()
+    public async Task<IEnumerable<MigrationTask>> GetAllTasksAsync()
     {
-        return _taskStore.GetAllAsync().ContinueWith(t => t.Result.AsEnumerable());
+        var tasks = await _taskStore.GetAllAsync().ConfigureAwait(false);
+        return tasks;
     }
 
     public Task<MigrationPreflightResult> ValidateAsync(MigrationRequest request, CancellationToken cancellationToken = default)
@@ -124,7 +134,7 @@ public class MigrationEngine : IMigrationEngine
         await _rollbackManager.CleanupOldRollbackPointsAsync(DateTime.UtcNow.AddDays(-Math.Max(0, options.OlderThanDays)));
         return removed;
     }
-    
+
     /// <inheritdoc/>
     public async Task<MigrationResult> ExecuteAsync(MigrationTask task, CancellationToken cancellationToken = default)
     {
@@ -132,11 +142,11 @@ public class MigrationEngine : IMigrationEngine
         var stopwatch = Stopwatch.StartNew();
         var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _cancellationTokens[task.Id] = cts;
-        
+
         // Create (or reuse) a pause gate for this task — initially signalled (running).
         var pauseGate = _pauseGates.GetOrAdd(task.Id, _ => new ManualResetEventSlim(true));
         pauseGate.Set(); // Ensure the gate is open when we start/resume.
-        
+
         try
         {
             task.StartedAt = DateTime.UtcNow;
@@ -144,7 +154,7 @@ public class MigrationEngine : IMigrationEngine
             task.State = MigrationState.Preparing;
             await SaveTaskAsync(task);
             OnStateChanged(task);
-            
+
             var validation = await _preflightService.ValidateAsync(new MigrationRequest
             {
                 Type = task.Type,
@@ -160,17 +170,17 @@ public class MigrationEngine : IMigrationEngine
             var tempTargetPath = BuildTempTargetPath(task.TargetPath);
             task.TempTargetPath = tempTargetPath;
             await SaveTaskAsync(task);
-            
+
             // Create rollback point
             task.RollbackPoint = await _rollbackManager.CreateRollbackPointAsync(task);
             await _rollbackManager.SetTempTargetPathAsync(task.RollbackPoint.Id, tempTargetPath);
             await SaveTaskAsync(task);
-            
+
             // Step 1: Rename source directory (atomic operation to detect locked files)
             task.State = MigrationState.Copying;
             await SaveTaskAsync(task);
             OnStateChanged(task);
-            
+
             var backupPath = task.SourcePath + "_migrating_" + Guid.NewGuid().ToString("N");
             task.BackupPath = backupPath;
             await SaveTaskAsync(task);
@@ -189,7 +199,7 @@ public class MigrationEngine : IMigrationEngine
                     + "are locked by running processes. Please close the application "
                     + $"(including any background services/tray icons) and retry. "
                     + $"Locked files: {string.Join(", ", lockedFiles.Take(10))}";
-                return await FailTaskAsync(task, fileLockMessage, null, System.Diagnostics.Stopwatch.StartNew().Elapsed);
+                return await FailTaskAsync(task, fileLockMessage, null, stopwatch.Elapsed);
             }
 
             try
@@ -232,59 +242,59 @@ public class MigrationEngine : IMigrationEngine
                 throw;
             }
             await _rollbackManager.RecordStepAsync(task.RollbackPoint.Id, CompletedStep.SourceRenamed);
-            
+
             // Persist the backup path on the rollback point so that RollbackSourceRenamedAsync
             // can locate the backup directory if a rollback is needed.
             await _rollbackManager.SetBackupPathAsync(task.RollbackPoint.Id, backupPath);
             await SaveTaskAsync(task);
-            
+
             // Step 2: Copy files to an isolated temporary target. The final
             // target path should not appear until the copy has completed.
             await CopyDirectoryAsync(task, backupPath, tempTargetPath, cts.Token);
-            
+
             if (cts.Token.IsCancellationRequested)
             {
                 return await CancelAndRollbackAsync(task, stopwatch.Elapsed, cts.Token);
             }
-            
+
             await _rollbackManager.RecordStepAsync(task.RollbackPoint.Id, CompletedStep.TempFilesCopied);
 
             // Step 3: Atomically promote the fully-copied temp directory to the final target
             _fileSystem.MoveDirectory(tempTargetPath, task.TargetPath);
             await _rollbackManager.RecordStepAsync(task.RollbackPoint.Id, CompletedStep.TargetFinalized);
-            
+
             // Step 4: Create symbolic link
             task.State = MigrationState.CreatingSymlink;
             await SaveTaskAsync(task);
             OnStateChanged(task);
-            
+
             var symlinkCreated = await _symlinkManager.CreateDirectorySymlinkAsync(task.SourcePath, task.TargetPath);
             if (!symlinkCreated)
             {
                 return await FailAndRollbackAsync(task, "Failed to create symbolic link", null, stopwatch.Elapsed, cts.Token);
             }
-            
+
             await _rollbackManager.RecordStepAsync(task.RollbackPoint.Id, CompletedStep.SymlinkCreated);
-            
+
             // Step 5: Delete backup directory
             task.State = MigrationState.CleaningUp;
             await SaveTaskAsync(task);
             OnStateChanged(task);
-            
+
             _fileSystem.DeleteDirectory(backupPath, true);
             await _rollbackManager.RecordStepAsync(task.RollbackPoint.Id, CompletedStep.BackupDeleted);
-            
+
             // Success!
             task.State = MigrationState.Completed;
             task.CompletedAt = DateTime.UtcNow;
             await SaveTaskAsync(task);
             OnStateChanged(task);
-            
+
             stopwatch.Stop();
-            
-            _logger.LogInformation("Migration task {TaskId} completed successfully in {Duration}", 
+
+            _logger.LogInformation("Migration task {TaskId} completed successfully in {Duration}",
                 task.Id, stopwatch.Elapsed);
-            
+
             return MigrationResult.Succeeded(task, stopwatch.Elapsed);
         }
         catch (OperationCanceledException)
@@ -312,7 +322,7 @@ public class MigrationEngine : IMigrationEngine
             }
         }
     }
-    
+
     /// <inheritdoc/>
     public async IAsyncEnumerable<MigrationResult> ExecuteBatchAsync(IEnumerable<MigrationTask> tasks, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
@@ -320,34 +330,34 @@ public class MigrationEngine : IMigrationEngine
         {
             if (cancellationToken.IsCancellationRequested)
                 yield break;
-            
+
             var result = await ExecuteAsync(task, cancellationToken);
             yield return result;
         }
     }
-    
+
     /// <inheritdoc/>
     public async Task PauseAsync(string taskId)
     {
         if (!_tasks.TryGetValue(taskId, out var task))
             return;
-        
+
         // Only pause tasks that are actively running.
         if (task.State is not (MigrationState.Copying or MigrationState.CreatingSymlink or MigrationState.CleaningUp or MigrationState.Preparing))
             return;
-        
+
         // Blocking the pause gate will cause the copy loop to wait at the next
         // checkpoint without triggering cancellation or rollback.
         if (_pauseGates.TryGetValue(taskId, out var gate))
             gate.Reset();
-        
+
         task.State = MigrationState.Paused;
         await SaveTaskAsync(task);
         OnStateChanged(task);
-        
+
         _logger.LogInformation("Migration task {TaskId} paused", taskId);
     }
-    
+
     /// <inheritdoc/>
     /// <remarks>
     /// Resuming unblocks the paused copy loop inside the already-running
@@ -361,20 +371,20 @@ public class MigrationEngine : IMigrationEngine
     {
         if (!_tasks.TryGetValue(taskId, out var task))
             return MigrationResult.Failed(null!, "Task not found", null);
-        
+
         if (task.State != MigrationState.Paused)
             return MigrationResult.Failed(task, "Task is not paused", null);
-        
+
         // Signal the pause gate — the copy loop will resume from where it stopped.
         if (_pauseGates.TryGetValue(taskId, out var gate))
             gate.Set();
-        
+
         task.State = MigrationState.Copying;
         await SaveTaskAsync(task);
         OnStateChanged(task);
-        
+
         _logger.LogInformation("Migration task {TaskId} resumed", taskId);
-        
+
         // The background execution loop is already running and waiting on the gate;
         // returning a placeholder result to indicate the resume request was accepted.
         // The authoritative result arrives later via StateChanged / ProgressChanged events.
@@ -385,7 +395,7 @@ public class MigrationEngine : IMigrationEngine
             FinalState = MigrationState.Copying
         };
     }
-    
+
     /// <inheritdoc/>
     public async Task<MigrationResult> CancelAsync(string taskId, bool rollback = true, CancellationToken cancellationToken = default)
     {
@@ -393,18 +403,18 @@ public class MigrationEngine : IMigrationEngine
         {
             return MigrationResult.Failed(null!, "Task not found", null);
         }
-        
+
         // Cancel the operation
         if (_cancellationTokens.TryGetValue(taskId, out var cts))
         {
             cts.Cancel();
         }
-        
+
         task.State = MigrationState.Cancelled;
         task.CompletedAt = DateTime.UtcNow;
         await SaveTaskAsync(task);
         OnStateChanged(task);
-        
+
         if (rollback && task.RollbackPoint != null)
         {
             var rollbackResult = await _rollbackManager.RollbackAsync(task.RollbackPoint.Id, cancellationToken);
@@ -417,7 +427,7 @@ public class MigrationEngine : IMigrationEngine
                 RollbackResult = rollbackResult
             };
         }
-        
+
         return MigrationResult.Failed(task, "Cancelled by user", null);
     }
 
@@ -435,7 +445,7 @@ public class MigrationEngine : IMigrationEngine
     {
         return _taskStore.RequestCancelAsync(taskId, rollback, cancellationToken);
     }
-    
+
     /// <inheritdoc/>
     public async Task<RollbackResult> RollbackAsync(string taskId, CancellationToken cancellationToken = default)
     {
@@ -449,7 +459,7 @@ public class MigrationEngine : IMigrationEngine
                 ErrorMessage = "No rollback point found"
             };
         }
-        
+
         task.State = MigrationState.RollingBack;
         await SaveTaskAsync(task);
         OnStateChanged(task);
@@ -465,17 +475,17 @@ public class MigrationEngine : IMigrationEngine
 
         return result;
     }
-    
+
     /// <inheritdoc/>
     public async Task<bool> CanRollbackAsync(string taskId)
     {
         var task = await _taskStore.GetAsync(taskId);
         if (task?.RollbackPoint == null)
             return false;
-        
+
         return task.RollbackPoint.CanRollback;
     }
-    
+
     #region Private Methods
 
     private sealed class PermissivePreflightService : IMigrationPreflightService
@@ -579,15 +589,16 @@ public class MigrationEngine : IMigrationEngine
         // Check individual files for process locks
         try
         {
-            var files = Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories);
             const int maxFilesToCheck = 200;
-            var checkedCount = 0;
-
-            foreach (var file in files)
+            var options = new EnumerationOptions
             {
-                if (checkedCount++ >= maxFilesToCheck)
-                    break;
+                RecurseSubdirectories = true,
+                IgnoreInaccessible = true,
+                AttributesToSkip = FileAttributes.ReparsePoint
+            };
 
+            foreach (var file in Directory.EnumerateFiles(directoryPath, "*", options).Take(maxFilesToCheck))
+            {
                 try
                 {
                     using var fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.None);
@@ -633,7 +644,7 @@ public class MigrationEngine : IMigrationEngine
         return tempPath;
     }
 
-    
+
     private async Task CopyDirectoryAsync(MigrationTask task, string sourceDir, string targetDir, CancellationToken cancellationToken)
     {
         // Iterative depth-first traversal to avoid stack overflow on deeply nested
@@ -709,8 +720,8 @@ public class MigrationEngine : IMigrationEngine
             {
                 var srcInfo = new DirectoryInfo(src);
                 var dstInfo = new DirectoryInfo(dst);
-                dstInfo.CreationTimeUtc   = srcInfo.CreationTimeUtc;
-                dstInfo.LastWriteTimeUtc  = srcInfo.LastWriteTimeUtc;
+                dstInfo.CreationTimeUtc = srcInfo.CreationTimeUtc;
+                dstInfo.LastWriteTimeUtc = srcInfo.LastWriteTimeUtc;
                 dstInfo.LastAccessTimeUtc = srcInfo.LastAccessTimeUtc;
             }
             catch
@@ -768,7 +779,7 @@ public class MigrationEngine : IMigrationEngine
             }
         }
     }
-    
+
     private async Task<MigrationResult> FailTaskAsync(MigrationTask task, string message, Exception? ex, TimeSpan elapsed)
     {
         task.State = MigrationState.Failed;
@@ -777,12 +788,12 @@ public class MigrationEngine : IMigrationEngine
         task.CompletedAt = DateTime.UtcNow;
         await SaveTaskAsync(task);
         OnStateChanged(task);
-        
+
         OnError(task, message, ex, MigrationErrorSeverity.Error);
-        
-        return MigrationResult.Failed(task, message, ex);
+
+        return MigrationResult.Failed(task, message, ex, elapsed);
     }
-    
+
     private async Task<MigrationResult> FailAndRollbackAsync(
         MigrationTask task, string message, Exception? ex, TimeSpan elapsed,
         CancellationToken cancellationToken = default)
@@ -791,22 +802,22 @@ public class MigrationEngine : IMigrationEngine
         task.ErrorMessage = message;
         await SaveTaskAsync(task);
         OnStateChanged(task);
-        
+
         if (task.RollbackPoint != null)
         {
             // Use a fresh timeout token so a cancelled copy operation does not
             // immediately cancel the rollback that protects the original data.
             using var rollbackCts = new CancellationTokenSource();
             rollbackCts.CancelAfter(TimeSpan.FromMinutes(5));
-            
+
             var rollbackResult = await _rollbackManager.RollbackAsync(task.RollbackPoint.Id, rollbackCts.Token);
-            
+
             task.State = rollbackResult.Success ? MigrationState.RolledBack : MigrationState.PartialRollback;
             task.CompletedAt = DateTime.UtcNow;
             task.ErrorMessage = message;
             await SaveTaskAsync(task);
             OnStateChanged(task);
-            
+
             return new MigrationResult
             {
                 Success = false,
@@ -814,14 +825,19 @@ public class MigrationEngine : IMigrationEngine
                 FinalState = task.State,
                 ErrorMessage = message,
                 Exception = ex,
+                SourcePath = task.SourcePath,
+                TargetPath = task.TargetPath,
+                Duration = elapsed,
+                BytesTransferred = task.CopiedBytes,
+                FilesTransferred = task.CopiedFiles,
                 WasRolledBack = rollbackResult.Success,
                 RollbackResult = rollbackResult
             };
         }
-        
+
         return await FailTaskAsync(task, message, ex, elapsed);
     }
-    
+
     private async Task<MigrationResult> CancelAndRollbackAsync(
         MigrationTask task, TimeSpan elapsed,
         CancellationToken cancellationToken = default)
@@ -830,12 +846,12 @@ public class MigrationEngine : IMigrationEngine
         task.CompletedAt = DateTime.UtcNow;
         await SaveTaskAsync(task);
         OnStateChanged(task);
-        
+
         if (task.CancelRollback && task.RollbackPoint != null)
         {
             using var rollbackCts = new CancellationTokenSource();
             rollbackCts.CancelAfter(TimeSpan.FromMinutes(5));
-            
+
             var rollbackResult = await _rollbackManager.RollbackAsync(task.RollbackPoint.Id, rollbackCts.Token);
             return new MigrationResult
             {
@@ -843,14 +859,19 @@ public class MigrationEngine : IMigrationEngine
                 TaskId = task.Id,
                 FinalState = MigrationState.Cancelled,
                 ErrorMessage = "Cancelled by user",
+                SourcePath = task.SourcePath,
+                TargetPath = task.TargetPath,
+                Duration = elapsed,
+                BytesTransferred = task.CopiedBytes,
+                FilesTransferred = task.CopiedFiles,
                 WasRolledBack = rollbackResult.Success,
                 RollbackResult = rollbackResult
             };
         }
-        
-        return MigrationResult.Failed(task, "Cancelled by user", null);
+
+        return MigrationResult.Failed(task, "Cancelled by user", null, elapsed);
     }
-    
+
     private void OnProgressChanged(MigrationTask task)
     {
         ProgressChanged?.Invoke(this, new MigrationProgressEventArgs
@@ -865,12 +886,12 @@ public class MigrationEngine : IMigrationEngine
             ProgressPercent = task.ProgressPercent
         });
     }
-    
+
     private void OnStateChanged(MigrationTask task)
     {
         StateChanged?.Invoke(this, task);
     }
-    
+
     private void OnError(MigrationTask task, string message, Exception? ex, MigrationErrorSeverity severity)
     {
         ErrorOccurred?.Invoke(this, new MigrationErrorEventArgs
@@ -883,6 +904,6 @@ public class MigrationEngine : IMigrationEngine
             IsRecoverable = task.RollbackPoint?.CanRollback ?? false
         });
     }
-    
+
     #endregion
 }

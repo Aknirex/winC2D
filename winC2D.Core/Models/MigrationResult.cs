@@ -9,62 +9,62 @@ public class MigrationResult
     /// Whether the migration was successful
     /// </summary>
     public bool Success { get; set; }
-    
+
     /// <summary>
     /// Associated task ID
     /// </summary>
     public string TaskId { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Final state of the migration
     /// </summary>
     public MigrationState FinalState { get; set; }
-    
+
     /// <summary>
     /// Error message if failed
     /// </summary>
     public string? ErrorMessage { get; set; }
-    
+
     /// <summary>
     /// Exception if failed
     /// </summary>
     public Exception? Exception { get; set; }
-    
+
     /// <summary>
     /// Source path
     /// </summary>
     public string SourcePath { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Target path
     /// </summary>
     public string TargetPath { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Total time taken
     /// </summary>
     public TimeSpan Duration { get; set; }
-    
+
     /// <summary>
     /// Total bytes transferred
     /// </summary>
     public long BytesTransferred { get; set; }
-    
+
     /// <summary>
     /// Total files transferred
     /// </summary>
     public int FilesTransferred { get; set; }
-    
+
     /// <summary>
     /// Whether rollback was performed
     /// </summary>
     public bool WasRolledBack { get; set; }
-    
+
     /// <summary>
     /// Rollback result if rollback was performed
     /// </summary>
     public RollbackResult? RollbackResult { get; set; }
-    
+
     /// <summary>
     /// Create a successful result
     /// </summary>
@@ -82,11 +82,15 @@ public class MigrationResult
             FilesTransferred = task.CopiedFiles
         };
     }
-    
+
     /// <summary>
     /// Create a failed result
     /// </summary>
-    public static MigrationResult Failed(MigrationTask? task, string errorMessage, Exception? exception = null)
+    public static MigrationResult Failed(
+        MigrationTask? task,
+        string errorMessage,
+        Exception? exception = null,
+        TimeSpan duration = default)
     {
         return new MigrationResult
         {
@@ -96,7 +100,10 @@ public class MigrationResult
             ErrorMessage = errorMessage,
             Exception = exception,
             SourcePath = task?.SourcePath ?? string.Empty,
-            TargetPath = task?.TargetPath ?? string.Empty
+            TargetPath = task?.TargetPath ?? string.Empty,
+            Duration = duration,
+            BytesTransferred = task?.CopiedBytes ?? 0,
+            FilesTransferred = task?.CopiedFiles ?? 0
         };
     }
 }
@@ -110,27 +117,27 @@ public class RollbackResult
     /// Whether the rollback was successful
     /// </summary>
     public bool Success { get; set; }
-    
+
     /// <summary>
     /// Error message if rollback failed
     /// </summary>
     public string? ErrorMessage { get; set; }
-    
+
     /// <summary>
     /// Exception if rollback failed
     /// </summary>
     public Exception? Exception { get; set; }
-    
+
     /// <summary>
     /// Steps that were rolled back
     /// </summary>
     public List<CompletedStep> RolledBackSteps { get; set; } = new();
-    
+
     /// <summary>
     /// The step at which rollback failed (only set when <see cref="IsPartial"/> is true).
     /// </summary>
     public CompletedStep? FailedStep { get; set; }
-    
+
     /// <summary>
     /// Whether the rollback was partial (some steps could not be rolled back)
     /// </summary>

@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.3.13] - 2026-06-22
+
+### Added
+- Added `PersistentStateFile` shared utility for atomic file writes (temp-file + rename) and process-level mutex locking, replacing duplicated persistence logic across `RollbackManager` and `JsonMigrationTaskStore`.
+
+### Changed
+- `RollbackManager` now uses `PersistentStateFile` for storage directory management and atomic state writes; introduced `_stateGate` lock with `MutateState()`/`RefreshStateForRead()` for thread-safe state access (schema version bumped to 2).
+- `MigrationEngine.Failed()` factory method now captures `Duration`, `BytesTransferred`, and `FilesTransferred` in failed results for better diagnostics.
+- File enumeration in `MigrationEngine` changed from `Directory.GetFiles` to `Directory.EnumerateFiles` with `EnumerationOptions` for locked-file detection, reducing memory allocation.
+- `FileSystem.GetDirectorySize()` no longer skips `System`-attributed files during size calculation (`AttributesToSkip` changed from `ReparsePoint | System` to `ReparsePoint` only).
+
+### Fixed
+- Cancellation in `FileSystem.GetDirectorySize()` and `MigrationEngine.CreateTaskAsync()` now uses `ThrowIfCancellationRequested()` instead of silent `break`, ensuring timely and observable task cancellation.
+- `MigrationEngine.GetAllTasksAsync()` no longer wraps results in a continuation, avoiding unnecessary async overhead.
+
+---
+
 ## [4.3.12] - 2026-06-22
 
 ### Added
@@ -191,6 +208,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[4.3.13]: https://github.com/Aknirex/winC2D/releases/tag/v4.3.13
 [4.3.12]: https://github.com/Aknirex/winC2D/releases/tag/v4.3.12
 [4.2.0]: https://github.com/Aknirex/winC2D/releases/tag/v4.2.0
 [4.1.6]: https://github.com/Aknirex/winC2D/releases/tag/v4.1.6

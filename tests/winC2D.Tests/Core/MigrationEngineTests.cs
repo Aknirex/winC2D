@@ -18,7 +18,7 @@ public class MigrationEngineTests : IDisposable
     private readonly Mock<IRollbackManager> _rollbackManagerMock;
     private readonly Mock<Microsoft.Extensions.Logging.ILogger<MigrationEngine>> _loggerMock;
     private readonly string _localAppDataRoot;
-    
+
     public MigrationEngineTests()
     {
         _localAppDataRoot = Path.Combine(Path.GetTempPath(), "winC2D-tests", Guid.NewGuid().ToString("N"));
@@ -53,7 +53,7 @@ public class MigrationEngineTests : IDisposable
             .Setup(r => r.DeleteRollbackPointAsync(It.IsAny<string>()))
             .Returns(Task.CompletedTask);
     }
-    
+
     [Fact]
     public async Task CreateTaskAsync_ShouldCreateValidTask()
     {
@@ -63,7 +63,7 @@ public class MigrationEngineTests : IDisposable
             _symlinkManagerMock.Object,
             _rollbackManagerMock.Object,
             _loggerMock.Object);
-        
+
         var request = new MigrationRequest
         {
             Type = MigrationType.Software,
@@ -71,15 +71,15 @@ public class MigrationEngineTests : IDisposable
             SourcePath = @"C:\Program Files\TestApp",
             TargetRootPath = @"D:\MigratedApps"
         };
-        
+
         // Setup file system mocks
         _fileSystemMock.Setup(f => f.DirectoryExists(request.SourcePath)).Returns(true);
         _fileSystemMock.Setup(f => f.GetDirectorySize(request.SourcePath, default)).Returns(1024 * 1024 * 100); // 100 MB
         _fileSystemMock.Setup(f => f.GetFiles(request.SourcePath, "*", true)).Returns(new[] { "file1.exe", "file2.dll" });
-        
+
         // Act
         var task = await engine.CreateTaskAsync(request);
-        
+
         // Assert
         task.Should().NotBeNull();
         task.Id.Should().NotBeNullOrEmpty();
@@ -87,7 +87,7 @@ public class MigrationEngineTests : IDisposable
         task.SourcePath.Should().Be(request.SourcePath);
         task.State.Should().Be(MigrationState.Pending);
     }
-    
+
     [Fact]
     public async Task GetTaskAsync_WhenTaskExists_ShouldReturnTask()
     {
@@ -97,7 +97,7 @@ public class MigrationEngineTests : IDisposable
             _symlinkManagerMock.Object,
             _rollbackManagerMock.Object,
             _loggerMock.Object);
-        
+
         var request = new MigrationRequest
         {
             Type = MigrationType.Software,
@@ -105,21 +105,21 @@ public class MigrationEngineTests : IDisposable
             SourcePath = @"C:\Program Files\TestApp",
             TargetRootPath = @"D:\MigratedApps"
         };
-        
+
         _fileSystemMock.Setup(f => f.DirectoryExists(request.SourcePath)).Returns(true);
         _fileSystemMock.Setup(f => f.GetDirectorySize(request.SourcePath, default)).Returns(1024);
         _fileSystemMock.Setup(f => f.GetFiles(request.SourcePath, "*", true)).Returns(Array.Empty<string>());
-        
+
         var createdTask = await engine.CreateTaskAsync(request);
-        
+
         // Act
         var retrievedTask = await engine.GetTaskAsync(createdTask.Id);
-        
+
         // Assert
         retrievedTask.Should().NotBeNull();
         retrievedTask!.Id.Should().Be(createdTask.Id);
     }
-    
+
     [Fact]
     public async Task GetTaskAsync_WhenTaskDoesNotExist_ShouldReturnNull()
     {
@@ -129,10 +129,10 @@ public class MigrationEngineTests : IDisposable
             _symlinkManagerMock.Object,
             _rollbackManagerMock.Object,
             _loggerMock.Object);
-        
+
         // Act
         var task = await engine.GetTaskAsync("non-existent-id");
-        
+
         // Assert
         task.Should().BeNull();
     }
@@ -286,6 +286,97 @@ public class MigrationEngineTests : IDisposable
         result.WasRolledBack.Should().BeTrue();
         _rollbackManagerMock.Verify(r => r.RecordStepAsync(rollbackPoint.Id, CompletedStep.TargetFinalized), Times.Once);
         _rollbackManagerMock.Verify(r => r.RollbackAsync(rollbackPoint.Id, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenTemporaryTargetPromotionFails_ShouldRollbackAndReportDuration()
+    {
+        var engine = new MigrationEngine(
+            _fileSystemMock.Object,
+            _symlinkManagerMock.Object,
+            _rollbackManagerMock.Object,
+            _loggerMock.Object);
+        var source = @"C:\Program Files\PromotionFailure";
+        var target = @"D:\MigratedApps\PromotionFailure";
+        var rollbackPoint = new RollbackPoint { Id = "rp-promotion" };
+
+        _fileSystemMock.Setup(f => f.GetDirectorySize(source, default)).Returns(100);
+        _fileSystemMock.Setup(f => f.GetFiles(source, "*", true)).Returns(new[] { source + @"\app.exe" });
+        _fileSystemMock.Setup(f => f.DirectoryExists(source)).Returns(true);
+        _fileSystemMock.Setup(f => f.GetFiles(It.Is<string>(p => p.Contains("_migrating_")), "*", false))
+            .Returns(new[] { source + @"_migrating_123\app.exe" });
+        _fileSystemMock.Setup(f => f.GetDirectories(It.Is<string>(p => p.Contains("_migrating_")), "*", false))
+            .Returns(Array.Empty<string>());
+        _fileSystemMock.Setup(f => f.GetFileSize(It.IsAny<string>())).Returns(100);
+        _fileSystemMock.Setup(f => f.MoveDirectory(
+                It.Is<string>(p => p.Contains("_copying_")), target))
+            .Throws(new IOException("Target disk full"));
+        _rollbackManagerMock.Setup(r => r.CreateRollbackPointAsync(It.IsAny<MigrationTask>()))
+            .ReturnsAsync(rollbackPoint);
+        _rollbackManagerMock.Setup(r => r.RollbackAsync(rollbackPoint.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RollbackResult { Success = true });
+
+        var task = await engine.CreateTaskAsync(new MigrationRequest
+        {
+            Type = MigrationType.Software,
+            Name = "PromotionFailure",
+            SourcePath = source,
+            TargetRootPath = @"D:\MigratedApps"
+        });
+        var result = await engine.ExecuteAsync(task);
+
+        result.Success.Should().BeFalse();
+        result.FinalState.Should().Be(MigrationState.RolledBack);
+        result.Duration.Should().BeGreaterThan(TimeSpan.Zero);
+        _rollbackManagerMock.Verify(r => r.RecordStepAsync(
+            rollbackPoint.Id, CompletedStep.TempFilesCopied), Times.Once);
+        _rollbackManagerMock.Verify(r => r.RollbackAsync(
+            rollbackPoint.Id, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenBackupDeletionFails_ShouldNotReportSuccess()
+    {
+        var engine = new MigrationEngine(
+            _fileSystemMock.Object,
+            _symlinkManagerMock.Object,
+            _rollbackManagerMock.Object,
+            _loggerMock.Object);
+        var source = @"C:\Program Files\CleanupFailure";
+        var target = @"D:\MigratedApps\CleanupFailure";
+        var rollbackPoint = new RollbackPoint { Id = "rp-cleanup" };
+
+        _fileSystemMock.Setup(f => f.GetDirectorySize(source, default)).Returns(100);
+        _fileSystemMock.Setup(f => f.GetFiles(source, "*", true)).Returns(new[] { source + @"\app.exe" });
+        _fileSystemMock.Setup(f => f.DirectoryExists(source)).Returns(true);
+        _fileSystemMock.Setup(f => f.GetFiles(It.Is<string>(p => p.Contains("_migrating_")), "*", false))
+            .Returns(new[] { source + @"_migrating_123\app.exe" });
+        _fileSystemMock.Setup(f => f.GetDirectories(It.Is<string>(p => p.Contains("_migrating_")), "*", false))
+            .Returns(Array.Empty<string>());
+        _fileSystemMock.Setup(f => f.GetFileSize(It.IsAny<string>())).Returns(100);
+        _fileSystemMock.Setup(f => f.DeleteDirectory(
+                It.Is<string>(p => p.Contains("_migrating_")), true))
+            .Throws(new IOException("Backup is still in use"));
+        _rollbackManagerMock.Setup(r => r.CreateRollbackPointAsync(It.IsAny<MigrationTask>()))
+            .ReturnsAsync(rollbackPoint);
+        _rollbackManagerMock.Setup(r => r.RollbackAsync(rollbackPoint.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RollbackResult { Success = true });
+        _symlinkManagerMock.Setup(s => s.CreateDirectorySymlinkAsync(source, target)).ReturnsAsync(true);
+
+        var task = await engine.CreateTaskAsync(new MigrationRequest
+        {
+            Type = MigrationType.Software,
+            Name = "CleanupFailure",
+            SourcePath = source,
+            TargetRootPath = @"D:\MigratedApps"
+        });
+        var result = await engine.ExecuteAsync(task);
+
+        result.Success.Should().BeFalse();
+        result.FinalState.Should().Be(MigrationState.RolledBack);
+        task.State.Should().NotBe(MigrationState.Completed);
+        _rollbackManagerMock.Verify(r => r.RecordStepAsync(
+            rollbackPoint.Id, CompletedStep.BackupDeleted), Times.Never);
     }
 
     [Fact]

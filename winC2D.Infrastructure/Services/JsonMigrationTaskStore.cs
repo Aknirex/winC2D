@@ -11,8 +11,8 @@ public sealed class JsonMigrationTaskStore : IMigrationTaskStore
     private const int SchemaVersion = 2;
     private static readonly TimeSpan PendingStaleAfter = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan HeartbeatStaleAfter = TimeSpan.FromSeconds(30);
-    private static readonly TimeSpan ProgressSaveInterval = TimeSpan.FromMilliseconds(500);
-    private const int ProgressSaveFileInterval = 100;
+    private static readonly TimeSpan ProgressSaveInterval = TimeSpan.FromSeconds(2);
+    private const int ProgressSaveFileInterval = 500;
 
     private readonly ILogger<JsonMigrationTaskStore> _logger;
     private readonly string _storageDirectory;
@@ -21,24 +21,25 @@ public sealed class JsonMigrationTaskStore : IMigrationTaskStore
     private readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = false };
     private readonly Dictionary<string, MigrationTask> _tasks = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, (DateTime SavedAt, int Files)> _progressSaves = new(StringComparer.OrdinalIgnoreCase);
+    private DateTime _loadedWriteTimeUtc;
+    private long _loadedLength = -1;
 
     public JsonMigrationTaskStore(ILogger<JsonMigrationTaskStore> logger)
     {
         _logger = logger;
-        var localAppData = Environment.GetEnvironmentVariable("LOCALAPPDATA");
-        if (string.IsNullOrWhiteSpace(localAppData))
-            localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        _storageDirectory = Path.Combine(localAppData, "winC2D", "tasks");
-        Directory.CreateDirectory(_storageDirectory);
+        _storageDirectory = PersistentStateFile.CreateStorageDirectory(logger, "tasks");
         _storageFilePath = Path.Combine(_storageDirectory, "migration_tasks.json");
-        LoadFromDisk();
+
+        using var processLock = PersistentStateFile.AcquireProcessLock(_storageFilePath);
+        LoadForRead(force: true);
     }
 
     public Task<MigrationTask?> GetAsync(string taskId, CancellationToken cancellationToken = default)
     {
         lock (_gate)
         {
-            LoadFromDisk();
+            using var processLock = PersistentStateFile.AcquireProcessLock(_storageFilePath, cancellationToken);
+            LoadForRead(force: false);
             return Task.FromResult(_tasks.GetValueOrDefault(taskId));
         }
     }
@@ -47,7 +48,8 @@ public sealed class JsonMigrationTaskStore : IMigrationTaskStore
     {
         lock (_gate)
         {
-            LoadFromDisk();
+            using var processLock = PersistentStateFile.AcquireProcessLock(_storageFilePath, cancellationToken);
+            LoadForRead(force: false);
             return Task.FromResult((IReadOnlyList<MigrationTask>)_tasks.Values.ToList());
         }
     }
@@ -56,7 +58,8 @@ public sealed class JsonMigrationTaskStore : IMigrationTaskStore
     {
         lock (_gate)
         {
-            LoadFromDisk();
+            using var processLock = PersistentStateFile.AcquireProcessLock(_storageFilePath, cancellationToken);
+            LoadFromDisk(force: true);
             task.SchemaVersion = MigrationTask.CurrentSchemaVersion;
             _tasks[task.Id] = task;
             if (immediate)
@@ -80,12 +83,13 @@ public sealed class JsonMigrationTaskStore : IMigrationTaskStore
             if (!shouldSave)
                 return Task.CompletedTask;
 
+            using var processLock = PersistentStateFile.AcquireProcessLock(_storageFilePath, cancellationToken);
             task.LastHeartbeatAt = now;
-            LoadFromDisk();
+            LoadFromDisk(force: true);
             task.SchemaVersion = MigrationTask.CurrentSchemaVersion;
             _tasks[task.Id] = task;
-            _progressSaves[task.Id] = (now, task.CopiedFiles);
             SaveToDisk();
+            _progressSaves[task.Id] = (now, task.CopiedFiles);
         }
 
         return Task.CompletedTask;
@@ -95,7 +99,8 @@ public sealed class JsonMigrationTaskStore : IMigrationTaskStore
     {
         lock (_gate)
         {
-            LoadFromDisk();
+            using var processLock = PersistentStateFile.AcquireProcessLock(_storageFilePath, cancellationToken);
+            LoadFromDisk(force: true);
             if (_tasks.TryGetValue(taskId, out var task))
             {
                 task.LastHeartbeatAt = DateTime.UtcNow;
@@ -106,36 +111,27 @@ public sealed class JsonMigrationTaskStore : IMigrationTaskStore
         return Task.CompletedTask;
     }
 
-    public Task RequestPauseAsync(string taskId, CancellationToken cancellationToken = default)
-    {
-        return UpdateRequestAsync(taskId, t => t.PauseRequestedAt = DateTime.UtcNow);
-    }
+    public Task RequestPauseAsync(string taskId, CancellationToken cancellationToken = default) =>
+        UpdateRequestAsync(taskId, t => t.PauseRequestedAt = DateTime.UtcNow, cancellationToken);
 
-    public Task RequestResumeAsync(string taskId, CancellationToken cancellationToken = default)
-    {
-        return UpdateRequestAsync(taskId, t => t.ResumeRequestedAt = DateTime.UtcNow);
-    }
+    public Task RequestResumeAsync(string taskId, CancellationToken cancellationToken = default) =>
+        UpdateRequestAsync(taskId, t => t.ResumeRequestedAt = DateTime.UtcNow, cancellationToken);
 
-    public Task RequestCancelAsync(string taskId, bool rollback, CancellationToken cancellationToken = default)
-    {
-        return UpdateRequestAsync(taskId, t =>
+    public Task RequestCancelAsync(string taskId, bool rollback, CancellationToken cancellationToken = default) =>
+        UpdateRequestAsync(taskId, t =>
         {
             t.CancelRequestedAt = DateTime.UtcNow;
             t.CancelRollback = rollback;
-        });
-    }
+        }, cancellationToken);
 
     public bool IsStale(MigrationTask task, DateTime utcNow)
     {
         if (IsTerminalState(task.State))
             return false;
-
         if (task.State == MigrationState.Pending)
             return utcNow - task.CreatedAt > PendingStaleAfter && !IsWorkerAlive(task);
-
         if (task.LastHeartbeatAt is null)
             return !IsWorkerAlive(task);
-
         return utcNow - task.LastHeartbeatAt.Value > HeartbeatStaleAfter && !IsWorkerAlive(task);
     }
 
@@ -143,17 +139,14 @@ public sealed class JsonMigrationTaskStore : IMigrationTaskStore
     {
         if (!IsStale(task, utcNow))
             return string.Empty;
-
         if (task.WorkerProcessId is null)
         {
             return task.State == MigrationState.Pending
                 ? "Task was created but no worker process id was recorded. It likely predates worker tracking, failed before launch metadata was saved, or was created by a test/old build."
                 : "Task has no worker process id, so no running process can continue it.";
         }
-
         if (task.LastHeartbeatAt is null)
             return $"Worker process {task.WorkerProcessId} is no longer running and never wrote a heartbeat.";
-
         var ageSeconds = Math.Max(0, (int)(utcNow - task.LastHeartbeatAt.Value).TotalSeconds);
         return $"Worker process {task.WorkerProcessId} is no longer running. Last heartbeat was {ageSeconds} seconds ago.";
     }
@@ -162,7 +155,6 @@ public sealed class JsonMigrationTaskStore : IMigrationTaskStore
     {
         if (task.WorkerProcessId is null)
             return false;
-
         try
         {
             var process = Process.GetProcessById(task.WorkerProcessId.Value);
@@ -178,7 +170,8 @@ public sealed class JsonMigrationTaskStore : IMigrationTaskStore
     {
         lock (_gate)
         {
-            LoadFromDisk();
+            using var processLock = PersistentStateFile.AcquireProcessLock(_storageFilePath, cancellationToken);
+            LoadFromDisk(force: true);
             var now = DateTime.UtcNow;
             var cutoff = now.AddDays(-Math.Max(0, options.OlderThanDays));
             var remove = _tasks.Values
@@ -189,19 +182,21 @@ public sealed class JsonMigrationTaskStore : IMigrationTaskStore
 
             foreach (var id in remove)
                 _tasks.Remove(id);
-
             if (remove.Count > 0)
                 SaveToDisk();
-
             return Task.FromResult(remove.Count);
         }
     }
 
-    private Task UpdateRequestAsync(string taskId, Action<MigrationTask> update)
+    private Task UpdateRequestAsync(
+        string taskId,
+        Action<MigrationTask> update,
+        CancellationToken cancellationToken)
     {
         lock (_gate)
         {
-            LoadFromDisk();
+            using var processLock = PersistentStateFile.AcquireProcessLock(_storageFilePath, cancellationToken);
+            LoadFromDisk(force: true);
             if (_tasks.TryGetValue(taskId, out var task))
             {
                 update(task);
@@ -212,59 +207,71 @@ public sealed class JsonMigrationTaskStore : IMigrationTaskStore
         return Task.CompletedTask;
     }
 
-    private void LoadFromDisk()
+    private void LoadFromDisk(bool force)
+    {
+        if (!File.Exists(_storageFilePath))
+        {
+            _tasks.Clear();
+            _loadedWriteTimeUtc = default;
+            _loadedLength = -1;
+            return;
+        }
+
+        var info = new FileInfo(_storageFilePath);
+        if (!force && info.LastWriteTimeUtc == _loadedWriteTimeUtc && info.Length == _loadedLength)
+            return;
+
+        // Do not mutate the last known-good state until the entire document parses.
+        var json = File.ReadAllText(_storageFilePath);
+        var document = JsonSerializer.Deserialize<MigrationTaskStateDocument>(json, _jsonOptions)
+            ?? throw new InvalidDataException($"Task state file '{_storageFilePath}' is empty or invalid.");
+        var loaded = new Dictionary<string, MigrationTask>(StringComparer.OrdinalIgnoreCase);
+        foreach (var task in document.Tasks)
+        {
+            if (task.SchemaVersion == 0)
+                task.SchemaVersion = 1;
+            loaded[task.Id] = task;
+        }
+
+        _tasks.Clear();
+        foreach (var pair in loaded)
+            _tasks[pair.Key] = pair.Value;
+        _loadedWriteTimeUtc = info.LastWriteTimeUtc;
+        _loadedLength = info.Length;
+    }
+
+    private void LoadForRead(bool force)
     {
         try
         {
-            _tasks.Clear();
-            if (!File.Exists(_storageFilePath))
-                return;
-
-            var json = File.ReadAllText(_storageFilePath);
-            var document = JsonSerializer.Deserialize<MigrationTaskStateDocument>(json, _jsonOptions);
-            if (document?.Tasks is null)
-                return;
-
-            foreach (var task in document.Tasks)
-            {
-                if (task.SchemaVersion == 0)
-                    task.SchemaVersion = 1;
-                _tasks[task.Id] = task;
-            }
+            LoadFromDisk(force);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to load migration tasks from {Path}", _storageFilePath);
+            _logger.LogWarning(ex,
+                "Failed to refresh migration tasks from {Path}; using last known-good state",
+                _storageFilePath);
         }
     }
 
     private void SaveToDisk()
     {
-        try
+        Directory.CreateDirectory(_storageDirectory);
+        var document = new MigrationTaskStateDocument
         {
-            Directory.CreateDirectory(_storageDirectory);
-            var document = new MigrationTaskStateDocument
-            {
-                SchemaVersion = SchemaVersion,
-                Tasks = _tasks.Values.OrderBy(t => t.CreatedAt).ToList()
-            };
-            var json = JsonSerializer.Serialize(document, _jsonOptions);
-            var tmpPath = _storageFilePath + ".tmp";
-            File.WriteAllText(tmpPath, json);
-            File.Move(tmpPath, _storageFilePath, overwrite: true);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to persist migration tasks to {Path}", _storageFilePath);
-        }
+            SchemaVersion = SchemaVersion,
+            Tasks = _tasks.Values.OrderBy(t => t.CreatedAt).ToList()
+        };
+        var json = JsonSerializer.Serialize(document, _jsonOptions);
+        PersistentStateFile.AtomicWriteAllText(_storageFilePath, json);
+        var info = new FileInfo(_storageFilePath);
+        _loadedWriteTimeUtc = info.LastWriteTimeUtc;
+        _loadedLength = info.Length;
     }
 
     private static bool IsTerminalState(MigrationState state) => state is
-        MigrationState.Completed or
-        MigrationState.Failed or
-        MigrationState.RolledBack or
-        MigrationState.PartialRollback or
-        MigrationState.Cancelled;
+        MigrationState.Completed or MigrationState.Failed or MigrationState.RolledBack or
+        MigrationState.PartialRollback or MigrationState.Cancelled;
 
     private sealed class MigrationTaskStateDocument
     {
