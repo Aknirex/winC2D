@@ -44,7 +44,8 @@ Copy-Item "$root\README.md" "$publishDir\" -Force
 Copy-Item "$root\LICENSE" "$publishDir\" -Force
 Copy-Item "$root\CHANGELOG.md" "$publishDir\" -Force
 
-# Kilo Code skill
+# Portable agent skill (the installer links this canonical copy into each
+# user-selected agent directory)
 $skillDir = Join-Path $publishDir "winc2d-skill"
 New-Item -ItemType Directory -Force $skillDir | Out-Null
 Copy-Item "$root\installer\winc2d-skill\SKILL.md" $skillDir -Force

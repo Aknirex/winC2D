@@ -36,7 +36,7 @@ Apos migrar softwares, o winC2D cria **links simbolicos (symlinks)** nos caminho
 
 1. Baixe `winC2D-Setup.exe` em [Releases](https://github.com/Aknirex/winC2D/releases)
 2. Execute o instalador -- padrao `D:\Program Files\winC2D` (nao ocupa o drive C)
-3. O instalador inclui GUI, CLI, gsudo, e instala o AI Agent skill em `%USERPROFILE%\.agents\skills\winc2d\`
+3. O instalador inclui GUI, CLI e gsudo, e pode vincular uma unica copia compartilhada do AI Agent skill ao Codex, Claude Code, Antigravity, OpenCode, OpenClaw e outros agentes comuns
 4. Privilégios de administrador sao necessarios para migracao (o app eleva automaticamente)
 5. Desinstale via Painel de Controle -> Programas e Recursos
 6. Requer Windows 10 / 11
