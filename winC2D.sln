@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "winC2D.Cli", "winC2D.Cli\wi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "winC2D.Tests", "tests\winC2D.Tests\winC2D.Tests.csproj", "{8AC3ACD0-77D5-8F91-C050-A6E13CB620A8}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "winC2D.Mcp", "winC2D.Mcp\winC2D.Mcp.csproj", "{9AC3ACD0-88D6-9F91-C050-A6E13CB620A9}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F6A7B8C9-D0E1-2345-F012-345678901234}"
 EndProject
 Global
@@ -85,6 +87,18 @@ Global
 		{8AC3ACD0-77D5-8F91-C050-A6E13CB620A8}.Release|x64.Build.0 = Release|Any CPU
 		{8AC3ACD0-77D5-8F91-C050-A6E13CB620A8}.Release|x86.ActiveCfg = Release|Any CPU
 		{8AC3ACD0-77D5-8F91-C050-A6E13CB620A8}.Release|x86.Build.0 = Release|Any CPU
+		{9AC3ACD0-88D6-9F91-C050-A6E13CB620A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9AC3ACD0-88D6-9F91-C050-A6E13CB620A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9AC3ACD0-88D6-9F91-C050-A6E13CB620A9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9AC3ACD0-88D6-9F91-C050-A6E13CB620A9}.Debug|x64.Build.0 = Debug|Any CPU
+		{9AC3ACD0-88D6-9F91-C050-A6E13CB620A9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9AC3ACD0-88D6-9F91-C050-A6E13CB620A9}.Debug|x86.Build.0 = Debug|Any CPU
+		{9AC3ACD0-88D6-9F91-C050-A6E13CB620A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9AC3ACD0-88D6-9F91-C050-A6E13CB620A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9AC3ACD0-88D6-9F91-C050-A6E13CB620A9}.Release|x64.ActiveCfg = Release|Any CPU
+		{9AC3ACD0-88D6-9F91-C050-A6E13CB620A9}.Release|x64.Build.0 = Release|Any CPU
+		{9AC3ACD0-88D6-9F91-C050-A6E13CB620A9}.Release|x86.ActiveCfg = Release|Any CPU
+		{9AC3ACD0-88D6-9F91-C050-A6E13CB620A9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
