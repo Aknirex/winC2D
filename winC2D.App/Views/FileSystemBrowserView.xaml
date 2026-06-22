@@ -26,7 +26,7 @@
             </Grid.RowDefinitions>
 
             <!-- Quick Access header -->
-            <TextBlock Grid.Row="0" Text="★ 快速访问" FontWeight="SemiBold" FontSize="13"
+            <TextBlock Grid.Row="0" Text="{Binding L_QuickAccess}" FontWeight="SemiBold" FontSize="13"
                        Margin="12,10,12,4"
                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
 
@@ -84,7 +84,7 @@
             <Separator Grid.Row="2" Margin="12,6"/>
 
             <!-- This PC header -->
-            <TextBlock Grid.Row="3" Text="🖴 此电脑" FontWeight="SemiBold" FontSize="13"
+            <TextBlock Grid.Row="3" Text="{Binding L_ThisPC}" FontWeight="SemiBold" FontSize="13"
                        Margin="12,0,12,4"
                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
 
@@ -175,46 +175,57 @@
             </Grid.RowDefinitions>
 
             <!-- ── Breadcrumb ──────────────────────────── -->
-            <ItemsControl Grid.Row="0" ItemsSource="{Binding Breadcrumbs}"
-                          Margin="0,4,0,8">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="{x:Type vm:BreadcrumbItem}">
-                        <StackPanel Orientation="Horizontal">
-                            <!-- Separator arrow (hidden for root item via style trigger) -->
-                            <TextBlock Text=" ▸ " FontSize="12"
-                                       VerticalAlignment="Center"
-                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsRoot}" Value="True">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                            <!-- Clickable crumb -->
-                            <Button Command="{Binding DataContext.NavigateBreadcrumbCommand,
-                                            RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                    CommandParameter="{Binding}"
-                                    Background="Transparent"
-                                    BorderThickness="0"
-                                    Padding="4,2"
-                                    Cursor="Hand">
-                                <TextBlock Text="{Binding DisplayName}" FontSize="12"
-                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            </Button>
-                        </StackPanel>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <StackPanel Grid.Row="0" Margin="0,4,0,4">
+                <ItemsControl ItemsSource="{Binding Breadcrumbs}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:BreadcrumbItem}">
+                            <StackPanel Orientation="Horizontal">
+                                <!-- Separator arrow (hidden for root item via style trigger) -->
+                                <TextBlock Text=" ▸ " FontSize="12"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsRoot}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <!-- Clickable crumb -->
+                                <Button Command="{Binding DataContext.NavigateBreadcrumbCommand,
+                                                RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Padding="4,2"
+                                        Cursor="Hand">
+                                    <TextBlock Text="{Binding DisplayName}" FontSize="12"
+                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Path input -->
+                <ui:TextBox Text="{Binding BreadcrumbPath, UpdateSourceTrigger=PropertyChanged}"
+                            PlaceholderText="{Binding L_BreadcrumbPlaceholder}"
+                            VerticalAlignment="Center" FontSize="12"
+                            Margin="0,2,0,0">
+                    <ui:TextBox.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding NavigateToPathInputCommand}"/>
+                    </ui:TextBox.InputBindings>
+                </ui:TextBox>
+            </StackPanel>
 
             <!-- ── Toolbar ────────────────────────────── -->
             <Grid Grid.Row="1" Margin="0,0,0,6">
@@ -226,13 +237,13 @@
                 <!-- Navigation buttons -->
                 <StackPanel Orientation="Horizontal">
                     <ui:Button Command="{Binding NavigateUpCommand}"
-                               ToolTip="向上一级"
+                               ToolTip="{Binding L_TooltipUp}"
                                Appearance="Secondary" Margin="0,0,4,0"
                                Width="32" Height="28" Padding="4">
                         <ui:SymbolIcon Symbol="ArrowUp24" FontSize="14"/>
                     </ui:Button>
                     <ui:Button Command="{Binding RefreshCommand}"
-                               ToolTip="刷新"
+                               ToolTip="{Binding L_TooltipRefresh}"
                                Appearance="Secondary" Margin="0,0,4,0"
                                Width="32" Height="28" Padding="4">
                         <ui:SymbolIcon Symbol="ArrowClockwise24" FontSize="14"/>
@@ -240,19 +251,12 @@
 
                     <!-- Add to Quick Access -->
                     <ui:Button Command="{Binding AddToQuickAccessCommand}"
-                               ToolTip="添加到快速访问"
+                               ToolTip="{Binding L_TooltipPin}"
                                Appearance="Secondary" Margin="0,0,8,0"
                                Width="32" Height="28" Padding="4">
                         <ui:SymbolIcon Symbol="Pin24" FontSize="14"/>
                     </ui:Button>
 
-                    <!-- Current path display -->
-                    <TextBlock Text="{Binding CurrentPath, TargetNullValue=此电脑}"
-                               VerticalAlignment="Center" FontSize="11"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               TextTrimming="CharacterEllipsis"
-                               MaxWidth="300"
-                               Margin="4,0"/>
                 </StackPanel>
 
                 <!-- Scan + selection buttons -->
@@ -263,13 +267,13 @@
                                Margin="0,0,4,0">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="DataUsage24" FontSize="14"/>
-                            <TextBlock Text="扫描大小" Margin="4,0,0,0"/>
+                            <TextBlock Text="{Binding L_ScanSizes}" Margin="4,0,0,0"/>
                         </StackPanel>
                     </ui:Button>
-                    <ui:Button Command="{Binding SelectAllCommand}" Content="全选"
+                    <ui:Button Command="{Binding SelectAllCommand}" Content="{Binding L_SelectAll}"
                                Appearance="Secondary" Margin="0,0,2,0"
                                IsEnabled="{Binding IsMigrating, Converter={StaticResource InverseBooleanConverter}}"/>
-                    <ui:Button Command="{Binding DeselectAllCommand}" Content="取消"
+                    <ui:Button Command="{Binding DeselectAllCommand}" Content="{Binding L_DeselectAll}"
                                Appearance="Secondary"
                                IsEnabled="{Binding IsMigrating, Converter={StaticResource InverseBooleanConverter}}"/>
                 </StackPanel>
@@ -280,6 +284,7 @@
                       x:Name="FileSystemDataGrid"
                       ItemsSource="{Binding Items}"
                       AutoGenerateColumns="False"
+                      CanUserAddRows="False"
                       IsReadOnly="False"
                       CanUserSortColumns="True"
                       SelectionMode="Extended"
@@ -295,7 +300,7 @@
                 <!-- Row right-click context menu -->
                 <DataGrid.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="在资源管理器中打开"
+                        <MenuItem Header="{Binding L_MenuExplorer}"
                                   Command="{Binding PlacementTarget.DataContext.OpenInExplorerCommand,
                                                     RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                   CommandParameter="{Binding PlacementTarget.DataContext.RightClickedItem,
@@ -304,7 +309,7 @@
                                 <ui:SymbolIcon Symbol="FolderOpen24" FontSize="14"/>
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem Header="复制路径"
+                        <MenuItem Header="{Binding L_MenuCopyPath}"
                                   Command="{Binding PlacementTarget.DataContext.CopyPathCommand,
                                                     RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                   CommandParameter="{Binding PlacementTarget.DataContext.RightClickedItem,
@@ -363,7 +368,7 @@
                     </DataGridTemplateColumn>
 
                     <!-- Name with icon -->
-                    <DataGridTemplateColumn Header="名称" Width="*" SortMemberPath="Name"
+                    <DataGridTemplateColumn Header="{Binding L_ColName}" Width="*" SortMemberPath="Name"
                                             CanUserSort="True" IsReadOnly="True">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate DataType="{x:Type models:FileSystemItem}">
@@ -390,13 +395,13 @@
                     </DataGridTemplateColumn>
 
                     <!-- Size -->
-                    <DataGridTextColumn Header="大小" Binding="{Binding SizeText, Mode=OneWay}"
+                    <DataGridTextColumn Header="{Binding L_ColSize}" Binding="{Binding SizeText, Mode=OneWay}"
                                         SortMemberPath="SizeBytes" Width="90"
                                         ElementStyle="{StaticResource ExplorerCellTextStyle}"
                                         IsReadOnly="True"/>
 
                     <!-- Status -->
-                    <DataGridTemplateColumn Header="状态" SortMemberPath="Status" Width="80"
+                    <DataGridTemplateColumn Header="{Binding L_ColStatus}" SortMemberPath="Status" Width="80"
                                             IsReadOnly="True">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate DataType="{x:Type models:FileSystemItem}">
@@ -409,13 +414,13 @@
                     </DataGridTemplateColumn>
 
                     <!-- Type -->
-                    <DataGridTextColumn Header="类型" Binding="{Binding TypeText}"
+                    <DataGridTextColumn Header="{Binding L_ColType}" Binding="{Binding TypeText}"
                                         SortMemberPath="TypeText" Width="100"
                                         ElementStyle="{StaticResource ExplorerCellTextStyle}"
                                         IsReadOnly="True"/>
 
                     <!-- Path -->
-                    <DataGridTextColumn Header="路径" Binding="{Binding FullPath}"
+                    <DataGridTextColumn Header="{Binding L_ColPath}" Binding="{Binding FullPath}"
                                         SortMemberPath="FullPath" Width="280"
                                         ElementStyle="{StaticResource ExplorerCellTextStyle}"
                                         IsReadOnly="True"/>
@@ -427,11 +432,11 @@
                     Background="{DynamicResource CardBackgroundBrush}"
                     CornerRadius="4">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="已选: " FontWeight="SemiBold"
+                    <TextBlock Text="{Binding L_SelectedPrefix}" FontWeight="SemiBold"
                                Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                     <TextBlock Text="{Binding TotalSelectedCount}" FontWeight="SemiBold"
                                Foreground="{DynamicResource AccentFillColorDefaultBrush}"/>
-                    <TextBlock Text=" 个项目 (" Margin="0"
+                    <TextBlock Text="{Binding L_SelectedSuffix}" Margin="0"
                                Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                     <TextBlock Text="{Binding TotalSelectedSizeText}" FontWeight="SemiBold"
                                Foreground="{DynamicResource AccentFillColorDefaultBrush}"/>
@@ -448,18 +453,18 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Text="目标路径:" VerticalAlignment="Center"
+                <TextBlock Grid.Column="0" Text="{Binding L_TargetPath}" VerticalAlignment="Center"
                            Margin="0,0,6,0"
                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                 <ui:TextBox Grid.Column="1"
                             Text="{Binding TargetPath, UpdateSourceTrigger=PropertyChanged}"
                             VerticalAlignment="Center"
-                            PlaceholderText="输入迁移目标目录…"
+                            PlaceholderText="{Binding L_TargetPlaceholder}"
                             MinWidth="200"/>
 
                 <ui:Button Grid.Column="2"
                            Command="{Binding BrowseTargetPathCommand}"
-                           Content="浏览…"
+                           Content="{Binding L_Browse}"
                            Appearance="Secondary"
                            Margin="6,0,6,0"
                            VerticalAlignment="Center"/>
@@ -472,7 +477,7 @@
                            MinWidth="100">
                     <StackPanel Orientation="Horizontal">
                         <ui:SymbolIcon Symbol="ArrowRight24" FontSize="14"/>
-                        <TextBlock Text="迁移选中" Margin="4,0,0,0"/>
+                        <TextBlock Text="{Binding L_MigrateSelected}" Margin="4,0,0,0"/>
                     </StackPanel>
                 </ui:Button>
             </Grid>
@@ -495,7 +500,7 @@
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
                         <ui:ProgressRing Width="14" Height="14" IsIndeterminate="True"
                                          Margin="0,0,6,0"/>
-                        <TextBlock Text="扫描中：" FontSize="11"
+                        <TextBlock Text="{Binding L_Scanning}" FontSize="11"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                         <TextBlock Text="{Binding CurrentScanDirectory}" FontSize="11"
                                    Foreground="{DynamicResource AccentFillColorDefaultBrush}"
@@ -515,7 +520,7 @@
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
                         <ui:ProgressRing Width="14" Height="14" IsIndeterminate="True"
                                          Margin="0,0,6,0"/>
-                        <TextBlock Text="迁移中…" FontSize="11"
+                        <TextBlock Text="{Binding L_Migrating}" FontSize="11"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                     </StackPanel>
                     <ProgressBar Grid.Row="1" Value="{Binding MigrationProgress}" Maximum="100"

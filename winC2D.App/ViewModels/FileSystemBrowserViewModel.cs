@@ -92,7 +92,7 @@ public partial class FileSystemBrowserViewModel : ObservableObject
     private int _migrationProgress;
 
     [ObservableProperty]
-    private string _statusMessage = "就绪";
+    private string _statusMessage = "Ready";
 
     [ObservableProperty]
     private string _currentScanDirectory = string.Empty;
@@ -278,14 +278,14 @@ public partial class FileSystemBrowserViewModel : ObservableObject
         Items.Clear();
         SelectedItems.Clear();
         BuildBreadcrumbs();
-        PushStatus("就绪", isBusy: false);
+        PushStatus(_localizationService.GetString("Explorer.StatusReady"), isBusy: false);
     }
 
     private async Task NavigateToPathAsync(string path)
     {
         if (string.IsNullOrEmpty(path)) return;
 
-        PushStatus("正在加载…", isBusy: true);
+        PushStatus(_localizationService.GetString("Explorer.StatusLoading"), isBusy: true);
 
         try
         {
@@ -293,16 +293,16 @@ public partial class FileSystemBrowserViewModel : ObservableObject
             ReplaceItems(contents);
             CurrentPath = path;
             BuildBreadcrumbs();
-            PushStatus($"{contents.Count} 个项目", isBusy: false);
+            PushStatus(string.Format(_localizationService.GetString("Explorer.StatusItemsCount"), contents.Count), isBusy: false);
         }
         catch (UnauthorizedAccessException)
         {
-            PushStatus("访问被拒绝", isBusy: false);
+            PushStatus(_localizationService.GetString("Explorer.StatusAccessDenied"), isBusy: false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Navigation failed: {Path}", path);
-            PushStatus($"加载失败: {ex.Message}", isBusy: false);
+            PushStatus(string.Format(_localizationService.GetString("Explorer.StatusLoadFailed"), ex.Message), isBusy: false);
         }
     }
 
@@ -313,7 +313,7 @@ public partial class FileSystemBrowserViewModel : ObservableObject
         // Root node
         Breadcrumbs.Add(new BreadcrumbItem
         {
-            DisplayName = "此电脑",
+            DisplayName = _localizationService.GetString("Explorer.ThisPC").Replace("🖴 ", "").TrimStart(),
             FullPath = null,
             Index = 0,
             IsLast = CurrentPath is null,
@@ -398,7 +398,7 @@ public partial class FileSystemBrowserViewModel : ObservableObject
                 {
                     CurrentScanDirectory = report.CurrentDirectory;
                     ScanProgress = report.ProgressPercent;
-                    PushStatus($"正在计算: {report.ItemsFound}/{report.TotalDirectories} - {report.CurrentDirectory}", isBusy: true);
+                    PushStatus(string.Format(_localizationService.GetString("Explorer.StatusScanning"), report.ItemsFound, report.TotalDirectories, report.CurrentDirectory), isBusy: true);
                 }, DispatcherPriority.Background);
             });
 
@@ -421,16 +421,16 @@ public partial class FileSystemBrowserViewModel : ObservableObject
             // Persist cache after all scanning completes.
             await _sizeCache.SaveAsync(ct);
 
-            PushStatus($"扫描完成: {snapshot.Count} 个项目", isBusy: false);
+            PushStatus(string.Format(_localizationService.GetString("Explorer.StatusScanComplete"), snapshot.Count), isBusy: false);
         }
         catch (OperationCanceledException)
         {
-            PushStatus("扫描已取消", isBusy: false);
+            PushStatus(_localizationService.GetString("Explorer.StatusScanCancelled"), isBusy: false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Scan failed");
-            PushStatus($"扫描失败: {ex.Message}", isBusy: false);
+            PushStatus(string.Format(_localizationService.GetString("Explorer.StatusScanFailed"), ex.Message), isBusy: false);
         }
         finally
         {
@@ -484,7 +484,7 @@ public partial class FileSystemBrowserViewModel : ObservableObject
         // Validate target path
         if (string.IsNullOrWhiteSpace(TargetPath))
         {
-            PushStatus("请先设置目标路径", isBusy: false);
+            PushStatus(_localizationService.GetString("Explorer.StatusTargetRequired"), isBusy: false);
             return;
         }
 
@@ -534,18 +534,18 @@ public partial class FileSystemBrowserViewModel : ObservableObject
                 {
                     hasError = true;
                     _logger.LogError("Migration failed for {Name}: {Error}", item.Name, result.ErrorMessage);
-                    PushStatus($"迁移失败: {item.Name} - {result.ErrorMessage ?? "未知错误"}", isBusy: false);
+                    PushStatus(string.Format(_localizationService.GetString("Explorer.StatusMigrationFailed"), item.Name, result.ErrorMessage ?? "unknown"), isBusy: false);
                     break;
                 }
             }
 
             if (!hasError)
-                PushStatus("迁移完成", isBusy: false);
+                PushStatus(_localizationService.GetString("Explorer.StatusMigrationComplete"), isBusy: false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Migration error");
-            PushStatus($"迁移出错: {ex.Message}", isBusy: false);
+            PushStatus(string.Format(_localizationService.GetString("Explorer.StatusMigrationError"), ex.Message), isBusy: false);
         }
         finally
         {
@@ -621,7 +621,7 @@ public partial class FileSystemBrowserViewModel : ObservableObject
     {
         var dialog = new System.Windows.Forms.FolderBrowserDialog
         {
-            Description = "选择迁移目标文件夹",
+            Description = _localizationService.GetString("Explorer.BrowseTargetDesc"),
             SelectedPath = TargetPath,
             ShowNewFolderButton = true,
             UseDescriptionForTitle = true,
@@ -808,7 +808,7 @@ public partial class FileSystemBrowserViewModel : ObservableObject
         }
 
         MigrationProgress = percent;
-        PushStatus($"迁移中: {e.FilesCopied}/{e.TotalFiles} 文件 ({e.BytesCopied / (1024 * 1024)}/{e.TotalBytes / (1024 * 1024)} MB)", isBusy: true);
+        PushStatus(string.Format(_localizationService.GetString("Explorer.StatusMigrationProgress"), e.FilesCopied, e.TotalFiles, e.BytesCopied / (1024 * 1024), e.TotalBytes / (1024 * 1024)), isBusy: true);
     }
 
     private void OnMigrationError(object? sender, MigrationErrorEventArgs e)
@@ -827,6 +827,72 @@ public partial class FileSystemBrowserViewModel : ObservableObject
     private void NotifyLocalizedStrings()
     {
         OnPropertyChanged(nameof(StatusMessage));
+        OnPropertyChanged(nameof(L_QuickAccess));
+        OnPropertyChanged(nameof(L_ThisPC));
+        OnPropertyChanged(nameof(L_TooltipUp));
+        OnPropertyChanged(nameof(L_TooltipRefresh));
+        OnPropertyChanged(nameof(L_TooltipPin));
+        OnPropertyChanged(nameof(L_ScanSizes));
+        OnPropertyChanged(nameof(L_SelectAll));
+        OnPropertyChanged(nameof(L_DeselectAll));
+        OnPropertyChanged(nameof(L_ColName));
+        OnPropertyChanged(nameof(L_ColSize));
+        OnPropertyChanged(nameof(L_ColStatus));
+        OnPropertyChanged(nameof(L_ColType));
+        OnPropertyChanged(nameof(L_ColPath));
+        OnPropertyChanged(nameof(L_MenuExplorer));
+        OnPropertyChanged(nameof(L_MenuCopyPath));
+        OnPropertyChanged(nameof(L_SelectedPrefix));
+        OnPropertyChanged(nameof(L_SelectedSuffix));
+        OnPropertyChanged(nameof(L_TargetPath));
+        OnPropertyChanged(nameof(L_TargetPlaceholder));
+        OnPropertyChanged(nameof(L_Browse));
+        OnPropertyChanged(nameof(L_MigrateSelected));
+        OnPropertyChanged(nameof(L_Scanning));
+        OnPropertyChanged(nameof(L_Migrating));
+        OnPropertyChanged(nameof(L_BreadcrumbPlaceholder));
+        // Refresh status message
+        PushStatus(StatusMessage, IsBusy);
+    }
+
+    // ── Localized string properties ──────────────────────────────────────
+
+    public string L_QuickAccess => _localizationService.GetString("Explorer.QuickAccess");
+    public string L_ThisPC => _localizationService.GetString("Explorer.ThisPC");
+    public string L_TooltipUp => _localizationService.GetString("Explorer.TooltipUp");
+    public string L_TooltipRefresh => _localizationService.GetString("Explorer.TooltipRefresh");
+    public string L_TooltipPin => _localizationService.GetString("Explorer.TooltipPin");
+    public string L_ScanSizes => _localizationService.GetString("Explorer.ScanSizes");
+    public string L_SelectAll => _localizationService.GetString("Explorer.SelectAll");
+    public string L_DeselectAll => _localizationService.GetString("Explorer.DeselectAll");
+    public string L_ColName => _localizationService.GetString("Explorer.ColName");
+    public string L_ColSize => _localizationService.GetString("Explorer.ColSize");
+    public string L_ColStatus => _localizationService.GetString("Explorer.ColStatus");
+    public string L_ColType => _localizationService.GetString("Explorer.ColType");
+    public string L_ColPath => _localizationService.GetString("Explorer.ColPath");
+    public string L_MenuExplorer => _localizationService.GetString("Explorer.MenuExplorer");
+    public string L_MenuCopyPath => _localizationService.GetString("Explorer.MenuCopyPath");
+    public string L_SelectedPrefix => _localizationService.GetString("Explorer.SelectedPrefix");
+    public string L_SelectedSuffix => _localizationService.GetString("Explorer.SelectedSuffix");
+    public string L_TargetPath => _localizationService.GetString("Explorer.TargetPath");
+    public string L_TargetPlaceholder => _localizationService.GetString("Explorer.TargetPlaceholder");
+    public string L_Browse => _localizationService.GetString("Explorer.Browse");
+    public string L_MigrateSelected => _localizationService.GetString("Explorer.MigrateSelected");
+    public string L_Scanning => _localizationService.GetString("Explorer.Scanning");
+    public string L_Migrating => _localizationService.GetString("Explorer.Migrating");
+    public string L_BreadcrumbPlaceholder => _localizationService.GetString("Explorer.BreadcrumbPlaceholder");
+
+    // ── Breadcrumb path input ────────────────────────────────────────────
+
+    [ObservableProperty]
+    private string _breadcrumbPath = string.Empty;
+
+    [RelayCommand]
+    private async Task NavigateToPathInputAsync()
+    {
+        if (string.IsNullOrWhiteSpace(BreadcrumbPath)) return;
+        await NavigateToPathAsync(BreadcrumbPath);
+        BreadcrumbPath = string.Empty;
     }
 
     // ═════════════════════════════════════════════════════════════════════
