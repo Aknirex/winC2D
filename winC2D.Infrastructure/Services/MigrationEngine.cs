@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using winC2D.Core.Resilience;
 using winC2D.Core.Services;
 using winC2D.Core.Models;
 using winC2D.Core.Events;
@@ -28,6 +29,16 @@ public class MigrationEngine : IMigrationEngine
     
     // Per-task pause gates: Set = running, Reset = paused.
     private readonly ConcurrentDictionary<string, ManualResetEventSlim> _pauseGates = new();
+
+    // Retry policy for transient file-system errors (locked files, AV interference, etc.)
+    private static readonly RetryPolicy FileCopyRetryPolicy = new(new RetryPolicyOptions
+    {
+        MaxRetries = 3,
+        BaseDelayMs = 250,
+        MaxDelayMs = 5_000,
+        CircuitBreakerThreshold = 8,
+        CircuitBreakDuration = TimeSpan.FromSeconds(15)
+    });
     
     public event EventHandler<MigrationProgressEventArgs>? ProgressChanged;
     public event EventHandler<MigrationErrorEventArgs>? ErrorOccurred;
@@ -116,6 +127,26 @@ public class MigrationEngine : IMigrationEngine
     public Task<int> CleanupTasksAsync(TaskCleanupOptions options, CancellationToken cancellationToken = default)
     {
         return CleanupTasksCoreAsync(options, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public EngineDiagnostics GetDiagnostics()
+    {
+        var circuitState = FileCopyRetryPolicy.GetCircuitState();
+        var tasks = _tasks.Values.ToList();
+
+        return new EngineDiagnostics
+        {
+            ActiveTaskCount = tasks.Count(t => t.State is not (MigrationState.Completed
+                or MigrationState.Failed or MigrationState.RolledBack
+                or MigrationState.PartialRollback or MigrationState.Cancelled)),
+            TotalTaskCount = tasks.Count,
+            FileCopyCircuitState = circuitState,
+            IsCircuitOpen = circuitState == CircuitBreakerState.Open,
+            CopyingTaskCount = tasks.Count(t => t.State == MigrationState.Copying),
+            PausedTaskCount = tasks.Count(t => t.State == MigrationState.Paused),
+            Timestamp = DateTime.UtcNow
+        };
     }
 
     private async Task<int> CleanupTasksCoreAsync(TaskCleanupOptions options, CancellationToken cancellationToken)
@@ -250,15 +281,20 @@ public class MigrationEngine : IMigrationEngine
             await _rollbackManager.RecordStepAsync(task.RollbackPoint.Id, CompletedStep.TempFilesCopied);
 
             // Step 3: Atomically promote the fully-copied temp directory to the final target
-            _fileSystem.MoveDirectory(tempTargetPath, task.TargetPath);
+            await FileCopyRetryPolicy.ExecuteAsync(
+                ct => { _fileSystem.MoveDirectory(tempTargetPath, task.TargetPath); return Task.CompletedTask; },
+                TransientErrorDetectors.IsTransientFileError, cts.Token);
             await _rollbackManager.RecordStepAsync(task.RollbackPoint.Id, CompletedStep.TargetFinalized);
             
-            // Step 4: Create symbolic link
+            // Step 4: Create symbolic link (with retry for transient permission issues)
             task.State = MigrationState.CreatingSymlink;
             await SaveTaskAsync(task);
             OnStateChanged(task);
             
-            var symlinkCreated = await _symlinkManager.CreateDirectorySymlinkAsync(task.SourcePath, task.TargetPath);
+            var symlinkCreated = await FileCopyRetryPolicy.ExecuteAsync(
+                ct => _symlinkManager.CreateDirectorySymlinkAsync(task.SourcePath, task.TargetPath),
+                ex => ex is UnauthorizedAccessException or IOException,
+                cts.Token);
             if (!symlinkCreated)
             {
                 return await FailAndRollbackAsync(task, "Failed to create symbolic link", null, stopwatch.Elapsed, cts.Token);
@@ -679,18 +715,22 @@ public class MigrationEngine : IMigrationEngine
                 task.CurrentFile = fileName;
                 OnProgressChanged(task);
 
-                _fileSystem.CopyFilePreserveMetadata(file, targetFile, false);
-
-                var fileSize = _fileSystem.GetFileSize(file);
-                if (task.VerifyFiles)
+                // Copy with retry for transient errors (locked files, AV scanning, etc.)
+                await FileCopyRetryPolicy.ExecuteAsync(async ct =>
                 {
-                    var copiedSize = _fileSystem.GetFileSize(targetFile);
-                    if (copiedSize != fileSize)
-                        throw new IOException($"File verification failed for '{fileName}'.");
-                }
+                    _fileSystem.CopyFilePreserveMetadata(file, targetFile, false);
 
-                task.CopiedBytes += fileSize;
-                task.CopiedFiles++;
+                    var fileSize = _fileSystem.GetFileSize(file);
+                    if (task.VerifyFiles)
+                    {
+                        var copiedSize = _fileSystem.GetFileSize(targetFile);
+                        if (copiedSize != fileSize)
+                            throw new IOException($"File verification failed for '{fileName}'.");
+                    }
+
+                    task.CopiedBytes += fileSize;
+                    task.CopiedFiles++;
+                }, TransientErrorDetectors.IsTransientFileError, cancellationToken);
                 await SaveProgressAsync(task);
 
                 OnProgressChanged(task);

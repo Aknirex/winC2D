@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using winC2D.Core.FileSystem;
 using winC2D.Core.Models;
+using winC2D.Core.Resilience;
 using winC2D.Core.Services;
 
 namespace winC2D.Cli;
@@ -53,6 +54,7 @@ public static class CliApplication
                 "rollback" => await RollbackAsync(commandArgs, services, stdout, cancellationToken),
                 "list" => await ListAsync(commandArgs, services, stdout),
                 "cleanup" => await CleanupAsync(commandArgs, services, stdout, cancellationToken),
+                "diagnostics" => await DiagnosticsAsync(services, stdout),
                 "help" or "--help" or "-h" => await WriteAsync(stdout, CliExitCode.Success, BuildUsage()),
                 "version" or "--version" or "-v" => await WriteAsync(stdout, CliExitCode.Success, BuildVersion()),
                 InternalRunTaskCommand => await RunTaskAsync(commandArgs, services, stdout, cancellationToken),
@@ -268,15 +270,46 @@ public static class CliApplication
 
     private static async Task<int> StatusAsync(string[] args, IServiceProvider services, TextWriter stdout)
     {
-        var parsed = Parse(args, valueOptions: ["task-id"], flags: []);
+        var parsed = Parse(args, valueOptions: ["task-id"], flags: ["stream"]);
         EnsureNoPositionals(parsed);
         var taskId = Require(parsed, "task-id");
+        var stream = parsed.HasFlag("stream");
+
         var task = await services.GetRequiredService<IMigrationEngine>().GetTaskAsync(taskId);
 
         if (task is null)
             return await WriteAsync(stdout, CliExitCode.TaskNotFound, Error("TASK_NOT_FOUND", $"Task not found: {taskId}", new { taskId }));
 
-        return await WriteAsync(stdout, CliExitCode.Success, BuildTaskStatus(task, services.GetService<IMigrationTaskStore>()));
+        if (!stream)
+            return await WriteAsync(stdout, CliExitCode.Success, BuildTaskStatus(task, services.GetService<IMigrationTaskStore>()));
+
+        // Streaming mode: output one JSON line per polling interval until terminal state.
+        // This gives AI agents real-time progress without polling loops.
+        var engine = services.GetRequiredService<IMigrationEngine>();
+        var store = services.GetService<IMigrationTaskStore>();
+        var terminalExitCode = (CliExitCode?)null;
+
+        while (true)
+        {
+            task = await engine.GetTaskAsync(taskId);
+            if (task is null)
+                break;
+
+            var status = BuildTaskStatus(task, store);
+            await WriteAsync(stdout, CliExitCode.Success, status);
+
+            if (IsTerminalState(task.State))
+            {
+                terminalExitCode = task.State == MigrationState.Completed
+                    ? CliExitCode.Success
+                    : CliExitCode.BusinessFailure;
+                break;
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(1));
+        }
+
+        return (int)(terminalExitCode ?? CliExitCode.BusinessFailure);
     }
 
     private static async Task<int> PauseAsync(string[] args, IServiceProvider services, TextWriter stdout, CancellationToken cancellationToken)
@@ -750,11 +783,13 @@ public static class CliApplication
             {
                 "Run privilege-status first.",
                 "Run disk-info to inspect available target drives.",
+                "Run diagnostics to check circuit-breaker and engine health.",
                 "Run migrate with --dry-run before any real migration.",
                 "Only run a real migration when dry-run returns success=true and canProceed=true.",
                 "For real migration, add --yes and keep the same --source and --target values.",
                 "Store the returned taskId.",
                 "Poll status --task-id <taskId> until state is Completed, Failed, RolledBack, PartialRollback, or Cancelled.",
+                "For real-time monitoring, use status --task-id <taskId> --stream (outputs JSON lines each second).",
                 "After Completed, verify that the source path is a symbolic link and the target path exists."
             },
             safetyRules = new[]
@@ -768,10 +803,12 @@ public static class CliApplication
             {
                 "winC2D.Cli.exe privilege-status",
                 "winC2D.Cli.exe disk-info",
+                "winC2D.Cli.exe diagnostics",
                 "winC2D.Cli.exe preflight --source \"C:\\Program Files\\TeamSpeak\" --target \"D:\\Program Files\"",
                 "winC2D.Cli.exe migrate --source \"C:\\Program Files\\TeamSpeak\" --target \"D:\\Program Files\" --dry-run",
                 "winC2D.Cli.exe migrate --source \"C:\\Program Files\\TeamSpeak\" --target \"D:\\Program Files\" --yes",
-                "winC2D.Cli.exe status --task-id \"<taskId>\""
+                "winC2D.Cli.exe status --task-id \"<taskId>\"",
+                "winC2D.Cli.exe status --task-id \"<taskId>\" --stream"
             }
         },
         commands = new[]
@@ -783,13 +820,14 @@ public static class CliApplication
             "scan [--directories <comma-separated-paths>]",
             "preflight --source <path> --target <path> [--verify true|false]",
             "migrate --source <path> --target <path> [--dry-run] [--verify true|false] [--yes] [--wait] [--timeout-seconds 1800]",
-            "status --task-id <id>",
+            "status --task-id <id> [--stream]",
             "pause --task-id <id>",
             "resume --task-id <id>",
             "cancel --task-id <id> [--no-rollback] --yes",
             "rollback --task-id <id> --yes",
             "list [--state all|completed|failed|running|stale]",
-            "cleanup --state stale|terminal [--older-than-days 30] --yes"
+            "cleanup --state stale|terminal [--older-than-days 30] --yes",
+            "diagnostics"
         }
     };
 
@@ -1124,4 +1162,33 @@ public static class CliApplication
     }
 
     private sealed class CliParseException(string message) : Exception(message);
+
+    private static async Task<int> DiagnosticsAsync(IServiceProvider services, TextWriter stdout)
+    {
+        var engine = services.GetRequiredService<IMigrationEngine>();
+        var diag = engine.GetDiagnostics();
+
+        return await WriteAsync(stdout, CliExitCode.Success, new
+        {
+            success = true,
+            diagnostics = new
+            {
+                activeTaskCount = diag.ActiveTaskCount,
+                totalTaskCount = diag.TotalTaskCount,
+                copyingTaskCount = diag.CopyingTaskCount,
+                pausedTaskCount = diag.PausedTaskCount,
+                circuitBreaker = new
+                {
+                    state = diag.FileCopyCircuitState.ToString(),
+                    isOpen = diag.IsCircuitOpen,
+                    description = diag.IsCircuitOpen
+                        ? "Circuit breaker is OPEN — file copy operations are being rejected. The system will auto-recover after the break duration."
+                        : diag.FileCopyCircuitState == CircuitBreakerState.HalfOpen
+                            ? "Circuit breaker is HALF-OPEN — probing with a trial request."
+                            : "Circuit breaker is CLOSED — normal operation."
+                }
+            },
+            timestamp = diag.Timestamp
+        });
+    }
 }

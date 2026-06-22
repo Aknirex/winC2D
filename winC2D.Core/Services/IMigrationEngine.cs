@@ -123,4 +123,14 @@ public interface IMigrationEngine
     Task<bool> CanRollbackAsync(string taskId);
     
     #endregion
+
+    #region Diagnostics
+
+    /// <summary>
+    /// Get engine diagnostics including circuit-breaker state, active task count,
+    /// and resilience status for monitoring and debugging.
+    /// </summary>
+    EngineDiagnostics GetDiagnostics();
+
+    #endregion
 }
