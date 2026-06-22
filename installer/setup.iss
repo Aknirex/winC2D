@@ -95,8 +95,6 @@ Filename: "{cmd}"; Parameters: "/c rd /s /q ""{app}"""; Flags: runhidden; RunOnc
 
 [Code]
 const
-  FILE_ATTRIBUTE_DIRECTORY = $10;
-  FILE_ATTRIBUTE_REPARSE_POINT = $400;
   INVALID_FILE_ATTRIBUTES = $FFFFFFFF;
 
 var
