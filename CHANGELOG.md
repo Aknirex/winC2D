@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.3.14] - 2026-08-21
+
+### Added
+- Settings page now has working folder browser dialogs for Program Files and Program Files (x86) paths (previously unimplemented TODO commands).
+
+### Changed
+- `SymlinkManager` methods (`CreateDirectorySymlinkAsync`, `CreateFileSymlinkAsync`, `DeleteSymlinkAsync`, `VerifySymlinkAsync`) converted from no-op `async` to synchronous `Task.FromResult` implementations, eliminating unnecessary async state machine allocations.
+- `FolderBrowserDialog` instances in App view models now use `using` declarations to guarantee disposal.
+- `SemaphoreSlim` instances in `FileSystemBrowser` and `SoftwareScanner` are now disposed when the scan producer completes; empty catch blocks in `FileSystemBrowser`, `RollbackManager`, and `SoftwareScanner` now log failures instead of silently swallowing them.
+- `MigrationEngine` admin check simplified to a single `WindowsIdentity` usage with the unused variable removed.
+
+### Fixed
+- Bumped transitive package references to patched versions: `System.Text.Json` 8.0.5 (High-severity advisories GHSA-hh2w-p6rv-4g7w, GHSA-8g4q-xg66-9fp4), plus `System.Net.Http` 4.3.4 and `System.Text.RegularExpressions` 4.3.1 in the test project.
+
+---
+
 ## [4.3.13] - 2026-06-22
 
 ### Added
