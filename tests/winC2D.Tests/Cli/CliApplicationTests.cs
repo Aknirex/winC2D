@@ -325,8 +325,8 @@ public class CliApplicationTests
     private static async Task<CliRunResult> RunCliAsync(string[] args, IServiceProvider? services = null)
     {
         services ??= new ServiceCollection().BuildServiceProvider();
-        var stdout = new StringWriter();
-        var stderr = new StringWriter();
+        using var stdout = new StringWriter();
+        using var stderr = new StringWriter();
 
         var exitCode = await CliApplication.RunAsync(args, services, stdout, stderr);
         var text = stdout.ToString().Trim();

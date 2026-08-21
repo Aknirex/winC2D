@@ -87,35 +87,42 @@ public sealed class SoftwareScanner : ISoftwareScanner
 
         var producer = Task.Run(async () =>
         {
-            var tasks = allDirs.Select(async path =>
+            try
             {
-                await semaphore.WaitAsync(cancellationToken);
-                try
+                var tasks = allDirs.Select(async path =>
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    var item = await BuildItemAsync(path, cancellationToken);
-                    await channel.Writer.WriteAsync(item, cancellationToken);
+                    await semaphore.WaitAsync(cancellationToken);
+                    try
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        var item = await BuildItemAsync(path, cancellationToken);
+                        await channel.Writer.WriteAsync(item, cancellationToken);
 
-                    int current = Interlocked.Increment(ref done);
-                    progress?.Report(new ScanProgressReport(
-                        CurrentDirectory : Path.GetFileName(path) ?? path,
-                        ItemsFound       : current,
-                        TotalDirectories : total,
-                        ProgressPercent  : total > 0 ? (int)((double)current / total * 100) : 100));
-                }
-                catch (OperationCanceledException) { /* swallow – outer loop will stop */ }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Skipped directory during scan: {Path}", path);
-                }
-                finally
-                {
-                    semaphore.Release();
-                }
-            });
+                        int current = Interlocked.Increment(ref done);
+                        progress?.Report(new ScanProgressReport(
+                            CurrentDirectory : Path.GetFileName(path) ?? path,
+                            ItemsFound       : current,
+                            TotalDirectories : total,
+                            ProgressPercent  : total > 0 ? (int)((double)current / total * 100) : 100));
+                    }
+                    catch (OperationCanceledException) { /* swallow – outer loop will stop */ }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Skipped directory during scan: {Path}", path);
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                });
 
-            await Task.WhenAll(tasks);
-            channel.Writer.Complete();
+                await Task.WhenAll(tasks);
+                channel.Writer.Complete();
+            }
+            finally
+            {
+                semaphore.Dispose();
+            }
         }, cancellationToken);
 
         // Yield items as the producer writes them
@@ -161,7 +168,8 @@ public sealed class SoftwareScanner : ISoftwareScanner
                     cancellationToken.ThrowIfCancellationRequested();
                     if (!hasExe && file.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
                         hasExe = true;
-                    try { size += _fileSystem.GetFileSize(file); } catch { }
+                    try { size += _fileSystem.GetFileSize(file); }
+                    catch (Exception ex) { _logger.LogTrace(ex, "Failed to get file size: {Path}", file); }
                 }
             }, cancellationToken);
         }
@@ -266,7 +274,8 @@ public sealed class SoftwareScanner : ISoftwareScanner
                     hasAny = true;
                     if (!hasExe && file.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
                         hasExe = true;
-                    try { size += _fileSystem.GetFileSize(file); } catch { }
+                    try { size += _fileSystem.GetFileSize(file); }
+                    catch (Exception ex) { _logger.LogTrace(ex, "Failed to get file size: {Path}", file); }
                 }
                 
                 if (!hasAny)

@@ -568,15 +568,18 @@ public class RollbackManager : IRollbackManager
                 point.TargetPath, point.SourcePath);
             return true;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to restore source from target");
-            try
+            catch (Exception ex)
             {
-                if (_fileSystem.DirectoryExists(restoreTempPath))
-                    _fileSystem.DeleteDirectory(restoreTempPath, true);
-            }
-            catch { }
+                _logger.LogError(ex, "Failed to restore source from target");
+                try
+                {
+                    if (_fileSystem.DirectoryExists(restoreTempPath))
+                        _fileSystem.DeleteDirectory(restoreTempPath, true);
+                }
+                catch (Exception cleanupEx)
+                {
+                    _logger.LogDebug(cleanupEx, "Failed to clean up restore temp path: {Path}", restoreTempPath);
+                }
 
             return false;
         }
@@ -620,7 +623,10 @@ public class RollbackManager : IRollbackManager
                 dstInfo.LastWriteTimeUtc = srcInfo.LastWriteTimeUtc;
                 dstInfo.LastAccessTimeUtc = srcInfo.LastAccessTimeUtc;
             }
-            catch { }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Failed to preserve directory timestamps for {Path}", dst);
+            }
         }
     }
 

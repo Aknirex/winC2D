@@ -205,13 +205,12 @@ public class MigrationEngine : IMigrationEngine
             try
             {
 #pragma warning disable CA1416
+                using var adminIdentity = System.Security.Principal.WindowsIdentity.GetCurrent();
+                var isAdmin = new System.Security.Principal.WindowsPrincipal(adminIdentity)
+                    .IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
                 _logger.LogInformation(
                     "[DIAG] Attempting MoveDirectory: '{SourcePath}' -\u003E '{BackupPath}'. Admin={IsAdmin}",
-                    task.SourcePath, backupPath,
-                    System.Security.Principal.WindowsIdentity.GetCurrent().Name is { } n
-                        && new System.Security.Principal.WindowsPrincipal(
-                            System.Security.Principal.WindowsIdentity.GetCurrent())
-                           .IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator));
+                    task.SourcePath, backupPath, isAdmin);
 #pragma warning restore CA1416
 
                 _fileSystem.MoveDirectory(task.SourcePath, backupPath);

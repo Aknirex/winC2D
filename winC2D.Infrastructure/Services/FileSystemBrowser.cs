@@ -180,71 +180,78 @@ public sealed class FileSystemBrowser : IFileSystemBrowser
 
         var producer = Task.Run(async () =>
         {
-            var tasks = dirsToScan.Select(async dirItem =>
+            try
             {
-                await semaphore.WaitAsync(ct);
-                try
+                var tasks = dirsToScan.Select(async dirItem =>
                 {
-                    ct.ThrowIfCancellationRequested();
-
-                    // Check size cache first
-                    if (_sizeCache.TryGet(dirItem.FullPath, out var cached))
+                    await semaphore.WaitAsync(ct);
+                    try
                     {
-                        dirItem.SizeBytes = cached.SizeBytes;
-                        dirItem.SizeChecked = true;
-                        dirItem.Status = cached.SizeBytes > 0
-                            ? FileSystemItemStatus.Normal
-                            : FileSystemItemStatus.Empty;
-                    }
-                    else
-                    {
-                        long size = 0;
-                        try
-                        {
-                            size = _fileSystem.GetDirectorySize(dirItem.FullPath, ct);
-                            _sizeCache.Set(dirItem.FullPath, size);
-                        }
-                        catch (OperationCanceledException) { throw; }
-                        catch (UnauthorizedAccessException)
-                        {
-                            dirItem.Status = FileSystemItemStatus.AccessDenied;
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "Error scanning {Path}", dirItem.FullPath);
-                            dirItem.Status = FileSystemItemStatus.Error;
-                        }
+                        ct.ThrowIfCancellationRequested();
 
-                        dirItem.SizeBytes = size;
-                        dirItem.SizeChecked = true;
-                        if (dirItem.Status == FileSystemItemStatus.Normal)
-                            dirItem.Status = size > 0
+                        // Check size cache first
+                        if (_sizeCache.TryGet(dirItem.FullPath, out var cached))
+                        {
+                            dirItem.SizeBytes = cached.SizeBytes;
+                            dirItem.SizeChecked = true;
+                            dirItem.Status = cached.SizeBytes > 0
                                 ? FileSystemItemStatus.Normal
                                 : FileSystemItemStatus.Empty;
+                        }
+                        else
+                        {
+                            long size = 0;
+                            try
+                            {
+                                size = _fileSystem.GetDirectorySize(dirItem.FullPath, ct);
+                                _sizeCache.Set(dirItem.FullPath, size);
+                            }
+                            catch (OperationCanceledException) { throw; }
+                            catch (UnauthorizedAccessException)
+                            {
+                                dirItem.Status = FileSystemItemStatus.AccessDenied;
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, "Error scanning {Path}", dirItem.FullPath);
+                                dirItem.Status = FileSystemItemStatus.Error;
+                            }
+
+                            dirItem.SizeBytes = size;
+                            dirItem.SizeChecked = true;
+                            if (dirItem.Status == FileSystemItemStatus.Normal)
+                                dirItem.Status = size > 0
+                                    ? FileSystemItemStatus.Normal
+                                    : FileSystemItemStatus.Empty;
+                        }
+
+                        await channel.Writer.WriteAsync(dirItem, ct);
+
+                        int current = Interlocked.Increment(ref done);
+                        progress?.Report(new ScanProgressReport(
+                            CurrentDirectory: dirItem.Name,
+                            ItemsFound: current,
+                            TotalDirectories: total,
+                            ProgressPercent: (int)((double)current / total * 100)));
                     }
+                    catch (OperationCanceledException) { /* swallow */ }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Skipped directory during scan: {Path}", dirItem.FullPath);
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                });
 
-                    await channel.Writer.WriteAsync(dirItem, ct);
-
-                    int current = Interlocked.Increment(ref done);
-                    progress?.Report(new ScanProgressReport(
-                        CurrentDirectory: dirItem.Name,
-                        ItemsFound: current,
-                        TotalDirectories: total,
-                        ProgressPercent: (int)((double)current / total * 100)));
-                }
-                catch (OperationCanceledException) { /* swallow */ }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Skipped directory during scan: {Path}", dirItem.FullPath);
-                }
-                finally
-                {
-                    semaphore.Release();
-                }
-            });
-
-            await Task.WhenAll(tasks);
-            channel.Writer.Complete();
+                await Task.WhenAll(tasks);
+                channel.Writer.Complete();
+            }
+            finally
+            {
+                semaphore.Dispose();
+            }
         }, ct);
 
         // Track which paths are directories so we know what remains to yield.
@@ -344,8 +351,10 @@ public sealed class FileSystemBrowser : IFileSystemBrowser
                     if (di.IsReady)
                     {
                         item.IsReady = true;
-                        try { item.TotalSize = di.TotalSize; } catch { }
-                        try { item.FreeSpace = di.AvailableFreeSpace; } catch { }
+                        try { item.TotalSize = di.TotalSize; }
+                        catch (Exception ex) { _logger.LogTrace(ex, "Failed to read total size for drive {Drive}", di.Name); }
+                        try { item.FreeSpace = di.AvailableFreeSpace; }
+                        catch (Exception ex) { _logger.LogTrace(ex, "Failed to read free space for drive {Drive}", di.Name); }
 
                         // Volume label
                         try { item.Label = string.IsNullOrWhiteSpace(di.VolumeLabel) ? "本地磁盘" : di.VolumeLabel; }
