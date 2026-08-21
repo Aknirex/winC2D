@@ -18,7 +18,7 @@ public class SymlinkManager : ISymlinkManager
     }
     
     /// <inheritdoc/>
-    public async Task<bool> CreateDirectorySymlinkAsync(string linkPath, string targetPath)
+    public Task<bool> CreateDirectorySymlinkAsync(string linkPath, string targetPath)
     {
         try
         {
@@ -30,14 +30,14 @@ public class SymlinkManager : ISymlinkManager
             if (!Directory.Exists(targetPath))
             {
                 _logger.LogError("Target directory does not exist: {TargetPath}", targetPath);
-                return false;
+                return Task.FromResult(false);
             }
             
             // Check if link path already exists
             if (Directory.Exists(linkPath) || File.Exists(linkPath))
             {
                 _logger.LogError("Link path already exists: {LinkPath}", linkPath);
-                return false;
+                return Task.FromResult(false);
             }
             
             // Ensure parent directory exists
@@ -51,30 +51,30 @@ public class SymlinkManager : ISymlinkManager
             Directory.CreateSymbolicLink(linkPath, targetPath);
             
             // Verify the symlink was created
-            var created = await VerifySymlinkAsync(linkPath);
-            if (!created)
+            var info = new DirectoryInfo(linkPath);
+            if ((info.Attributes & FileAttributes.ReparsePoint) == 0)
             {
                 _logger.LogError("Failed to verify symlink creation: {LinkPath}", linkPath);
-                return false;
+                return Task.FromResult(false);
             }
             
             _logger.LogInformation("Created directory symlink: {LinkPath} -> {TargetPath}", linkPath, targetPath);
-            return true;
+            return Task.FromResult(true);
         }
         catch (UnauthorizedAccessException ex)
         {
             _logger.LogError(ex, "Access denied creating symlink: {LinkPath}. Administrator privileges required.", linkPath);
-            return false;
+            return Task.FromResult(false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to create directory symlink: {LinkPath} -> {TargetPath}", linkPath, targetPath);
-            return false;
+            return Task.FromResult(false);
         }
     }
     
     /// <inheritdoc/>
-    public async Task<bool> CreateFileSymlinkAsync(string linkPath, string targetPath)
+    public Task<bool> CreateFileSymlinkAsync(string linkPath, string targetPath)
     {
         try
         {
@@ -86,14 +86,14 @@ public class SymlinkManager : ISymlinkManager
             if (!File.Exists(targetPath))
             {
                 _logger.LogError("Target file does not exist: {TargetPath}", targetPath);
-                return false;
+                return Task.FromResult(false);
             }
             
             // Check if link path already exists
             if (File.Exists(linkPath) || Directory.Exists(linkPath))
             {
                 _logger.LogError("Link path already exists: {LinkPath}", linkPath);
-                return false;
+                return Task.FromResult(false);
             }
             
             // Ensure parent directory exists
@@ -111,21 +111,21 @@ public class SymlinkManager : ISymlinkManager
             if ((info.Attributes & FileAttributes.ReparsePoint) == 0)
             {
                 _logger.LogError("Failed to verify file symlink creation: {LinkPath}", linkPath);
-                return false;
+                return Task.FromResult(false);
             }
             
             _logger.LogInformation("Created file symlink: {LinkPath} -> {TargetPath}", linkPath, targetPath);
-            return true;
+            return Task.FromResult(true);
         }
         catch (UnauthorizedAccessException ex)
         {
             _logger.LogError(ex, "Access denied creating symlink: {LinkPath}. Administrator privileges required.", linkPath);
-            return false;
+            return Task.FromResult(false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to create file symlink: {LinkPath} -> {TargetPath}", linkPath, targetPath);
-            return false;
+            return Task.FromResult(false);
         }
     }
     
@@ -186,7 +186,7 @@ public class SymlinkManager : ISymlinkManager
     }
     
     /// <inheritdoc/>
-    public async Task<bool> DeleteSymlinkAsync(string linkPath)
+    public Task<bool> DeleteSymlinkAsync(string linkPath)
     {
         try
         {
@@ -194,40 +194,40 @@ public class SymlinkManager : ISymlinkManager
             {
                 Directory.Delete(linkPath);
                 _logger.LogInformation("Deleted directory symlink: {LinkPath}", linkPath);
-                return true;
+                return Task.FromResult(true);
             }
             
             if (File.Exists(linkPath) && IsSymlink(linkPath))
             {
                 File.Delete(linkPath);
                 _logger.LogInformation("Deleted file symlink: {LinkPath}", linkPath);
-                return true;
+                return Task.FromResult(true);
             }
             
             _logger.LogWarning("Path is not a symlink or does not exist: {LinkPath}", linkPath);
-            return false;
+            return Task.FromResult(false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to delete symlink: {LinkPath}", linkPath);
-            return false;
+            return Task.FromResult(false);
         }
     }
     
     /// <inheritdoc/>
-    public async Task<bool> VerifySymlinkAsync(string linkPath)
+    public Task<bool> VerifySymlinkAsync(string linkPath)
     {
         try
         {
             if (!IsSymlink(linkPath))
             {
-                return false;
+                return Task.FromResult(false);
             }
             
             var target = GetSymlinkTarget(linkPath);
             if (string.IsNullOrEmpty(target))
             {
-                return false;
+                return Task.FromResult(false);
             }
             
             // Check if target exists
@@ -242,11 +242,11 @@ public class SymlinkManager : ISymlinkManager
                 }
             }
             
-            return Directory.Exists(fullPath) || File.Exists(fullPath);
+            return Task.FromResult(Directory.Exists(fullPath) || File.Exists(fullPath));
         }
         catch
         {
-            return false;
+            return Task.FromResult(false);
         }
     }
 }

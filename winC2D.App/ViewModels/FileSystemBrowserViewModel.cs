@@ -619,7 +619,7 @@ public partial class FileSystemBrowserViewModel : ObservableObject
     [RelayCommand]
     private void BrowseTargetPath()
     {
-        var dialog = new System.Windows.Forms.FolderBrowserDialog
+        using var dialog = new System.Windows.Forms.FolderBrowserDialog
         {
             Description = _localizationService.GetString("Explorer.BrowseTargetDesc"),
             SelectedPath = TargetPath,

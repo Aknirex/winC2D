@@ -98,7 +98,7 @@ public partial class AppDataMigrationViewModel : ObservableObject
     [RelayCommand]
     private void BrowsePath()
     {
-        var dialog = new System.Windows.Forms.FolderBrowserDialog
+        using var dialog = new System.Windows.Forms.FolderBrowserDialog
         {
             Description            = "Select AppData migration target folder",
             SelectedPath           = TargetPath,

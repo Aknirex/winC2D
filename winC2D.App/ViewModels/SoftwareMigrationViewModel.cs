@@ -230,7 +230,7 @@ public partial class SoftwareMigrationViewModel : ObservableObject
     [RelayCommand]
     private void BrowsePath()
     {
-        var dialog = new System.Windows.Forms.FolderBrowserDialog
+        using var dialog = new System.Windows.Forms.FolderBrowserDialog
         {
             Description            = "Select migration target folder",
             SelectedPath           = TargetPath,

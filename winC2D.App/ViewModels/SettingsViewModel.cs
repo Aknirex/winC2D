@@ -152,8 +152,20 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private void BrowseProgramFiles()
     {
-        // TODO: Implement folder browser dialog
-        _logger.LogInformation("Browse for Program Files path");
+        using var dialog = new System.Windows.Forms.FolderBrowserDialog
+        {
+            Description            = _localizationService.GetString("Settings.ProgramFilesLabel"),
+            SelectedPath           = ProgramFilesPath,
+            ShowNewFolderButton    = true,
+            UseDescriptionForTitle = true
+        };
+
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK &&
+            !string.IsNullOrEmpty(dialog.SelectedPath))
+        {
+            ProgramFilesPath = dialog.SelectedPath;
+            _logger.LogInformation("Program Files path set to {Path}", ProgramFilesPath);
+        }
     }
     
     /// <summary>
@@ -162,7 +174,20 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private void BrowseProgramFilesX86()
     {
-        // TODO: Implement folder browser dialog
-        _logger.LogInformation("Browse for Program Files (x86) path");
+        using var dialog = new System.Windows.Forms.FolderBrowserDialog
+        {
+            Description            = _localizationService.GetString("Settings.ProgramFilesX86Label"),
+            SelectedPath           = ProgramFilesX86Path,
+            ShowNewFolderButton    = true,
+            UseDescriptionForTitle = true
+        };
+
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK &&
+            !string.IsNullOrEmpty(dialog.SelectedPath))
+        {
+            ProgramFilesX86Path = dialog.SelectedPath;
+            UseCustomX86Path    = true;
+            _logger.LogInformation("Program Files (x86) path set to {Path}", ProgramFilesX86Path);
+        }
     }
 }
